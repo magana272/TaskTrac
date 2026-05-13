@@ -1,6 +1,7 @@
 import io.cucumber.java.en.*;
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.model.Session;
 import task.trak.app.client.gui.viewmodel.*;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ public class ObserverSteps {
 
     private TaskViewModel taskViewModel;
     private ProjectViewModel projectViewModel;
+    private UserViewModel userViewModel;
     private final List<ViewModelChangeType> received = new ArrayList<>();
     private final List<ViewModelChangeType> received2 = new ArrayList<>();
     private ViewModelChangeListener observer;
@@ -117,5 +119,51 @@ public class ObserverSteps {
     public void theObserverSawDuringNotification(String name) {
         assertTrue("Observer should have seen '" + name + "' during notification",
                 seenDuringNotification.contains(name));
+    }
+
+    // --- UserViewModel steps ---
+
+    @Given("a UserViewModel with a session")
+    public void aUserViewModelWithASession() {
+        userViewModel = new UserViewModel();
+        userViewModel.setSession(new Session("testuser"));
+        received.clear();
+    }
+
+    @Given("a UserViewModel is initialized")
+    public void aUserViewModelIsInitialized() {
+        userViewModel = new UserViewModel();
+        received.clear();
+    }
+
+    @Given("an observer is registered on the UserViewModel")
+    public void anObserverIsRegisteredOnTheUserViewModel() {
+        observer = received::add;
+        userViewModel.addObserver(observer);
+    }
+
+    @When("the session is set to null")
+    public void theSessionIsSetToNull() {
+        userViewModel.setSession(null);
+    }
+
+    @When("output is set to {string}")
+    public void outputIsSetTo(String text) {
+        userViewModel.setOutput(text);
+    }
+
+    @Then("the observer receives a SESSION notification")
+    public void theObserverReceivesASessionNotification() {
+        assertTrue("Expected SESSION notification", received.contains(ViewModelChangeType.SESSION));
+    }
+
+    @Then("the session is null")
+    public void theSessionIsNull() {
+        assertNull("Session should be null", userViewModel.getSession());
+    }
+
+    @Then("the observer receives an OUTPUT notification")
+    public void theObserverReceivesAnOutputNotification() {
+        assertTrue("Expected OUTPUT notification", received.contains(ViewModelChangeType.OUTPUT));
     }
 }

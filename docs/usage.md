@@ -190,7 +190,9 @@ java -jar trak-cli backlog delete MainBacklog
 
 ## GUI Features
 
-### Task View
+The GUI uses an MVC architecture with an Observer pattern. Views implement ViewModelChangeListener and register on ViewModels via `addObserver()`, so changes in one domain (e.g. tasks) automatically refresh related views (e.g. sprints).
+
+### TasksView
 - **Task cards** with title, status dropdown, project name, summary, deadline
 - **Status colors**: READY (red), INPROGRESS (yellow), COMPLETE (green)
 - **Click card** to open edit dialog (title, assigned to, summary, status)
@@ -200,7 +202,7 @@ java -jar trak-cli backlog delete MainBacklog
 - **Archive toggle** hides completed tasks (shows count)
 - **"+" button** to add new task (project dropdown, assignee from members, date picker)
 
-### Project View
+### ProjectsView
 - **Editable table** — click Name or Description to edit inline, Save Changes button
 - **Double-click Members cell** — manage members dialog (add/remove, owner only)
 - **Double-click Tasks cell** — task manager dialog (edit/delete tasks, owner only)
@@ -208,20 +210,20 @@ java -jar trak-cli backlog delete MainBacklog
 - **Double-click Description cell** — large text editor dialog
 - **"+ Add Project"** button
 
-### Sprint View
+### SprintView
 - **Editable table** — edit Start Date and End Date inline, Save Changes button
 - **Double-click Tasks cell** — view sprint tasks with edit buttons
 - **"+ Add Sprint"** button with project dropdown, date pickers, task checklist
 
-### Status Bar
-- Shows logged-in user
-- **Login/Signup** buttons with form dialogs
+### Authentication Views
+- **LoginView** — login form dialog
+- **SignUpView** — signup form dialog
+- **LogOutView** — logout confirmation
 - **Continue as Guest** button (logs in as `guest` account)
-- **Logout** button (visible when logged in)
+- Status bar shows logged-in user
 
-### Error Panel
-- Red dismissable bar below nav for errors
-- Auto-hides after 8 seconds
+### Error Handling
+- **ErrorAlertView** — modal error alert dialogs for validation and server errors
 
 ---
 
@@ -304,4 +306,4 @@ export MONGO_DB="trak"    # optional, defaults to "trak"
 make test
 ```
 
-138 tests covering: authentication, user/project/task/sprint/backlog CRUD, workspace commands, detail flags, password hashing, session persistence, service list operations, seed data generation.
+~200 tests covering: authentication, user/project/task/sprint/backlog CRUD, workspace commands, detail flags, password hashing, session persistence, service list operations, seed data generation, Observer pattern, ViewModel state, HTTP service packaging, and GUI MVC cucumber features.

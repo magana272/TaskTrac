@@ -31,3 +31,16 @@ Feature: Observer Pattern for ViewModels
     And an observer that reads data is registered on the ProjectViewModel
     When a project named "FreshProject" is created
     Then the observer saw "FreshProject" during notification
+
+  Scenario: Session null notification fires on logout
+    Given a UserViewModel with a session
+    And an observer is registered on the UserViewModel
+    When the session is set to null
+    Then the observer receives a SESSION notification
+    And the session is null
+
+  Scenario: Output change notifies observers
+    Given a UserViewModel is initialized
+    And an observer is registered on the UserViewModel
+    When output is set to "Hello World"
+    Then the observer receives an OUTPUT notification

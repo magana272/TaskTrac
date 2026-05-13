@@ -1,8 +1,10 @@
 package task.trak.app.client.gui.controller;
 
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.model.Session;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.gui.viewmodel.TaskViewModel;
+import task.trak.app.client.gui.viewmodel.UserViewModel;
 
 import java.util.Date;
 import java.util.List;
@@ -10,9 +12,11 @@ import java.util.List;
 public class TaskController {
 
     private final TaskViewModel taskViewModel;
+    private final UserViewModel userViewModel;
 
-    public TaskController(TaskViewModel taskViewModel) {
+    public TaskController(TaskViewModel taskViewModel, UserViewModel userViewModel) {
         this.taskViewModel = taskViewModel;
+        this.userViewModel = userViewModel;
     }
 
     public TaskViewModel getViewModel() {
@@ -40,7 +44,13 @@ public class TaskController {
     }
 
     public void refreshTasks() {
-        List<TaskDTO> tasks = ServiceFactory.taskService().listAll();
+        Session session = userViewModel.getSession();
+        List<TaskDTO> tasks;
+        if (session != null && session.getLogged_in_user() != null) {
+            tasks = ServiceFactory.taskService().listByAssignee(session.getLogged_in_user());
+        } else {
+            tasks = List.of();
+        }
         taskViewModel.setAll(tasks);
     }
 

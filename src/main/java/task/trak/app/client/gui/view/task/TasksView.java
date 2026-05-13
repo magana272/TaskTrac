@@ -12,8 +12,10 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -85,9 +87,15 @@ public class TasksView extends DataView implements ViewModelChangeListener {
             JPanel gridPanel = new JPanel(new GridBagLayout());
             gridPanel.setBackground(BG_COLOR);
 
+            // Cache project members per project to avoid repeated service calls
+            Map<String, List<String>> memberCache = new HashMap<>();
+
             List<JComponent> cards = new ArrayList<>();
             for (TaskDTO task : visible) {
-                cards.add(new TaskCardPanel(task, guiController.getTaskController(), List.of()));
+                List<String> assignees = memberCache.computeIfAbsent(
+                        task.projectName(),
+                        name -> guiController.getProjectController().getProjectMembers(name));
+                cards.add(new TaskCardPanel(task, guiController.getTaskController(), assignees));
             }
 
             if (cards.isEmpty()) {

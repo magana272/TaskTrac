@@ -161,13 +161,13 @@ flowchart TB
 ## Package Structure
 
 ```
-org.trak.api/              ← Shared (DTOs, service interfaces, Session)
+task.trak.api/              ← Shared (DTOs, service interfaces, Session)
   dto/                            TaskDTO, UserDTO, ProjectDTO, SprintDTO, BacklogDTO
   service/                        TaskService, UserService, ..., ServiceFactory
   model/                          Session
   util/                           TimeUtil, TeeOutputStream
 
-org.trak.app.server/       ← Server (never imported by client)
+task.trak.app.server/       ← Server (never imported by client)
   server/                         TrakServer, REST route handlers
   service/                        TrakTaskService, TrakProjectService, ...
   dao/                            EntityDAO, DAOFactory, SessionDAO
@@ -177,20 +177,33 @@ org.trak.app.server/       ← Server (never imported by client)
   model/                          Task, User, Project, Sprint, BackLog
   util/                           PasswordUtil
 
-org.trak.app.client/       ← Client (never imports from server)
+task.trak.app.client/       ← Client (never imports from server)
   cli/                            TTApp, CLIMain
   cli/cmd/                        CMD_Factory, all CMD classes
-  gui/                            TTAppGUI, GUIMain, MainFrame, TaskCardPanel, ...
-  gui/observer/                   CommandEvent, CommandEventBus, CommandListener
+  http/                           ApiClient, TaskHttpService, ProjectHttpService, ...
+  gui/viewmodel/                  ViewModel, ObservableViewModel, TaskViewModel,
+                                  ProjectViewModel, SprintViewModel, UserViewModel
+  gui/controller/                 GUIController, AuthController, TaskController,
+                                  ProjectController, SprintController
+  gui/view/                       DataView (abstract), MainFrame
+  gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView
+  gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView
+  gui/view/sprint/                SprintView, SprintAddView
+  gui/view/auth/                  LoginView, SignUpView, LogOutView
+  gui/view/error/                 ErrorView, ErrorAlertView,
+                                  UserNameAlreadyExistErrorView,
+                                  EmailAlreadyExistErrorView,
+                                  TaskBeforeProjectErrorView
+  gui/view/form/                  FormDialogView
+  gui/view/panel/                 OutputPanel, StatusPanel
   config/                         WorkspaceConfig
-  (root)                          ApiClient, TaskHttpService, ProjectHttpService, ...
 ```
 
 **Key boundary:** Client code (`app.client`) never imports from server code (`app.server`). Shared types live in `api`.
 
 ## ServiceFactory (Dependency Injection)
 
-`ServiceFactory` in `org.trak.api.service` uses supplier registration:
+`ServiceFactory` in `task.trak.api.service` uses supplier registration:
 - `ServiceFactory.registerLocalServices()` — registers direct service implementations (server/local mode)
 - `ServiceFactory.registerHttpServices()` — registers HTTP client implementations (remote mode)
 - CMD classes call `ServiceFactory.taskService()` etc. — transparent swap, zero code changes
@@ -199,14 +212,22 @@ org.trak.app.client/       ← Client (never imports from server)
 
 Built on `com.sun.net.httpserver.HttpServer` (JDK built-in). Token-based auth via `SessionManager`. Routes return JSON (Gson).
 
-## GUI (Swing)
+## GUI (Swing — MVC with Observer Pattern)
 
-Observer pattern via `CommandEventBus`. Commands fire `CommandEvent`s, `TTAppGUI` listens and dispatches to `MainFrame`. System look and feel. Features:
+The GUI follows a Model-View-Controller architecture with an Observer pattern for reactive updates:
+
+- **ViewModels** (`gui/viewmodel/`): `ObservableViewModel` base class implements `addObserver()`, `removeObserver()`, and `notifyObservers()`. Concrete ViewModels (`TaskViewModel`, `ProjectViewModel`, `SprintViewModel`, `UserViewModel`) implement `Serializable` and persist state to `.cache/`.
+- **Controllers** (`gui/controller/`): `GUIController` coordinates domain controllers (`AuthController`, `TaskController`, `ProjectController`, `SprintController`). Controllers invoke the service layer and update ViewModels.
+- **Views** (`gui/view/`): `DataView` is an abstract `JPanel` with a `render()` method. Views take `GUIController` as their only constructor parameter. Views call `addObserver()` on the ViewModels they depend on and implement `onViewModelChanged()` to re-render. `MainFrame` implements `ViewModelChangeListener`.
+- **Cross-domain observation**: Views can observe multiple ViewModels. `TasksView` observes both `TaskViewModel` and `ProjectViewModel`. `SprintView` observes `SprintViewModel`, `ProjectViewModel`, and `TaskViewModel`.
+- **Flow**: User action --> View --> Controller --> Service --> Controller updates ViewModel --> `notifyObservers()` --> Views call `render()`
+
+Features:
 - Task cards with status dropdowns (READY=red, INPROGRESS=yellow, COMPLETE=green)
 - Editable project/sprint tables with Save button
 - Double-click cells for member management, task management, summary editing
 - Sort by due date/estimate, filter by project, archive completed tasks
-- Login/Signup/Guest dialogs, error panel
+- Login/Signup/Guest dialogs, error alerts
 
 ---
 
@@ -401,4 +422,10 @@ Requires environment variables: `MONGO_URI` (connection string), `MONGO_DB` (dat
 | User Cucumber | 8 |
 | User Unit | 12 |
 | Workspace Cucumber | 9 |
-| **Total** | **138** |
+| ObserverPatternTest | 11 |
+| AppModelTest | 18 |
+| HttpServicePackageTest | 7 |
+| observer.feature (Cucumber) | 5 |
+| gui_mvc.feature (Cucumber) | 11 |
+| http_package.feature (Cucumber) | 8 |
+| **Total** | **~200** |
