@@ -140,8 +140,7 @@ public class TTApp implements App {
                 System.out.print("Password: ");
                 String password = scanner.nextLine().trim();
                 try {
-                    Session s = authService.signup(firstName, lastName, username, email, password);
-                    this.session = s;
+                    this.session = authService.signup(firstName, lastName, username, email, password);
                     System.out.println("Account created. Logged in as " + username + ".");
                 } catch (IllegalArgumentException e) {
                     System.out.println("Error: " + e.getMessage());

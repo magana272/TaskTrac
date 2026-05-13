@@ -3,9 +3,9 @@
 # ── Build ────────────────────────────────────────────────
 build:
 	./gradlew allJars
-	cp build/libs/trak-server-1.0-SNAPSHOT.jar trak-server
-	cp build/libs/trak-cli-1.0-SNAPSHOT.jar trak-cli
-	cp build/libs/trak-gui-1.0-SNAPSHOT.jar trak-gui
+	cp build/libs/trak-server-0.1.0.jar trak-server
+	cp build/libs/trak-cli-0.1.0.jar trak-cli
+	cp build/libs/trak-gui-0.1.0.jar trak-gui
 	chmod +x trak-server trak-cli trak-gui
 
 test:

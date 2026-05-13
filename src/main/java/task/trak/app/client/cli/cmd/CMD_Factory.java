@@ -8,9 +8,9 @@ import task.trak.app.client.cli.cmd.sprint.SprintCMD;
 import task.trak.app.client.cli.cmd.task.TaskCMD;
 import task.trak.app.client.cli.cmd.user.UserCMD;
 import task.trak.app.client.cli.cmd.workspace.*;
-import task.trak.app.client.gui.model.CommandEvent;
-import task.trak.app.client.gui.model.CommandEventBus;
-import task.trak.app.client.gui.model.CommandEventType;
+import task.trak.app.client.gui.viewmodel.event.CommandEvent;
+import task.trak.app.client.gui.viewmodel.event.CommandEventBus;
+import task.trak.app.client.gui.viewmodel.event.CommandEventType;
 
 import java.util.Arrays;
 import java.util.HashMap;

@@ -31,7 +31,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("org.trak.Main")
+    mainClass.set("task.trak.Main")
 }
 
 fun createFatJar(name: String, mainClassName: String): TaskProvider<Jar> {
@@ -47,14 +47,14 @@ fun createFatJar(name: String, mainClassName: String): TaskProvider<Jar> {
 }
 
 // 3 separate executables
-val serverJar = createFatJar("trak-server", "org.trak.app.server.ServerMain")
-val cliJar = createFatJar("trak-cli", "org.trak.app.client.cli.CLIMain")
-val guiJar = createFatJar("trak-gui", "org.trak.app.client.gui.GUIMain")
+val serverJar = createFatJar("trak-server", "task.trak.app.server.ServerMain")
+val cliJar = createFatJar("trak-cli", "task.trak.app.client.cli.CLIMain")
+val guiJar = createFatJar("trak-gui", "task.trak.app.client.gui.GUIMain")
 
 // Default jar still uses unified Main
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "org.trak.Main"
+        attributes["Main-Class"] = "task.trak.Main"
     }
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) {
         exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
