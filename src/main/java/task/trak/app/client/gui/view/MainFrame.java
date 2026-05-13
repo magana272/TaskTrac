@@ -1,49 +1,83 @@
 package task.trak.app.client.gui.view;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.dto.TaskDTO;
-import task.trak.app.client.gui.controller.TTAppGUI;
-import task.trak.app.client.gui.model.CommandEvent;
-import task.trak.app.client.gui.model.CommandEventType;
+import task.trak.app.client.gui.controller.GUIController;
+import task.trak.app.client.gui.view.error.ErrorView;
+import task.trak.app.client.gui.view.panel.OutputPanel;
+import task.trak.app.client.gui.view.panel.StatusPanel;
+import task.trak.app.client.gui.view.project.ProjectsView;
+import task.trak.app.client.gui.view.sprint.SprintView;
+import task.trak.app.client.gui.view.task.TasksView;
+import task.trak.app.client.gui.viewmodel.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.List;
 
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements ViewModelChangeListener {
 
-    private final TTAppGUI app;
-    private final ContentPanel contentPanel;
+    private static final String CARD_TASKS = "tasks";
+    private static final String CARD_PROJECTS = "projects";
+    private static final String CARD_SPRINTS = "sprints";
+    private static final String CARD_OUTPUT = "output";
+
+    private final GUIController controller;
+    private final UserViewModel userViewModel;
+
     private final StatusPanel statusPanel;
-    private final ErrorPanel errorPanel;
+    private final CardLayout cardLayout;
+    private final JPanel cardContainer;
 
-    public MainFrame(TTAppGUI app) {
+    private final TasksView tasksView;
+    private final ProjectsView projectsView;
+    private final SprintView sprintView;
+    private final OutputPanel outputPanel;
+
+    public MainFrame(GUIController controller,
+                     TaskViewModel taskViewModel,
+                     ProjectViewModel projectViewModel,
+                     SprintViewModel sprintViewModel,
+                     UserViewModel userViewModel) {
         super("Trak");
-        this.app = app;
+        this.controller = controller;
+        this.userViewModel = userViewModel;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(960, 640);
         setLayout(new BorderLayout());
 
-        // --- Top section: status bar + nav bar + error panel ---
+        taskViewModel.addObserver(this);
+        projectViewModel.addObserver(this);
+        sprintViewModel.addObserver(this);
+        userViewModel.addObserver(this);
+
         JPanel topSection = new JPanel();
         topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
 
-        this.statusPanel = new StatusPanel(this::onCommandSubmitted);
+        this.statusPanel = new StatusPanel(controller);
         topSection.add(statusPanel);
         topSection.add(createNavBar());
 
-        this.errorPanel = new ErrorPanel();
-        topSection.add(errorPanel);
-
         add(topSection, BorderLayout.NORTH);
 
-        // --- Center: content panel ---
-        this.contentPanel = new ContentPanel();
-        this.contentPanel.setOnCommand(this::onCommandSubmitted);
-        add(contentPanel, BorderLayout.CENTER);
+        // --- Center: CardLayout with views ---
+        this.cardLayout = new CardLayout();
+        this.cardContainer = new JPanel(cardLayout);
+
+        this.tasksView = new TasksView(controller);
+        this.projectsView = new ProjectsView(controller);
+        this.sprintView = new SprintView(controller);
+
+        this.outputPanel = new OutputPanel();
+        JScrollPane outputScroll = new JScrollPane(outputPanel);
+        outputScroll.setBorder(BorderFactory.createEmptyBorder());
+
+        cardContainer.add(tasksView, CARD_TASKS);
+        cardContainer.add(projectsView, CARD_PROJECTS);
+        cardContainer.add(sprintView, CARD_SPRINTS);
+        cardContainer.add(outputScroll, CARD_OUTPUT);
+
+        cardLayout.show(cardContainer, CARD_OUTPUT);
+        add(cardContainer, BorderLayout.CENTER);
 
         // --- Bottom: command input ---
         CommandInputPanel inputPanel = new CommandInputPanel(this::onCommandSubmitted);
@@ -56,9 +90,26 @@ public class MainFrame extends JFrame {
         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
         navBar.setBorder(new EmptyBorder(2, 6, 2, 6));
 
-        JButton tasksBtn = createNavButton("Tasks", "tasks");
-        JButton projectsBtn = createNavButton("Projects", "projects");
-        JButton sprintsBtn = createNavButton("Sprints", "sprints");
+        JButton tasksBtn = new JButton("Tasks");
+        tasksBtn.setFocusPainted(false);
+        tasksBtn.addActionListener(e -> {
+            controller.getTaskController().refreshTasks();
+            cardLayout.show(cardContainer, CARD_TASKS);
+        });
+
+        JButton projectsBtn = new JButton("Projects");
+        projectsBtn.setFocusPainted(false);
+        projectsBtn.addActionListener(e -> {
+            controller.getProjectController().refreshProjects();
+            cardLayout.show(cardContainer, CARD_PROJECTS);
+        });
+
+        JButton sprintsBtn = new JButton("Sprints");
+        sprintsBtn.setFocusPainted(false);
+        sprintsBtn.addActionListener(e -> {
+            controller.getSprintController().refreshSprints();
+            cardLayout.show(cardContainer, CARD_SPRINTS);
+        });
 
         navBar.add(tasksBtn);
         navBar.add(projectsBtn);
@@ -67,93 +118,45 @@ public class MainFrame extends JFrame {
         return navBar;
     }
 
-    private JButton createNavButton(String label, String command) {
-        JButton btn = new JButton(label);
-        btn.setFocusPainted(false);
-        btn.addActionListener(e -> onCommandSubmitted(command));
-        return btn;
+    @Override
+    public void onViewModelChanged(ViewModelChangeType type) {
+        SwingUtilities.invokeLater(() -> {
+            switch (type) {
+                case TASKS -> {
+                    cardLayout.show(cardContainer, CARD_TASKS);
+                    tasksView.render();
+                }
+                case PROJECTS -> {
+                    cardLayout.show(cardContainer, CARD_PROJECTS);
+                    projectsView.render();
+                }
+                case SPRINTS -> {
+                    cardLayout.show(cardContainer, CARD_SPRINTS);
+                    sprintView.render();
+                }
+                case SESSION -> updateStatus();
+                case ERROR -> {
+                    String error = userViewModel.getLastError();
+                    if (error != null) {
+                        new ErrorView(error).show(this);
+                    }
+                }
+                case OUTPUT -> {
+                    String output = userViewModel.getLastOutput();
+                    if (output != null) {
+                        outputPanel.appendOutput(output);
+                    }
+                    cardLayout.show(cardContainer, CARD_OUTPUT);
+                }
+            }
+        });
     }
 
     private void onCommandSubmitted(String command) {
-        contentPanel.showCommand(command);
-        app.executeCommand(command);
-    }
-
-    @SuppressWarnings("unchecked")
-    public void displayCommandResult(CommandEvent event) {
-        if (!event.success()) {
-            errorPanel.showError(event.errorMessage());
-            updateStatus();
-            return;
-        }
-
-        Object data = event.data();
-        CommandEventType type = event.type();
-
-        // Route data-carrying events to the appropriate content view
-        if (data instanceof List<?> list && !list.isEmpty()) {
-            Object first = list.getFirst();
-            if (first instanceof TaskDTO) {
-                contentPanel.showTasks((List<TaskDTO>) data);
-                updateStatus();
-                return;
-            }
-            if (first instanceof ProjectDTO) {
-                contentPanel.showProjects((List<ProjectDTO>) data);
-                updateStatus();
-                return;
-            }
-            if (first instanceof SprintDTO) {
-                contentPanel.showSprints((List<SprintDTO>) data);
-                updateStatus();
-                return;
-            }
-        }
-
-        // For known list types that returned empty, show the appropriate empty view
-        if (type == CommandEventType.TASK_LIST) {
-            contentPanel.showTasks(List.of());
-            updateStatus();
-            return;
-        }
-        if (type == CommandEventType.PROJECT_LIST) {
-            contentPanel.showProjects(List.of());
-            updateStatus();
-            return;
-        }
-        if (type == CommandEventType.SPRINT_LIST) {
-            contentPanel.showSprints(List.of());
-            updateStatus();
-            return;
-        }
-
-        // After mutations, refresh the relevant list view silently
-        if (type == CommandEventType.PROJECT_CREATED || type == CommandEventType.PROJECT_UPDATED || type == CommandEventType.PROJECT_DELETED) {
-            app.executeCommand("projects");
-            updateStatus();
-            return;
-        }
-        if (type == CommandEventType.TASK_CREATED || type == CommandEventType.TASK_UPDATED || type == CommandEventType.TASK_DELETED || type == CommandEventType.COMPLETE_TASK) {
-            app.executeCommand("tasks");
-            updateStatus();
-            return;
-        }
-        if (type == CommandEventType.SPRINT_CREATED || type == CommandEventType.SPRINT_UPDATED || type == CommandEventType.SPRINT_DELETED) {
-            app.executeCommand("sprints");
-            updateStatus();
-            return;
-        }
-        if (type == CommandEventType.LOGIN || type == CommandEventType.LOGOUT) {
-            updateStatus();
-            return;
-        }
-
-        // Fallback: show raw text output
-        contentPanel.showOutput(event.textOutput());
-        updateStatus();
+        controller.executeCommand(command);
     }
 
     private void updateStatus() {
-        statusPanel.update(app.getSession());
+        statusPanel.update(userViewModel.getSession());
     }
 }

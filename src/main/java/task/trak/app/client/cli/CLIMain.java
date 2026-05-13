@@ -1,7 +1,7 @@
 package task.trak.app.client.cli;
 
 import task.trak.api.service.ServiceFactory;
-import task.trak.app.client.ApiClient;
+import task.trak.app.client.http.ApiClient;
 import task.trak.app.client.config.WorkspaceConfig;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.SessionDAO;

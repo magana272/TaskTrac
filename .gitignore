@@ -42,6 +42,7 @@ bin/
 ### Project ###
 .env
 .store/
+.cache/
 docs/design/
 docs/change/
 /tasktracker
@@ -49,3 +50,6 @@ docs/change/
 /tasktracker-cli
 /tasktracker-gui
 qodana.yaml
+trak-cli
+trak-gui
+trak-server
