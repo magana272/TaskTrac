@@ -1,0 +1,7 @@
+#!/bin/bash
+while read local_ref local_sha remote_ref remote_sha; do
+  if echo "$remote_ref" | grep -q "refs/heads/main"; then
+    echo "ERROR: direct push to main is not allowed. use a pull request."
+    exit 1
+  fi
+done

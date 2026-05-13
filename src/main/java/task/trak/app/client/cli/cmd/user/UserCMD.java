@@ -1,0 +1,69 @@
+package task.trak.app.client.cli.cmd.user;
+
+import task.trak.api.dto.UserDTO;
+import task.trak.app.client.cli.cmd.cmdtype.CMD;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.function.Consumer;
+
+public class UserCMD implements CMD<UserDTO> {
+    public HashMap<String, Consumer<String[]>> fns = new HashMap<>();
+
+    protected UserCMD() {
+        this.fns.put("add", (String[] args) -> {
+            try {
+                new UserAddCMD(args).Execute();
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        });
+        this.fns.put("get", (String[] args) -> {
+            try {
+                new UserGetCMD(args).Execute();
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        });
+        this.fns.put("update", (String[] args) -> {
+            try {
+                new UserUpdateCMD(args).Execute();
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        });
+        this.fns.put("delete", (String[] args) -> {
+            try {
+                new UserDeleteCMD(args).Execute();
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        });
+    }
+
+    public UserCMD(String[] options) {
+        this();
+        if (options != null && options.length > 0) {
+            String subCommand = options[0];
+            String[] subArgs = Arrays.copyOfRange(options, 1, options.length);
+            Consumer<String[]> handler = this.fns.get(subCommand);
+            if (handler != null) {
+                handler.accept(subArgs);
+            } else {
+                System.err.println("Unknown user sub-command: " + subCommand);
+            }
+        }
+    }
+
+    @Override
+    public void accept(String[] strings) {
+        String subCommand = strings[0];
+        String[] subArgs = Arrays.copyOfRange(strings, 1, strings.length);
+        Consumer<String[]> handler = this.fns.get(subCommand);
+        if (handler != null) {
+            handler.accept(subArgs);
+        } else {
+            System.err.println("Unknown user sub-command: " + subCommand);
+        }
+    }
+}
