@@ -42,6 +42,7 @@ public final class TrakTheme {
     public static final Color ACCENT_DIM = new Color(0xFF, 0xD5, 0x4F, 30); // glow
     public static final Color ACCENT_GREEN = new Color(0x34, 0xC7, 0x59);
     public static final Color ACCENT_BLUE = new Color(0x64, 0xB5, 0xF6);
+    public static final Color PRIMARY_BLUE = new Color(0x5B, 0x9B, 0xD5);
     // ── Status ──
     public static final Color STATUS_READY = new Color(0xEF, 0x53, 0x50);
     public static final Color STATUS_INPROGRESS = new Color(0xFF, 0xB7, 0x4D);
@@ -175,10 +176,10 @@ public final class TrakTheme {
     // ── Button styling ──
 
     /**
-     * Primary action button (green).
+     * Primary action button.
      */
     public static void styleButtonPrimary(JButton btn) {
-        btn.setBackground(ACCENT_GREEN);
+        btn.setBackground(PRIMARY_BLUE);
         btn.setForeground(Color.WHITE);
         btn.setFont(FONT_BODY.deriveFont(Font.BOLD));
         btn.setOpaque(true);

@@ -56,7 +56,7 @@ public class ProjectAddView extends FormDialogView {
         ownerTitle.setForeground(TrakTheme.TEXT_SECONDARY);
         header.add(ownerTitle);
         JLabel ownerLabel = new JLabel(project.ownerUsername() != null ? project.ownerUsername() : "-");
-        ownerLabel.setFont(ownerLabel.getFont().deriveFont(Font.BOLD));
+        ownerLabel.setFont(TrakTheme.FONT_HEADING);
         ownerLabel.setForeground(TrakTheme.TEXT_PRIMARY);
         header.add(ownerLabel);
         dialog.add(header, BorderLayout.NORTH);
@@ -82,7 +82,7 @@ public class ProjectAddView extends FormDialogView {
                     row.setBorder(new EmptyBorder(4, 12, 4, 8));
 
                     JLabel nameLabel = new JLabel(member);
-                    nameLabel.setFont(nameLabel.getFont().deriveFont(Font.PLAIN, 13f));
+                    nameLabel.setFont(TrakTheme.FONT_BODY);
                     nameLabel.setForeground(TrakTheme.TEXT_PRIMARY);
                     row.add(nameLabel, BorderLayout.CENTER);
 

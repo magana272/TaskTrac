@@ -41,12 +41,6 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         this.statusPanel = new StatusPanel(controller);
         topSection.add(statusPanel);
 
-        // Subtle divider line
-        JSeparator sep = new JSeparator();
-        sep.setForeground(TrakTheme.BORDER);
-        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        topSection.add(sep);
-
         add(topSection, BorderLayout.NORTH);
 
         // ── Center: Dashboard ──
