@@ -1,6 +1,6 @@
 package task.trak.app.client.cli.cmd.backlog;
 
-import task.trak.api.dto.BacklogDTO;
+import task.trak.model.dto.BacklogDTO;
 import task.trak.api.service.BacklogService;
 import task.trak.api.service.ServiceFactory;
 

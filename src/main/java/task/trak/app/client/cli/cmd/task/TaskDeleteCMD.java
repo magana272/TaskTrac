@@ -1,6 +1,6 @@
 package task.trak.app.client.cli.cmd.task;
 
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.TaskDTO;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
 

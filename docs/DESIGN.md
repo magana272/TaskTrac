@@ -94,6 +94,11 @@ A task tracking system with three executables:
 - The system shall support sorting tasks by due date and estimate in GUI
 - The system shall support filtering tasks by project in GUI
 - The system shall allow seeding test data via `--test` flag (20 users, 10 projects, 1000 tasks, 20 sprints)
+- The system shall provide a centralized dark theme (TrakTheme) applied via UIManager defaults
+- The system shall allow toggling between personal workspace (Mine) and team workspace (Team) in the GUI
+- The system shall provide structured duration input (days/hours/minutes spinners) for task estimates
+- The system shall support editing task estimates in the GUI edit dialog
+- The system shall use FormPanel for consistent two-column layout in all form dialogs
 
 ---
 
@@ -161,13 +166,13 @@ flowchart TB
 ## Package Structure
 
 ```
-org.trak.api/              ← Shared (DTOs, service interfaces, Session)
+task.trak.api/              ← Shared (DTOs, service interfaces, Session)
   dto/                            TaskDTO, UserDTO, ProjectDTO, SprintDTO, BacklogDTO
   service/                        TaskService, UserService, ..., ServiceFactory
   model/                          Session
   util/                           TimeUtil, TeeOutputStream
 
-org.trak.app.server/       ← Server (never imported by client)
+task.trak.app.server/       ← Server (never imported by client)
   server/                         TrakServer, REST route handlers
   service/                        TrakTaskService, TrakProjectService, ...
   dao/                            EntityDAO, DAOFactory, SessionDAO
@@ -177,20 +182,33 @@ org.trak.app.server/       ← Server (never imported by client)
   model/                          Task, User, Project, Sprint, BackLog
   util/                           PasswordUtil
 
-org.trak.app.client/       ← Client (never imports from server)
+task.trak.app.client/       ← Client (never imports from server)
   cli/                            TTApp, CLIMain
   cli/cmd/                        CMD_Factory, all CMD classes
-  gui/                            TTAppGUI, GUIMain, MainFrame, TaskCardPanel, ...
-  gui/observer/                   CommandEvent, CommandEventBus, CommandListener
+  http/                           ApiClient, TaskHttpService, ProjectHttpService, ...
+  gui/viewmodel/                  ViewModel, ObservableViewModel, TaskViewModel,
+                                  ProjectViewModel, SprintViewModel, UserViewModel
+  gui/controller/                 GUIController, AuthController, TaskController,
+                                  ProjectController, SprintController
+  gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel
+  gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView, TimeInputPanel
+  gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView
+  gui/view/sprint/                SprintView, SprintAddView
+  gui/view/auth/                  LoginView, SignUpView, LogOutView
+  gui/view/error/                 ErrorView, ErrorAlertView,
+                                  UserNameAlreadyExistErrorView,
+                                  EmailAlreadyExistErrorView,
+                                  TaskBeforeProjectErrorView
+  gui/view/form/                  FormDialogView, FormPanel
+  gui/view/panel/                 OutputPanel, StatusPanel
   config/                         WorkspaceConfig
-  (root)                          ApiClient, TaskHttpService, ProjectHttpService, ...
 ```
 
 **Key boundary:** Client code (`app.client`) never imports from server code (`app.server`). Shared types live in `api`.
 
 ## ServiceFactory (Dependency Injection)
 
-`ServiceFactory` in `org.trak.api.service` uses supplier registration:
+`ServiceFactory` in `task.trak.api.service` uses supplier registration:
 - `ServiceFactory.registerLocalServices()` — registers direct service implementations (server/local mode)
 - `ServiceFactory.registerHttpServices()` — registers HTTP client implementations (remote mode)
 - CMD classes call `ServiceFactory.taskService()` etc. — transparent swap, zero code changes
@@ -199,14 +217,29 @@ org.trak.app.client/       ← Client (never imports from server)
 
 Built on `com.sun.net.httpserver.HttpServer` (JDK built-in). Token-based auth via `SessionManager`. Routes return JSON (Gson).
 
-## GUI (Swing)
+## GUI (Swing — MVC with Observer Pattern)
 
-Observer pattern via `CommandEventBus`. Commands fire `CommandEvent`s, `TTAppGUI` listens and dispatches to `MainFrame`. System look and feel. Features:
+The GUI follows a Model-View-Controller architecture with an Observer pattern for reactive updates:
+
+- **ViewModels** (`gui/viewmodel/`): `ObservableViewModel` base class implements `addObserver()`, `removeObserver()`, and `notifyObservers()`. Concrete ViewModels (`TaskViewModel`, `ProjectViewModel`, `SprintViewModel`, `UserViewModel`) implement `Serializable` and persist state to `.cache/`.
+- **Controllers** (`gui/controller/`): `GUIController` coordinates domain controllers (`AuthController`, `TaskController`, `ProjectController`, `SprintController`). Controllers invoke the service layer and update ViewModels.
+- **Views** (`gui/view/`): `DataView` is an abstract `JPanel` with a `render()` method. Views take `GUIController` as their only constructor parameter. Views call `addObserver()` on the ViewModels they depend on and implement `onViewModelChanged()` to re-render. `MainFrame` implements `ViewModelChangeListener`.
+- **Cross-domain observation**: Views can observe multiple ViewModels. `TasksView` observes both `TaskViewModel` and `ProjectViewModel`. `SprintView` observes `SprintViewModel`, `ProjectViewModel`, and `TaskViewModel`.
+- **Flow**: User action --> View --> Controller --> Service --> Controller updates ViewModel --> `notifyObservers()` --> Views call `render()`
+
+Features:
 - Task cards with status dropdowns (READY=red, INPROGRESS=yellow, COMPLETE=green)
 - Editable project/sprint tables with Save button
 - Double-click cells for member management, task management, summary editing
 - Sort by due date/estimate, filter by project, archive completed tasks
-- Login/Signup/Guest dialogs, error panel
+- Login/Signup/Guest dialogs, error alerts
+- Dark cinematic theme via TrakTheme (deep charcoal + warm gold accent, 8px spacing grid)
+- Workspace toggle (Mine/Team) with filtered data fetching
+- Structured duration spinners (TimeInputPanel) for task estimate input
+- Green CTA button for primary actions (Add Task)
+- GlassPanel rounded containers with gradient background and optional drop shadow
+- FormPanel two-column layout for all form dialogs
+- Task cards with custom-painted rounded corners, gradient background, gold glow hover
 
 ---
 
@@ -280,15 +313,16 @@ java -jar trak-gui [--local] [--test]     # GUI (remote default, --local for sta
 ## Makefile Targets
 ```bash
 make build          # Build all 3 jars
+make build-gui      # Build GUI jar only
+make build-cli      # Build CLI jar only
+make build-server   # Build server jar only
 make test           # Run tests
 make clean          # Clean artifacts
-make server         # Start server
-make gui            # GUI local
-make gui-test       # GUI local + test data
-make gui-server     # GUI remote
-make cli            # CLI usage
-make all            # Build all
-make all-test       # Build all + test data
+make reset          # Clean + remove .store and .cache
+make cli            # Build + CLI usage
+make cli-test       # Build + quick CLI test
+make all            # Build + run tests
+make all-test       # Build + run tests + show usage
 ```
 
 ## Authentication
@@ -401,4 +435,10 @@ Requires environment variables: `MONGO_URI` (connection string), `MONGO_DB` (dat
 | User Cucumber | 8 |
 | User Unit | 12 |
 | Workspace Cucumber | 9 |
-| **Total** | **138** |
+| ObserverPatternTest | 11 |
+| AppModelTest | 18 |
+| HttpServicePackageTest | 7 |
+| observer.feature (Cucumber) | 5 |
+| gui_mvc.feature (Cucumber) | 11 |
+| http_package.feature (Cucumber) | 8 |
+| **Total** | **~200** |

@@ -1,6 +1,9 @@
 package task.trak.app.server.service.user;
 
-import task.trak.api.dto.UserDTO;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
+import task.trak.model.dto.request.UpdateUserRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.UserService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;
@@ -13,13 +16,14 @@ public class TrakUserService implements UserService {
     private final EntityDAO<User> store = DAOFactory.userDAO();
 
     @Override
-    public UserDTO create(String username, String firstName, String lastName, String email, String password) {
+    public UserDTO create(CreateUserRequest request) {
+        request.validate();
         TrakBuilderUser builder = new TrakBuilderUser();
-        builder.setUserName(username);
-        if (firstName != null) builder.setFirstName(firstName);
-        if (lastName != null) builder.setLastName(lastName);
-        if (email != null) builder.setEmail(email);
-        if (password != null) builder.setPassword(password);
+        builder.setUserName(request.username());
+        if (request.firstName() != null) builder.setFirstName(request.firstName());
+        if (request.lastName() != null) builder.setLastName(request.lastName());
+        if (request.email() != null) builder.setEmail(request.email());
+        if (request.password() != null) builder.setPassword(request.password());
         User user = builder.build();
         store.save(user);
         return toDTO(user);
@@ -47,23 +51,24 @@ public class TrakUserService implements UserService {
     }
 
     @Override
-    public UserDTO updateByUsername(String username, String newFirstName, String newLastName, String newEmail, String newPassword) {
-        User user = store.loadByKey(username);
+    public UserDTO updateByUsername(UpdateUserRequest request) {
+        request.validate();
+        User user = store.loadByKey(request.username());
         if (user == null) {
-            throw new IllegalArgumentException("User \"" + username + "\" not found.");
+            throw new EntityNotFoundException("User \"" + request.username() + "\" not found.");
         }
 
-        if (newFirstName != null) {
-            user.setFirst_name(newFirstName);
+        if (request.firstName() != null) {
+            user.setFirst_name(request.firstName());
         }
-        if (newLastName != null) {
-            user.setLast_name(newLastName);
+        if (request.lastName() != null) {
+            user.setLast_name(request.lastName());
         }
-        if (newEmail != null) {
-            user.setEmail(newEmail);
+        if (request.email() != null) {
+            user.setEmail(request.email());
         }
-        if (newPassword != null) {
-            user.setPassword_hash(PasswordUtil.hash(newPassword));
+        if (request.password() != null) {
+            user.setPassword_hash(PasswordUtil.hash(request.password()));
         }
 
         store.save(user);

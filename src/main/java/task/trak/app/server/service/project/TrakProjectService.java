@@ -1,6 +1,9 @@
 package task.trak.app.server.service.project;
 
-import task.trak.api.dto.ProjectDTO;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.UpdateProjectRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.ProjectService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;
@@ -18,34 +21,25 @@ public class TrakProjectService implements ProjectService {
     private final EntityDAO<Project> store = DAOFactory.projectDAO();
 
     @Override
-    public ProjectDTO create(String name) {
-        Project project = new TrakProjectBuilder()
-                .setID(System.currentTimeMillis())
-                .setProjectName(name)
-                .build();
-        store.save(project);
-        return toDTO(project);
-    }
-
-    @Override
-    public ProjectDTO create(String name, String summary, String ownerUsername, List<String> memberUsernames) {
+    public ProjectDTO create(CreateProjectRequest request) {
+        request.validate();
         TrakProjectBuilder builder = new TrakProjectBuilder();
         builder.setID(System.currentTimeMillis());
-        builder.setProjectName(name);
-        if (summary != null) builder.setSummary(summary);
-        if (ownerUsername != null) {
-            User owner = DAOFactory.userDAO().loadByKey(ownerUsername);
+        builder.setProjectName(request.name());
+        if (request.summary() != null) builder.setSummary(request.summary());
+        if (request.ownerUsername() != null) {
+            User owner = DAOFactory.userDAO().loadByKey(request.ownerUsername());
             if (owner == null) {
-                throw new IllegalArgumentException("Owner user \"" + ownerUsername + "\" not found.");
+                throw new EntityNotFoundException("Owner user \"" + request.ownerUsername() + "\" not found.");
             }
             builder.setOwner(owner);
         }
-        if (memberUsernames != null) {
+        if (request.memberUsernames() != null) {
             List<User> members = new ArrayList<>();
-            for (String username : memberUsernames) {
+            for (String username : request.memberUsernames()) {
                 User member = DAOFactory.userDAO().loadByKey(username);
                 if (member == null) {
-                    throw new IllegalArgumentException("Member user \"" + username + "\" not found.");
+                    throw new EntityNotFoundException("Member user \"" + username + "\" not found.");
                 }
                 members.add(member);
             }
@@ -77,27 +71,28 @@ public class TrakProjectService implements ProjectService {
     }
 
     @Override
-    public ProjectDTO updateByName(String projectName, String newName, String newSummary, List<String> newMemberUsernames) {
-        Project project = store.loadByKey(projectName);
+    public ProjectDTO updateByName(UpdateProjectRequest request) {
+        request.validate();
+        Project project = store.loadByKey(request.projectName());
         if (project == null) {
-            throw new IllegalArgumentException("Project \"" + projectName + "\" not found.");
+            throw new EntityNotFoundException("Project \"" + request.projectName() + "\" not found.");
         }
 
-        if (newName != null && !newName.equals(projectName)) {
-            store.deleteByKey(projectName);
-            project.setName(newName);
+        if (request.newName() != null && !request.newName().equals(request.projectName())) {
+            store.deleteByKey(request.projectName());
+            project.setName(request.newName());
         }
 
-        if (newSummary != null) {
-            project.setSummary(newSummary);
+        if (request.newSummary() != null) {
+            project.setSummary(request.newSummary());
         }
 
-        if (newMemberUsernames != null) {
+        if (request.newMemberUsernames() != null) {
             List<User> members = new ArrayList<>();
-            for (String username : newMemberUsernames) {
+            for (String username : request.newMemberUsernames()) {
                 User member = DAOFactory.userDAO().loadByKey(username);
                 if (member == null) {
-                    throw new IllegalArgumentException("Member user \"" + username + "\" not found.");
+                    throw new EntityNotFoundException("Member user \"" + username + "\" not found.");
                 }
                 members.add(member);
             }
@@ -134,11 +129,11 @@ public class TrakProjectService implements ProjectService {
     public ProjectDTO addMember(String projectName, String username) {
         Project project = store.loadByKey(projectName);
         if (project == null) {
-            throw new IllegalArgumentException("Project \"" + projectName + "\" not found.");
+            throw new EntityNotFoundException("Project \"" + projectName + "\" not found.");
         }
         User user = DAOFactory.userDAO().loadByKey(username);
         if (user == null) {
-            throw new IllegalArgumentException("User \"" + username + "\" not found.");
+            throw new EntityNotFoundException("User \"" + username + "\" not found.");
         }
         if (project.getMembers() == null) {
             project.setMembers(new ArrayList<>());

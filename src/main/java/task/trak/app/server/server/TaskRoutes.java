@@ -2,21 +2,19 @@ package task.trak.app.server.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.CreateTaskRequest;
+import task.trak.model.dto.request.UpdateTaskRequest;
+import task.trak.model.exception.TrakException;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class TaskRoutes {
-
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     public static class TaskListHandler implements HttpHandler {
         @Override
@@ -50,35 +48,13 @@ public class TaskRoutes {
         private void handleCreate(HttpExchange exchange) throws IOException {
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
-                String title = req.get("title");
-                String projectName = req.get("projectName");
-                String assignedTo = req.get("assignedTo");
-                String summary = req.get("summary");
-                String deadlineStr = req.get("deadline");
-                String estimate = req.get("estimate");
-
-                if (title == null || title.isEmpty()) {
-                    JsonHelper.sendError(exchange, 400, "title is required");
-                    return;
-                }
-
-                Date deadline = null;
-                if (deadlineStr != null && !deadlineStr.isEmpty()) {
-                    try {
-                        synchronized (DATE_FORMAT) {
-                            deadline = DATE_FORMAT.parse(deadlineStr);
-                        }
-                    } catch (ParseException e) {
-                        JsonHelper.sendError(exchange, 400, "Invalid deadline format. Use yyyy-MM-dd");
-                        return;
-                    }
-                }
+                CreateTaskRequest request = JsonHelper.fromJson(body, CreateTaskRequest.class);
+                request.validate();
 
                 TaskService taskService = ServiceFactory.taskService();
-                TaskDTO task = taskService.create(title, projectName, assignedTo, summary, deadline, estimate);
+                TaskDTO task = taskService.create(request);
                 JsonHelper.sendJson(exchange, 201, task);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
@@ -129,20 +105,25 @@ public class TaskRoutes {
         private void handleUpdate(HttpExchange exchange, Long id) throws IOException {
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
-                String title = req.get("title");
-                String status = req.get("status");
-                String assignedTo = req.get("assignedTo");
-                String summary = req.get("summary");
+                UpdateTaskRequest bodyRequest = JsonHelper.fromJson(body, UpdateTaskRequest.class);
+                UpdateTaskRequest request = new UpdateTaskRequest(
+                        id,
+                        bodyRequest.title(),
+                        bodyRequest.status(),
+                        bodyRequest.assignedTo(),
+                        bodyRequest.summary(),
+                        bodyRequest.estimate()
+                );
+                request.validate();
 
                 TaskService taskService = ServiceFactory.taskService();
-                TaskDTO task = taskService.updateById(id, title, status, assignedTo, summary);
+                TaskDTO task = taskService.updateById(request);
                 if (task == null) {
                     JsonHelper.sendError(exchange, 404, "Task not found");
                     return;
                 }
                 JsonHelper.sendJson(exchange, 200, task);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());

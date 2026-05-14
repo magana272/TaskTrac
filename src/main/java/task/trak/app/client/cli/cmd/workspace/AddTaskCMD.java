@@ -1,7 +1,8 @@
 package task.trak.app.client.cli.cmd.workspace;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.CreateTaskRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
@@ -64,7 +65,7 @@ public class AddTaskCMD extends WorkspaceCMD {
         String estimate = scanner.nextLine().trim();
         if (estimate.isEmpty()) estimate = null;
 
-        TaskDTO task = taskService.create(title, this.projectName, assignedTo, summary, deadline, estimate);
+        TaskDTO task = taskService.create(new CreateTaskRequest(title, this.projectName, assignedTo, summary, deadline, estimate));
         System.out.println("Task " + task.id() + " created successfully.");
         return Optional.empty();
     }

@@ -22,18 +22,21 @@ This produces three jar files:
 
 ### Option 1: GUI with test data (fastest)
 ```bash
-make gui-test
+make build-gui
+java -jar trak-gui --local --test
 ```
 Launches the GUI pre-loaded with 20 users, 10 projects, 1000 tasks, and 20 sprints. Logged in as `guest`.
 
 ### Option 2: GUI standalone
 ```bash
-make gui
+make build-gui
+java -jar trak-gui --local
 ```
 Launches the GUI in local mode. Click "Continue as Guest" or sign up.
 
 ### Option 3: CLI
 ```bash
+make build-cli
 java -jar trak-cli
 # Interactive prompt — login as guest (password: guest) or create account
 ```
@@ -41,10 +44,11 @@ java -jar trak-cli
 ### Option 4: Client-Server mode
 ```bash
 # Terminal 1: start server
-make server
+make build-server
+java -jar trak-server
 
 # Terminal 2: GUI connecting to server
-make gui-server
+java -jar trak-gui
 
 # Terminal 3: CLI connecting to server
 java -jar trak-cli --remote tasks
@@ -57,15 +61,16 @@ java -jar trak-cli --remote tasks
 | Target | Description |
 |---|---|
 | `make build` | Build all 3 jars |
+| `make build-gui` | Build GUI jar only |
+| `make build-cli` | Build CLI jar only |
+| `make build-server` | Build server jar only |
 | `make test` | Run all tests |
 | `make clean` | Clean build artifacts |
-| `make server` | Start REST API server (port 8080) |
-| `make gui` | GUI in local mode |
-| `make gui-test` | GUI in local mode with test data |
-| `make gui-server` | GUI connecting to server |
-| `make gui-test-server` | GUI connecting to server with test data |
-| `make cli` | Show CLI usage |
-| `make cli-test` | Quick CLI test (runs `info`) |
+| `make reset` | Clean + remove `.store` and `.cache` |
+| `make cli` | Build + show CLI usage |
+| `make cli-test` | Build + quick CLI test (runs `info`) |
+| `make cli-server` | Build + show CLI remote usage |
+| `make cli-test-server` | Build + quick CLI remote test |
 | `make all` | Build + run tests |
 | `make all-test` | Build + run tests + show usage |
 
@@ -190,17 +195,26 @@ java -jar trak-cli backlog delete MainBacklog
 
 ## GUI Features
 
-### Task View
-- **Task cards** with title, status dropdown, project name, summary, deadline
-- **Status colors**: READY (red), INPROGRESS (yellow), COMPLETE (green)
-- **Click card** to open edit dialog (title, assigned to, summary, status)
+The GUI uses an MVC architecture with an Observer pattern. Views implement ViewModelChangeListener and register on ViewModels via `addObserver()`, so changes in one domain (e.g. tasks) automatically refresh related views (e.g. sprints).
+
+### Dark Cinematic Theme
+The GUI uses a centralized dark theme (`TrakTheme`) with a deep charcoal background (#121216), warm gold accent (#FFD54F), and an 8px spacing grid. Typography follows a scale from DISPLAY (22pt bold) down to CAPTION (10pt). All views, dialogs, tables, and input fields inherit the theme automatically via `UIManager` defaults. Custom components include `GlassPanel` (rounded gradient panels with optional drop shadow) and `FormPanel` (two-column form layout used by all dialogs).
+
+### Workspace Toggle (Mine / Team)
+The nav bar includes "⌂ Mine" and "✳ Team" toggle buttons. **Mine** (default) shows only tasks assigned to you and projects you own or belong to. **Team** shows all tasks and projects across the workspace. The toggle re-fetches data from the service layer, so it reflects the latest state. Resets to Mine on logout.
+
+### TasksView
+- **Task cards** with gradient backgrounds, gold glow hover, status dropdown, project name, summary, deadline
+- **Status colors**: READY (red), INPROGRESS (amber), COMPLETE (green)
+- **Click card** to open edit dialog (title, assigned to, summary, status, estimate)
+- **Time input spinners** for estimate (days/hours/minutes) in both Add and Edit dialogs
 - **Status dropdown** on card changes status immediately
 - **Sort** by Due Date or Estimate
 - **Filter** by Project
 - **Archive toggle** hides completed tasks (shows count)
-- **"+" button** to add new task (project dropdown, assignee from members, date picker)
+- **Green "+" button** (primary CTA) to add new task (project dropdown, assignee from members, date picker, time spinners)
 
-### Project View
+### ProjectsView
 - **Editable table** — click Name or Description to edit inline, Save Changes button
 - **Double-click Members cell** — manage members dialog (add/remove, owner only)
 - **Double-click Tasks cell** — task manager dialog (edit/delete tasks, owner only)
@@ -208,20 +222,20 @@ java -jar trak-cli backlog delete MainBacklog
 - **Double-click Description cell** — large text editor dialog
 - **"+ Add Project"** button
 
-### Sprint View
+### SprintView
 - **Editable table** — edit Start Date and End Date inline, Save Changes button
 - **Double-click Tasks cell** — view sprint tasks with edit buttons
 - **"+ Add Sprint"** button with project dropdown, date pickers, task checklist
 
-### Status Bar
-- Shows logged-in user
-- **Login/Signup** buttons with form dialogs
+### Authentication Views
+- **LoginView** — login form dialog
+- **SignUpView** — signup form dialog
+- **LogOutView** — logout confirmation
 - **Continue as Guest** button (logs in as `guest` account)
-- **Logout** button (visible when logged in)
+- Status bar shows logged-in user
 
-### Error Panel
-- Red dismissable bar below nav for errors
-- Auto-hides after 8 seconds
+### Error Handling
+- **ErrorAlertView** — modal error alert dialogs for validation and server errors
 
 ---
 
@@ -229,6 +243,7 @@ java -jar trak-cli backlog delete MainBacklog
 
 ### Start the server
 ```bash
+make build-server
 java -jar trak-server          # default port 8080
 java -jar trak-server 9090     # custom port
 ```
@@ -304,4 +319,4 @@ export MONGO_DB="trak"    # optional, defaults to "trak"
 make test
 ```
 
-138 tests covering: authentication, user/project/task/sprint/backlog CRUD, workspace commands, detail flags, password hashing, session persistence, service list operations, seed data generation.
+~200 tests covering: authentication, user/project/task/sprint/backlog CRUD, workspace commands, detail flags, password hashing, session persistence, service list operations, seed data generation, Observer pattern, ViewModel state, HTTP service packaging, and GUI MVC cucumber features.

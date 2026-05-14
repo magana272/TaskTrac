@@ -1,12 +1,27 @@
-.PHONY: test build clean server gui gui-test gui-server gui-test-server cli cli-test cli-server cli-test-server all all-test
+.PHONY: test build build-gui build-cli build-server clean reset server gui gui-test gui-server gui-test-server cli cli-test cli-server cli-test-server all all-test
 
 # ── Build ────────────────────────────────────────────────
 build:
 	./gradlew allJars
-	cp build/libs/trak-server-1.0-SNAPSHOT.jar trak-server
-	cp build/libs/trak-cli-1.0-SNAPSHOT.jar trak-cli
-	cp build/libs/trak-gui-1.0-SNAPSHOT.jar trak-gui
+	cp build/libs/trak-server-0.1.0.jar trak-server
+	cp build/libs/trak-cli-0.1.0.jar trak-cli
+	cp build/libs/trak-gui-0.1.0.jar trak-gui
 	chmod +x trak-server trak-cli trak-gui
+
+build-gui:
+	./gradlew trak-gui
+	cp build/libs/trak-gui-0.1.0.jar trak-gui
+	chmod +x trak-gui
+
+build-cli:
+	./gradlew trak-cli
+	cp build/libs/trak-cli-0.1.0.jar trak-cli
+	chmod +x trak-cli
+
+build-server:
+	./gradlew trak-server
+	cp build/libs/trak-server-0.1.0.jar trak-server
+	chmod +x trak-server
 
 test:
 	./gradlew cleanTest test
@@ -15,25 +30,9 @@ clean:
 	./gradlew clean
 	rm -f trak-server trak-cli trak-gui
 
-# ── Server ───────────────────────────────────────────────
-server: build
-	java -jar trak-server
+reset: clean
+	rm -rf .store .cache
 
-# ── GUI (local, no server needed) ────────────────────────
-gui: build
-	java -jar trak-gui --local
-
-gui-test: build
-	java -jar trak-gui --local --test
-
-# ── GUI (remote, needs server running) ───────────────────
-gui-server: build
-	java -jar trak-gui
-
-gui-test-server: build
-	java -jar trak-gui --test
-
-# ── CLI (local, no server needed) ────────────────────────
 cli: build
 	@echo "Usage: java -jar trak-cli <command>"
 	@echo "Example: java -jar trak-cli info"

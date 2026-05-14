@@ -2,7 +2,7 @@ package task.trak.app.server.dao;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.app.client.cli.TTApp;
 
 import java.io.*;

@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.user;
 
-import task.trak.api.dto.UserDTO;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.UpdateUserRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.UserService;
 
@@ -51,7 +52,7 @@ public class UserUpdateCMD extends UserCMD {
         String newEmail = this.options.get("email");
         String newPassword = this.options.get("password");
 
-        UserDTO updated = userService.updateByUsername(this.username, newFirstName, newLastName, newEmail, newPassword);
+        UserDTO updated = userService.updateByUsername(new UpdateUserRequest(this.username, newFirstName, newLastName, newEmail, newPassword));
         System.out.println("User \"" + this.username + "\" updated successfully.");
         return Optional.of(updated);
     }

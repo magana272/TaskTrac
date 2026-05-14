@@ -1,13 +1,13 @@
 package task.trak.api.service;
 
-import task.trak.api.dto.ProjectDTO;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.UpdateProjectRequest;
 
 import java.util.List;
 
 public interface ProjectService {
-    ProjectDTO create(String name);
-
-    ProjectDTO create(String name, String summary, String ownerUsername, List<String> memberUsernames);
+    ProjectDTO create(CreateProjectRequest request);
 
     ProjectDTO getById(Long id);
 
@@ -15,7 +15,7 @@ public interface ProjectService {
 
     boolean deleteByName(String name);
 
-    ProjectDTO updateByName(String projectName, String newName, String newSummary, List<String> newMemberUsernames);
+    ProjectDTO updateByName(UpdateProjectRequest request);
 
     List<ProjectDTO> listAll();
 

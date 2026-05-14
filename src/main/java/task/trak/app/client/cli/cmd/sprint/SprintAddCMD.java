@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.sprint;
 
-import task.trak.api.dto.SprintDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.SprintService;
 
@@ -48,7 +49,7 @@ public class SprintAddCMD extends SprintCMD {
             throw new IllegalArgumentException("--project is required. Usage: sprint add <name> --project <project_name>");
         }
 
-        SprintDTO sprint = sprintService.create(this.sprintName, project);
+        SprintDTO sprint = sprintService.create(new CreateSprintRequest(this.sprintName, project));
         System.out.println("Sprint " + sprint.id() + " \"" + this.sprintName + "\" created successfully.");
         return Optional.of(sprint);
     }

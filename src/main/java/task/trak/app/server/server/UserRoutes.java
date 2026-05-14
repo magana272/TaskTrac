@@ -2,7 +2,10 @@ package task.trak.app.server.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.dto.UserDTO;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
+import task.trak.model.dto.request.UpdateUserRequest;
+import task.trak.model.exception.TrakException;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.UserService;
 
@@ -26,22 +29,13 @@ public class UserRoutes {
         private void handleCreate(HttpExchange exchange) throws IOException {
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
-                String username = req.get("username");
-                String firstName = req.get("firstName");
-                String lastName = req.get("lastName");
-                String email = req.get("email");
-                String password = req.get("password");
-
-                if (username == null || firstName == null || lastName == null || email == null || password == null) {
-                    JsonHelper.sendError(exchange, 400, "username, firstName, lastName, email, and password are required");
-                    return;
-                }
+                CreateUserRequest request = JsonHelper.fromJson(body, CreateUserRequest.class);
+                request.validate();
 
                 UserService userService = ServiceFactory.userService();
-                UserDTO user = userService.create(username, firstName, lastName, email, password);
+                UserDTO user = userService.create(request);
                 JsonHelper.sendJson(exchange, 201, user);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
@@ -52,12 +46,6 @@ public class UserRoutes {
     public static class UserDetailHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            String token = SessionManager.extractToken(exchange);
-            if (token == null || SessionManager.getUsername(token) == null) {
-                JsonHelper.sendError(exchange, 401, "Not authenticated");
-                return;
-            }
-
             String username = JsonHelper.extractPathParam(exchange.getRequestURI().getPath(), "/api/users/");
             if (username.isEmpty()) {
                 JsonHelper.sendError(exchange, 400, "Username is required in path");
@@ -90,20 +78,24 @@ public class UserRoutes {
         private void handleUpdate(HttpExchange exchange, String username) throws IOException {
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
-                String firstName = req.get("firstName");
-                String lastName = req.get("lastName");
-                String email = req.get("email");
-                String password = req.get("password");
+                UpdateUserRequest bodyRequest = JsonHelper.fromJson(body, UpdateUserRequest.class);
+                UpdateUserRequest request = new UpdateUserRequest(
+                        username,
+                        bodyRequest.firstName(),
+                        bodyRequest.lastName(),
+                        bodyRequest.email(),
+                        bodyRequest.password()
+                );
+                request.validate();
 
                 UserService userService = ServiceFactory.userService();
-                UserDTO user = userService.updateByUsername(username, firstName, lastName, email, password);
+                UserDTO user = userService.updateByUsername(request);
                 if (user == null) {
                     JsonHelper.sendError(exchange, 404, "User not found");
                     return;
                 }
                 JsonHelper.sendJson(exchange, 200, user);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());

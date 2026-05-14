@@ -1,11 +1,13 @@
 package task.trak.api.service;
 
-import task.trak.api.dto.SprintDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
+import task.trak.model.dto.request.UpdateSprintRequest;
 
 import java.util.List;
 
 public interface SprintService {
-    SprintDTO create(String name, String projectName);
+    SprintDTO create(CreateSprintRequest request);
 
     SprintDTO getById(Long id);
 
@@ -15,11 +17,7 @@ public interface SprintService {
 
     boolean deleteByName(String name);
 
-    SprintDTO updateByName(String name, String newStartDate, String newEndDate);
-
-    SprintDTO updateByNameAndProject(String name, String projectName, String newStartDate, String newEndDate);
-
-    SprintDTO updateTaskIds(String name, List<Long> taskIds);
+    SprintDTO update(UpdateSprintRequest request);
 
     List<SprintDTO> listAll();
 }

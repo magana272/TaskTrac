@@ -1,7 +1,8 @@
 package task.trak.app.server.service.auth;
 
-import task.trak.api.dto.UserDTO;
-import task.trak.api.model.Session;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
+import task.trak.model.Session;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.UserService;
 import task.trak.app.server.dao.SessionDAO;
@@ -33,7 +34,7 @@ public class TrakAuthService implements AuthService {
                 throw new IllegalArgumentException("Email \"" + email + "\" is already in use.");
             }
         }
-        userService.create(username, firstName, lastName, email, password);
+        userService.create(new CreateUserRequest(username, firstName, lastName, email, password));
         Session session = new Session(username);
         SessionDAO.save(session);
         return session;

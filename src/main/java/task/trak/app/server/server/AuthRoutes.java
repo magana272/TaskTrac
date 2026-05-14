@@ -2,7 +2,7 @@ package task.trak.app.server.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.UserService;
@@ -99,10 +99,6 @@ public class AuthRoutes {
             }
             try {
                 String token = SessionManager.extractToken(exchange);
-                if (token == null || SessionManager.getUsername(token) == null) {
-                    JsonHelper.sendError(exchange, 401, "Not authenticated");
-                    return;
-                }
                 SessionManager.removeToken(token);
                 Map<String, String> resp = new LinkedHashMap<>();
                 resp.put("message", "Logged out");

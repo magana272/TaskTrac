@@ -1,6 +1,6 @@
 package task.trak.app.client.cli.cmd.project;
 
-import task.trak.api.dto.ProjectDTO;
+import task.trak.model.dto.ProjectDTO;
 import task.trak.app.client.cli.cmd.cmdtype.CMD;
 
 import java.util.Arrays;

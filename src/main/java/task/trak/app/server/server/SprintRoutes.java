@@ -1,9 +1,11 @@
 package task.trak.app.server.server;
 
-import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.dto.SprintDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
+import task.trak.model.dto.request.UpdateSprintRequest;
+import task.trak.model.exception.TrakException;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.SprintService;
 
@@ -39,19 +41,13 @@ public class SprintRoutes {
         private void handleCreate(HttpExchange exchange) throws IOException {
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
-                String name = req.get("name");
-                String projectName = req.get("projectName");
-
-                if (name == null || name.isEmpty()) {
-                    JsonHelper.sendError(exchange, 400, "name is required");
-                    return;
-                }
+                CreateSprintRequest request = JsonHelper.fromJson(body, CreateSprintRequest.class);
+                request.validate();
 
                 SprintService sprintService = ServiceFactory.sprintService();
-                SprintDTO sprint = sprintService.create(name, projectName);
+                SprintDTO sprint = sprintService.create(request);
                 JsonHelper.sendJson(exchange, 201, sprint);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
@@ -128,55 +124,47 @@ public class SprintRoutes {
         private void handleUpdate(HttpExchange exchange, String idStr) throws IOException {
             try {
                 Long id = Long.parseLong(idStr);
-                String body = JsonHelper.readBody(exchange);
-                Map<String, Object> req = JsonHelper.fromJson(body,
-                        new TypeToken<Map<String, Object>>() {
-                        }.getType());
-                String startDate = (String) req.get("startDate");
-                String endDate = (String) req.get("endDate");
-                Number addTaskNum = (Number) req.get("addTask");
-
                 SprintService sprintService = ServiceFactory.sprintService();
 
-                // If addTask is provided, update task IDs
-                if (addTaskNum != null) {
-                    Long taskId = addTaskNum.longValue();
-                    SprintDTO existing = sprintService.getById(id);
-                    if (existing == null) {
-                        JsonHelper.sendError(exchange, 404, "Sprint not found");
-                        return;
-                    }
-                    List<Long> taskIds = new ArrayList<>(existing.taskIds() != null ? existing.taskIds() : List.of());
-                    if (!taskIds.contains(taskId)) {
-                        taskIds.add(taskId);
-                    }
-                    SprintDTO sprint = sprintService.updateTaskIds(existing.name(), taskIds);
-                    JsonHelper.sendJson(exchange, 200, sprint);
+                SprintDTO existing = sprintService.getById(id);
+                if (existing == null) {
+                    JsonHelper.sendError(exchange, 404, "Sprint not found");
                     return;
                 }
 
-                // Otherwise update dates
-                if (startDate != null || endDate != null) {
-                    SprintDTO existing = sprintService.getById(id);
-                    if (existing == null) {
-                        JsonHelper.sendError(exchange, 404, "Sprint not found");
-                        return;
+                String body = JsonHelper.readBody(exchange);
+                UpdateSprintRequest bodyRequest = JsonHelper.fromJson(body, UpdateSprintRequest.class);
+
+                // If addTask is in the body, merge it into existing task IDs
+                List<Long> taskIds = bodyRequest.taskIds();
+                if (taskIds == null) {
+                    // Check for legacy addTask field
+                    Map<String, Object> raw = JsonHelper.fromJson(body,
+                            new com.google.gson.reflect.TypeToken<Map<String, Object>>() {}.getType());
+                    Number addTaskNum = (Number) raw.get("addTask");
+                    if (addTaskNum != null) {
+                        Long taskId = addTaskNum.longValue();
+                        taskIds = new ArrayList<>(existing.taskIds() != null ? existing.taskIds() : List.of());
+                        if (!taskIds.contains(taskId)) {
+                            taskIds.add(taskId);
+                        }
                     }
-                    SprintDTO sprint;
-                    if (existing.projectName() != null) {
-                        sprint = sprintService.updateByNameAndProject(
-                                existing.name(), existing.projectName(), startDate, endDate);
-                    } else {
-                        sprint = sprintService.updateByName(existing.name(), startDate, endDate);
-                    }
-                    JsonHelper.sendJson(exchange, 200, sprint);
-                    return;
                 }
 
-                JsonHelper.sendError(exchange, 400, "No update fields provided");
+                UpdateSprintRequest request = new UpdateSprintRequest(
+                        existing.name(),
+                        existing.projectName(),
+                        bodyRequest.startDate(),
+                        bodyRequest.endDate(),
+                        taskIds
+                );
+                request.validate();
+
+                SprintDTO sprint = sprintService.update(request);
+                JsonHelper.sendJson(exchange, 200, sprint);
             } catch (NumberFormatException e) {
                 JsonHelper.sendError(exchange, 400, "Invalid sprint ID");
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());

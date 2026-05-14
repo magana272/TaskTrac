@@ -1,10 +1,10 @@
 package task.trak;
 
 import task.trak.api.service.ServiceFactory;
-import task.trak.app.client.ApiClient;
+import task.trak.app.client.http.ApiClient;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.client.config.WorkspaceConfig;
-import task.trak.app.client.gui.controller.TTAppGUI;
+import task.trak.app.client.gui.GUIMain;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.SessionDAO;
 import task.trak.app.server.server.TrakServer;
@@ -45,11 +45,9 @@ public class Main {
                 initLocalStore();
                 ServiceFactory.registerLocalServices();
             }
-            TTAppGUI gui = new TTAppGUI(seedTest, local);
-            if (local) {
-                gui.setSessionPersistence(SessionDAO::load, SessionDAO::save);
-            }
-            gui.initStore(local);
+            // Delegate to GUIMain which handles all MVC wiring
+            String[] guiArgs = args;
+            GUIMain.main(guiArgs);
         } else {
             // CLI mode — default to LOCAL unless --remote
             boolean remote = Arrays.asList(args).contains("--remote");
@@ -102,7 +100,7 @@ public class Main {
     private static void ensureGuestAccount() {
         var userService = ServiceFactory.userService();
         if (userService.getByUsername("guest") == null) {
-            userService.create("guest", "Guest", "Admin", "guest@trak", "guest");
+            userService.create(new task.trak.model.dto.request.CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
         }
     }
 

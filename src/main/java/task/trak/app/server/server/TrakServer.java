@@ -34,33 +34,33 @@ public class TrakServer {
         // Create HttpServer
         server = HttpServer.create(new InetSocketAddress(port), 0);
 
-        // Register auth routes
+        // Auth routes (no auth required — login/signup)
         server.createContext("/api/auth/login", new AuthRoutes.LoginHandler());
         server.createContext("/api/auth/signup", new AuthRoutes.SignupHandler());
-        server.createContext("/api/auth/logout", new AuthRoutes.LogoutHandler());
+        server.createContext("/api/auth/logout", AuthFilter.requireAuth(new AuthRoutes.LogoutHandler()));
 
-        // Register user routes
+        // User routes (POST /api/users is open for registration; detail requires auth)
         server.createContext("/api/users", new UserRoutes.UserListHandler());
-        server.createContext("/api/users/", new UserRoutes.UserDetailHandler());
+        server.createContext("/api/users/", AuthFilter.requireAuth(new UserRoutes.UserDetailHandler()));
 
-        // Register project routes
-        server.createContext("/api/projects", new ProjectRoutes.ProjectListHandler());
-        server.createContext("/api/projects/id/", new ProjectRoutes.ProjectByIdHandler());
-        server.createContext("/api/projects/name/", new ProjectRoutes.ProjectByNameHandler());
-        server.createContext("/api/projects/", new ProjectRoutes.ProjectDetailHandler());
+        // Project routes (all require auth)
+        server.createContext("/api/projects", AuthFilter.requireAuth(new ProjectRoutes.ProjectListHandler()));
+        server.createContext("/api/projects/id/", AuthFilter.requireAuth(new ProjectRoutes.ProjectByIdHandler()));
+        server.createContext("/api/projects/name/", AuthFilter.requireAuth(new ProjectRoutes.ProjectByNameHandler()));
+        server.createContext("/api/projects/", AuthFilter.requireAuth(new ProjectRoutes.ProjectDetailHandler()));
 
-        // Register task routes
-        server.createContext("/api/tasks", new TaskRoutes.TaskListHandler());
-        server.createContext("/api/tasks/", new TaskRoutes.TaskDetailHandler());
+        // Task routes (all require auth)
+        server.createContext("/api/tasks", AuthFilter.requireAuth(new TaskRoutes.TaskListHandler()));
+        server.createContext("/api/tasks/", AuthFilter.requireAuth(new TaskRoutes.TaskDetailHandler()));
 
-        // Register sprint routes
-        server.createContext("/api/sprints", new SprintRoutes.SprintListHandler());
-        server.createContext("/api/sprints/name/", new SprintRoutes.SprintByNameHandler());
-        server.createContext("/api/sprints/", new SprintRoutes.SprintDetailHandler());
+        // Sprint routes (all require auth)
+        server.createContext("/api/sprints", AuthFilter.requireAuth(new SprintRoutes.SprintListHandler()));
+        server.createContext("/api/sprints/name/", AuthFilter.requireAuth(new SprintRoutes.SprintByNameHandler()));
+        server.createContext("/api/sprints/", AuthFilter.requireAuth(new SprintRoutes.SprintDetailHandler()));
 
-        // Register backlog routes
-        server.createContext("/api/backlogs", new BacklogRoutes.BacklogListHandler());
-        server.createContext("/api/backlogs/", new BacklogRoutes.BacklogDetailHandler());
+        // Backlog routes (all require auth)
+        server.createContext("/api/backlogs", AuthFilter.requireAuth(new BacklogRoutes.BacklogListHandler()));
+        server.createContext("/api/backlogs/", AuthFilter.requireAuth(new BacklogRoutes.BacklogDetailHandler()));
 
         server.setExecutor(null);
     }
@@ -80,9 +80,13 @@ public class TrakServer {
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 
+    public int getPort() {
+        return server.getAddress().getPort();
+    }
+
     public void start() {
         server.start();
-        System.out.println("Trak server started on port " + port);
+        System.out.println("Trak server started on port " + getPort());
     }
 
     public void stop() {

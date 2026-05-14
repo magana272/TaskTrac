@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.sprint;
 
-import task.trak.api.dto.SprintDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.UpdateSprintRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.SprintService;
 
@@ -77,15 +78,15 @@ public class SprintUpdateCMD extends SprintCMD {
         String newStartDate = this.options.get("start_date");
         String newEndDate = this.options.get("end_date");
 
-        if (newStartDate != null || newEndDate != null) {
-            sprintService.updateByNameAndProject(sprint.name(), sprint.projectName(), newStartDate, newEndDate);
-        }
-
+        List<Long> taskIds = null;
         String addTaskId = this.options.get("add_task");
         if (addTaskId != null) {
-            List<Long> taskIds = sprint.taskIds() != null ? new ArrayList<>(sprint.taskIds()) : new ArrayList<>();
+            taskIds = sprint.taskIds() != null ? new ArrayList<>(sprint.taskIds()) : new ArrayList<>();
             taskIds.add(Long.parseLong(addTaskId));
-            sprintService.updateTaskIds(String.valueOf(sprint.id()), taskIds);
+        }
+
+        if (newStartDate != null || newEndDate != null || taskIds != null) {
+            sprintService.update(new UpdateSprintRequest(sprint.name(), sprint.projectName(), newStartDate, newEndDate, taskIds));
         }
 
         SprintDTO updated = sprintService.getById(sprint.id());

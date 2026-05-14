@@ -1,6 +1,6 @@
 package task.trak.app.client.cli.cmd.sprint;
 
-import task.trak.api.dto.SprintDTO;
+import task.trak.model.dto.SprintDTO;
 import task.trak.app.client.cli.cmd.cmdtype.CMD;
 
 import java.util.Arrays;

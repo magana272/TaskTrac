@@ -1,6 +1,6 @@
 package task.trak.api.service;
 
-import task.trak.app.client.*;
+import task.trak.app.client.http.*;
 import task.trak.app.server.service.auth.TrakAuthService;
 import task.trak.app.server.service.backlog.TrakBacklogService;
 import task.trak.app.server.service.project.TrakProjectService;

@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.project;
 
-import task.trak.api.dto.ProjectDTO;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.UpdateProjectRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
 
@@ -57,7 +58,7 @@ public class ProjectUpdateCMD extends ProjectCMD {
         }
 
         ProjectDTO updated = projectService.updateByName(
-                this.projectName, newName, newSummary, newMemberUsernames);
+                new UpdateProjectRequest(this.projectName, newName, newSummary, newMemberUsernames));
 
         String displayName = newName != null ? newName : this.projectName;
         System.out.println("Project \"" + displayName + "\" updated successfully.");

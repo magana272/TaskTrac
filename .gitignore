@@ -42,10 +42,17 @@ bin/
 ### Project ###
 .env
 .store/
-docs/design/
-docs/change/
+.cache/
+src/test/.store/
+src/test/.cache/
 /tasktracker
 /tasktracker-server
 /tasktracker-cli
 /tasktracker-gui
 qodana.yaml
+trak-cli
+examples/trak-gui
+trak-server
+trak-gui
+trak-cli
+trak-server

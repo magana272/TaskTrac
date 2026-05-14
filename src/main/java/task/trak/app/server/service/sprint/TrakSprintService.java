@@ -1,6 +1,9 @@
 package task.trak.app.server.service.sprint;
 
-import task.trak.api.dto.SprintDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
+import task.trak.model.dto.request.UpdateSprintRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.SprintService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;
@@ -18,9 +21,10 @@ public class TrakSprintService implements SprintService {
     private final EntityDAO<Sprint> store = DAOFactory.sprintDAO();
 
     @Override
-    public SprintDTO create(String name, String projectName) {
+    public SprintDTO create(CreateSprintRequest request) {
+        request.validate();
         Long id = System.currentTimeMillis();
-        Sprint sprint = new Sprint(id, projectName, name, null, null, null);
+        Sprint sprint = new Sprint(id, request.projectName(), request.name(), null, null, null);
         store.save(sprint);
         return toDTO(sprint);
     }
@@ -52,51 +56,39 @@ public class TrakSprintService implements SprintService {
     }
 
     @Override
-    public SprintDTO updateByName(String name, String newStartDate, String newEndDate) {
-        Sprint sprint = store.loadByKey(name);
-        if (sprint == null) {
-            throw new IllegalArgumentException("Sprint \"" + name + "\" not found.");
+    public SprintDTO update(UpdateSprintRequest request) {
+        request.validate();
+
+        // Resolve the sprint: use projectName to disambiguate if present
+        Sprint sprint;
+        if (request.projectName() != null) {
+            sprint = store.loadAll().stream()
+                    .filter(s -> request.name().equals(s.getName()) && request.projectName().equals(s.getProject_name()))
+                    .findFirst()
+                    .orElse(null);
+            if (sprint == null) {
+                throw new EntityNotFoundException("Sprint \"" + request.name() + "\" not found in project \"" + request.projectName() + "\".");
+            }
+        } else {
+            sprint = store.loadByKey(request.name());
+            if (sprint == null) {
+                throw new EntityNotFoundException("Sprint \"" + request.name() + "\" not found.");
+            }
         }
 
-        if (newStartDate != null) {
-            sprint.setStart_date(parseDate(newStartDate));
+        // Update dates if provided
+        if (request.startDate() != null) {
+            sprint.setStart_date(parseDate(request.startDate()));
         }
-        if (newEndDate != null) {
-            sprint.setEnd_date(parseDate(newEndDate));
-        }
-
-        store.save(sprint);
-        return toDTO(sprint);
-    }
-
-    @Override
-    public SprintDTO updateByNameAndProject(String name, String projectName, String newStartDate, String newEndDate) {
-        Sprint sprint = store.loadAll().stream()
-                .filter(s -> name.equals(s.getName()) && projectName.equals(s.getProject_name()))
-                .findFirst()
-                .orElse(null);
-        if (sprint == null) {
-            throw new IllegalArgumentException("Sprint \"" + name + "\" not found in project \"" + projectName + "\".");
+        if (request.endDate() != null) {
+            sprint.setEnd_date(parseDate(request.endDate()));
         }
 
-        if (newStartDate != null) {
-            sprint.setStart_date(parseDate(newStartDate));
-        }
-        if (newEndDate != null) {
-            sprint.setEnd_date(parseDate(newEndDate));
+        // Update task IDs if provided
+        if (request.taskIds() != null) {
+            sprint.setTask_ids(request.taskIds());
         }
 
-        store.save(sprint);
-        return toDTO(sprint);
-    }
-
-    @Override
-    public SprintDTO updateTaskIds(String name, List<Long> taskIds) {
-        Sprint sprint = store.loadByKey(name);
-        if (sprint == null) {
-            throw new IllegalArgumentException("Sprint \"" + name + "\" not found.");
-        }
-        sprint.setTask_ids(taskIds);
         store.save(sprint);
         return toDTO(sprint);
     }

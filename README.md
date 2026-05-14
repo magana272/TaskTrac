@@ -5,16 +5,16 @@ A lightweight task and sprint tracking system with CLI, GUI, and REST API. Suppo
 ## Quick Start
 
 ```bash
-make build                    # build all executables
-make gui-test                 # launch GUI with test data
+make build                                        # build all executables
+make build-gui && java -jar trak-gui --local --test   # launch GUI with test data
 ```
 
 Or start the server and connect clients:
 
 ```bash
-make server                   # Terminal 1: start REST API
-make gui-server               # Terminal 2: launch GUI
-java -jar trak-cli --remote tasks   # Terminal 3: CLI
+make build-server && java -jar trak-server   # Terminal 1: start REST API
+java -jar trak-gui                           # Terminal 2: launch GUI
+java -jar trak-cli --remote tasks            # Terminal 3: CLI
 ```
 
 ## Executables
@@ -36,21 +36,25 @@ java -jar trak-gui [--local] [--test]     # GUI
 Requires Java 17+ and Gradle.
 
 ```bash
-make build       # build all 3 jars
-make test        # run 138 tests
-make clean       # clean artifacts
-make all         # build + test
-make all-test    # build + test + show usage
+make build          # build all 3 jars
+make build-gui      # build GUI jar only
+make build-cli      # build CLI jar only
+make build-server   # build server jar only
+make test           # run ~200 tests
+make clean          # clean artifacts
+make reset          # clean + remove .store and .cache
+make all            # build + test
+make all-test       # build + test + show usage
 ```
 
 ## Makefile Targets
 
 | Target | Description |
 |---|---|
-| `make server` | Start REST API |
-| `make gui` | GUI local mode |
-| `make gui-test` | GUI local + 20 users, 10 projects, 1000 tasks, 20 sprints |
-| `make gui-server` | GUI remote mode |
+| `make build-gui` | Build GUI jar |
+| `make build-cli` | Build CLI jar |
+| `make build-server` | Build server jar |
+| `make reset` | Clean + remove .store and .cache |
 | `make cli` | CLI usage help |
 | `make cli-test` | Quick CLI test |
 
@@ -102,14 +106,19 @@ java -jar trak-cli sprint update Sprint1 --project WebApp --start_date 2026-06-0
 
 ## GUI Features
 
-- **Task cards** with status dropdown (red=READY, yellow=INPROGRESS, green=COMPLETE)
-- **Click card** to edit (title, assignee dropdown, status, large summary editor)
+- **Dark cinematic theme** — deep charcoal background, warm gold accent, 8px spacing grid
+- **Workspace toggle** — "⌂ Mine" (your tasks/projects) vs "✳ Team" (all) in nav bar
+- **Task cards** with gradient backgrounds, gold glow hover, status dropdown (red/amber/green)
+- **Time input spinners** for estimates (days/hours/minutes) in Add and Edit task dialogs
+- **Green CTA button** for Add Task (primary action)
+- **Click card** to edit (title, assignee dropdown, status, summary, estimate)
 - **Editable tables** for projects and sprints with Save button
-- **Double-click cells**: Members (add/remove), Tasks (add/edit/delete), Sprints (create)
+- **Double-click cells**: Members (add/remove), Tasks (navigate to filtered view), Sprints (create)
 - **Sort** by due date or estimate, **filter** by project
 - **Archive** completed tasks (toggle to show/hide)
 - **Owner-only** permissions for member/task management
-- **Login/Signup/Guest** dialogs, error panel
+- **Login/Signup/Guest** views, error alert dialogs
+- **GlassPanel** rounded containers, **FormPanel** consistent form layout across all dialogs
 
 ## Storage
 
@@ -136,9 +145,15 @@ export MONGO_DB="trak"
 
 Client-server with clean package boundaries:
 
-- **`org.trak.api`** — shared DTOs, service interfaces, ServiceFactory
-- **`org.trak.app.server`** — REST API, services, DAO (Parquet/JSON/MongoDB)
-- **`org.trak.app.client`** — CLI, GUI, HTTP client services
+- **`task.trak.api`** — shared DTOs, service interfaces, ServiceFactory
+- **`task.trak.app.server`** — REST API, services, DAO (Parquet/JSON/MongoDB)
+- **`task.trak.app.client`** — CLI, HTTP client services (`http/` subpackage)
+- **`task.trak.app.client.gui`** — MVC desktop client
+  - `viewmodel/` — ObservableViewModel, TaskViewModel, ProjectViewModel, SprintViewModel, UserViewModel (Observer pattern)
+  - `controller/` — GUIController, AuthController, TaskController, ProjectController, SprintController
+  - `view/` — TrakTheme, GlassPanel, TasksView, TaskCardPanel, ProjectsView, SprintView, FormPanel, FormDialogView, TimeInputPanel, ErrorAlertView
+
+GUI uses MVC with an Observer pattern: views implement ViewModelChangeListener and register on ViewModels via `addObserver()`. ViewModels notify registered views on data changes, keeping cross-domain data fresh.
 
 Client never imports from server. `ServiceFactory` swaps LOCAL (direct DB) or REMOTE (HTTP) implementations transparently.
 
@@ -147,5 +162,5 @@ See [docs/DESIGN.md](docs/DESIGN.md) for full design, [docs/DIAGRAM.md](docs/DIA
 ## Tests
 
 ```bash
-make test    # 138 tests across 20 suites
+make test    # ~200 tests across 20+ suites
 ```

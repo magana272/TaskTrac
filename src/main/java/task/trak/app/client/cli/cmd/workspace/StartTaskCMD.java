@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.workspace;
 
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.UpdateTaskRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
 
@@ -44,11 +45,11 @@ public class StartTaskCMD extends WorkspaceCMD {
                 return Optional.empty();
             }
             // Stop the current task via service
-            taskService.updateById(currentTaskId, null, "READY", null, null);
+            taskService.updateById(new UpdateTaskRequest(currentTaskId, null, "READY", null, null, null));
         }
 
         // Start the new task via service
-        taskService.updateById(this.taskId, null, "INPROGRESS", null, null);
+        taskService.updateById(new UpdateTaskRequest(this.taskId, null, "INPROGRESS", null, null, null));
 
         long now = System.currentTimeMillis();
         this.session.setCurrent_task_id(this.taskId);

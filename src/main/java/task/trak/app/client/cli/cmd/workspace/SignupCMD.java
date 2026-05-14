@@ -1,6 +1,6 @@
 package task.trak.app.client.cli.cmd.workspace;
 
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.cli.TTApp;
