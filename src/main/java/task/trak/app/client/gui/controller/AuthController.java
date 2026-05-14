@@ -6,9 +6,6 @@ import task.trak.app.client.http.AuthHttpService;
 import task.trak.app.client.http.UserHttpService;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 
-import java.util.concurrent.CompletableFuture;
-import javax.swing.SwingUtilities;
-
 public class AuthController {
 
     private final AuthHttpService authService;
@@ -22,36 +19,30 @@ public class AuthController {
     }
 
     public void login(String username, String password) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Session session = this.authService.login(username, password);
-                SwingUtilities.invokeLater(() -> userViewModel.setSession(session));
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            Session session = this.authService.login(username, password);
+            userViewModel.setSession(session);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void signup(String username, String firstName, String lastName, String email, String password) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Session session = this.authService.signup(firstName, lastName, username, email, password);
-                SwingUtilities.invokeLater(() -> userViewModel.setSession(session));
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            Session session = this.authService.signup(firstName, lastName, username, email, password);
+            userViewModel.setSession(session);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void logout() {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.authService.logout();
-                SwingUtilities.invokeLater(() -> userViewModel.setSession(null));
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.authService.logout();
+            userViewModel.setSession(null);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public boolean isLoggedIn() {
@@ -64,41 +55,29 @@ public class AuthController {
     }
 
     public void changePassword(String currentPassword, String newPassword) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Session session = userViewModel.getSession();
-                if (session == null) throw new RuntimeException("Not logged in.");
-                String username = session.getLogged_in_user();
+        Session session = userViewModel.getSession();
+        if (session == null) throw new RuntimeException("Not logged in.");
+        String username = session.getLogged_in_user();
 
-                if (!userService.authenticate(username, currentPassword)) {
-                    throw new RuntimeException("Current password is incorrect.");
-                }
+        if (!userService.authenticate(username, currentPassword)) {
+            throw new RuntimeException("Current password is incorrect.");
+        }
 
-                userService.updateByUsername(new UpdateUserRequest(username, null, null, null, newPassword));
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        userService.updateByUsername(new UpdateUserRequest(username, null, null, null, newPassword));
     }
 
     public void deleteAccount(String password) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Session session = userViewModel.getSession();
-                if (session == null) throw new RuntimeException("Not logged in.");
-                String username = session.getLogged_in_user();
+        Session session = userViewModel.getSession();
+        if (session == null) throw new RuntimeException("Not logged in.");
+        String username = session.getLogged_in_user();
 
-                if (!userService.authenticate(username, password)) {
-                    throw new RuntimeException("Password is incorrect.");
-                }
+        if (!userService.authenticate(username, password)) {
+            throw new RuntimeException("Password is incorrect.");
+        }
 
-                userService.deleteByUsername(username);
-                try { authService.logout(); } catch (Exception ignored) { }
-                SwingUtilities.invokeLater(() -> userViewModel.setSession(null));
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        userService.deleteByUsername(username);
+        try { authService.logout(); } catch (Exception ignored) { }
+        userViewModel.setSession(null);
     }
 
     public Session getSession() {

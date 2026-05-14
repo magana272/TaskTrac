@@ -9,8 +9,6 @@ import task.trak.app.client.gui.viewmodel.UserViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import javax.swing.SwingUtilities;
 
 public class ProjectController {
 
@@ -29,68 +27,54 @@ public class ProjectController {
     }
 
     public void addProject(String name, String summary) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                String owner = userViewModel.getSession() != null
-                        ? userViewModel.getSession().getLogged_in_user()
-                        : "guest";
-                this.projectService.create(new CreateProjectRequest(name, summary, owner, new ArrayList<>()));
-                refreshProjectsSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            String owner = userViewModel.getSession() != null
+                    ? userViewModel.getSession().getLogged_in_user()
+                    : "guest";
+            this.projectService.create(new CreateProjectRequest(name, summary, owner, new ArrayList<>()));
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void updateProject(String name, String newName, String summary) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.projectService.updateByName(new UpdateProjectRequest(name, newName, summary, null));
-                refreshProjectsSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.projectService.updateByName(new UpdateProjectRequest(name, newName, summary, null));
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void deleteProject(String name) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.projectService.deleteByName(name);
-                refreshProjectsSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.projectService.deleteByName(name);
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void addMember(String projectName, String username) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.projectService.addMember(projectName, username);
-                refreshProjectsSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.projectService.addMember(projectName, username);
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void removeMember(String projectName, List<String> remainingMembers) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.projectService.updateByName(new UpdateProjectRequest(projectName, null, null, remainingMembers));
-                refreshProjectsSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.projectService.updateByName(new UpdateProjectRequest(projectName, null, null, remainingMembers));
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void refreshProjects() {
-        CompletableFuture.runAsync(this::refreshProjectsSync);
-    }
-
-    private void refreshProjectsSync() {
         try {
             String user = userViewModel.getSession() != null
                     ? userViewModel.getSession().getLogged_in_user() : null;
@@ -100,7 +84,7 @@ public class ProjectController {
             projectViewModel.setAll(projects);
         } catch (Exception e) {
             projectViewModel.setAll(List.of());
-            SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
+            userViewModel.setError(e.getMessage());
         }
     }
 

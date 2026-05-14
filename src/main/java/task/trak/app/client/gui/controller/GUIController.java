@@ -172,10 +172,9 @@ public class GUIController implements App, CommandListener {
             return;
         }
 
-        // Clear stale session — embedded server starts fresh with no tokens
-        userViewModel.setSession(null);
-        if (this.sessionSaver != null) {
-            this.sessionSaver.accept(null);
+        if (this.sessionLoader != null) {
+            Session session = this.sessionLoader.get();
+            userViewModel.setSession(session);
         }
 
         // Ensure guest admin account exists (create is unprotected; ignore if already exists)

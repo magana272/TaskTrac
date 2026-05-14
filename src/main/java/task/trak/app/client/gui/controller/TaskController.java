@@ -10,8 +10,6 @@ import task.trak.app.client.gui.viewmodel.UserViewModel;
 
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import javax.swing.SwingUtilities;
 
 public class TaskController {
 
@@ -30,54 +28,42 @@ public class TaskController {
     }
 
     public void addTask(String title, String projectName, String assignee, String summary, Date deadline, String estimate) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.taskService.create(new CreateTaskRequest(title, projectName, assignee, summary, deadline, estimate));
-                refreshTasksSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.taskService.create(new CreateTaskRequest(title, projectName, assignee, summary, deadline, estimate));
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void updateTask(long id, String title, String status, String assignee, String summary, String estimate) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.taskService.updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
-                refreshTasksSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.taskService.updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void deleteTask(long id) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.taskService.deleteById(id);
-                refreshTasksSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.taskService.deleteById(id);
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void completeTask(long id) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                this.taskService.updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
-                refreshTasksSync();
-            } catch (Exception e) {
-                SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
-            }
-        });
+        try {
+            this.taskService.updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void refreshTasks() {
-        CompletableFuture.runAsync(this::refreshTasksSync);
-    }
-
-    private void refreshTasksSync() {
         try {
             Session session = userViewModel.getSession();
             List<TaskDTO> tasks;
@@ -89,7 +75,7 @@ public class TaskController {
             taskViewModel.setAll(tasks);
         } catch (Exception e) {
             taskViewModel.setAll(List.of());
-            SwingUtilities.invokeLater(() -> userViewModel.setError(e.getMessage()));
+            userViewModel.setError(e.getMessage());
         }
     }
 
