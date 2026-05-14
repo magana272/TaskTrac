@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.task;
 
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.UpdateTaskRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
 
@@ -51,7 +52,7 @@ public class TaskUpdateCMD extends TaskCMD {
         String newAssignedTo = this.options.get("assigned_to");
         String newSummary = this.options.get("summary");
 
-        TaskDTO updated = taskService.updateById(this.taskId, newTitle, newStatus, newAssignedTo, newSummary, null);
+        TaskDTO updated = taskService.updateById(new UpdateTaskRequest(this.taskId, newTitle, newStatus, newAssignedTo, newSummary, null));
         System.out.println("Task " + this.taskId + " updated successfully.");
         return Optional.of(updated);
     }

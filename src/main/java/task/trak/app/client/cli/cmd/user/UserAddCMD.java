@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.user;
 
 import task.trak.api.dto.UserDTO;
+import task.trak.api.dto.request.CreateUserRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.UserService;
 
@@ -48,7 +49,7 @@ public class UserAddCMD extends UserCMD {
         String email = this.options.get("email");
         String password = this.options.get("password");
 
-        UserDTO user = userService.create(this.username, firstName, lastName, email, password);
+        UserDTO user = userService.create(new CreateUserRequest(this.username, firstName, lastName, email, password));
         System.out.println("User \"" + this.username + "\" created successfully.");
         return Optional.of(user);
     }

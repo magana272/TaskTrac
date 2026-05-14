@@ -1,6 +1,8 @@
 package task.trak.app.server.service.backlog;
 
 import task.trak.api.dto.BacklogDTO;
+import task.trak.api.dto.request.CreateBacklogRequest;
+import task.trak.api.exception.EntityNotFoundException;
 import task.trak.api.service.BacklogService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;
@@ -11,9 +13,10 @@ public class TrakBacklogService implements BacklogService {
     private final EntityDAO<BackLog> store = DAOFactory.backlogDAO();
 
     @Override
-    public BacklogDTO create(String name, String projectName) {
+    public BacklogDTO create(CreateBacklogRequest request) {
+        request.validate();
         Long id = System.currentTimeMillis();
-        BackLog backlog = new BackLog(id, name, projectName, null, null);
+        BackLog backlog = new BackLog(id, request.name(), request.projectName(), null, null);
         store.save(backlog);
         return toDTO(backlog);
     }
@@ -33,7 +36,7 @@ public class TrakBacklogService implements BacklogService {
     public BacklogDTO addTask(String backlogName, Long taskId) {
         BackLog backlog = store.loadByKey(backlogName);
         if (backlog == null) {
-            throw new IllegalArgumentException("Backlog \"" + backlogName + "\" not found.");
+            throw new EntityNotFoundException("Backlog \"" + backlogName + "\" not found.");
         }
         backlog.addTask(taskId);
         store.save(backlog);
@@ -44,7 +47,7 @@ public class TrakBacklogService implements BacklogService {
     public BacklogDTO removeTask(String backlogName, Long taskId) {
         BackLog backlog = store.loadByKey(backlogName);
         if (backlog == null) {
-            throw new IllegalArgumentException("Backlog \"" + backlogName + "\" not found.");
+            throw new EntityNotFoundException("Backlog \"" + backlogName + "\" not found.");
         }
         backlog.removeTask(taskId);
         store.save(backlog);

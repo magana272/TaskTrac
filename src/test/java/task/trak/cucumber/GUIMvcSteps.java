@@ -2,6 +2,9 @@ package task.trak.cucumber;
 
 import io.cucumber.java.en.*;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateProjectRequest;
+import task.trak.api.dto.request.CreateTaskRequest;
+import task.trak.api.dto.request.CreateUserRequest;
 import task.trak.api.model.Session;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.gui.viewmodel.*;
@@ -43,7 +46,7 @@ public class GUIMvcSteps {
     public void aTestUserExists(String username) {
         var userService = ServiceFactory.userService();
         if (userService.getByUsername(username) == null) {
-            userService.create(username, "Test", "User", username + "@test.com", "password");
+            userService.create(new CreateUserRequest(username, "Test", "User", username + "@test.com", "password"));
         }
     }
 
@@ -51,14 +54,14 @@ public class GUIMvcSteps {
     public void aTestProjectExistsWithOwner(String projectName, String owner) {
         var projectService = ServiceFactory.projectService();
         if (projectService.getByName(projectName) == null) {
-            projectService.create(projectName, "Test project", owner, List.of());
+            projectService.create(new CreateProjectRequest(projectName, "Test project", owner, List.of()));
         }
     }
 
     @Given("a test task {string} exists in project {string} assigned to {string}")
     public void aTestTaskExistsInProject(String title, String project, String assignee) {
         var taskService = ServiceFactory.taskService();
-        taskService.create(title, project, assignee, "Test task", null, null);
+        taskService.create(new CreateTaskRequest(title, project, assignee, "Test task", null, null));
     }
 
     @When("the controller loads tasks")

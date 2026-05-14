@@ -4,6 +4,8 @@ import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import task.trak.api.dto.BacklogDTO;
+import task.trak.api.dto.request.CreateBacklogRequest;
+import task.trak.api.exception.TrakException;
 import task.trak.api.service.BacklogService;
 import task.trak.api.service.ServiceFactory;
 
@@ -22,19 +24,13 @@ public class BacklogRoutes {
             }
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
-                String name = req.get("name");
-                String projectName = req.get("projectName");
-
-                if (name == null || name.isEmpty()) {
-                    JsonHelper.sendError(exchange, 400, "name is required");
-                    return;
-                }
+                CreateBacklogRequest request = JsonHelper.fromJson(body, CreateBacklogRequest.class);
+                request.validate();
 
                 BacklogService backlogService = ServiceFactory.backlogService();
-                BacklogDTO backlog = backlogService.create(name, projectName);
+                BacklogDTO backlog = backlogService.create(request);
                 JsonHelper.sendJson(exchange, 201, backlog);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
@@ -100,7 +96,7 @@ public class BacklogRoutes {
                     return;
                 }
                 JsonHelper.sendJson(exchange, 200, backlog);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());

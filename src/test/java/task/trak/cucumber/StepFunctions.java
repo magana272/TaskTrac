@@ -5,6 +5,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.*;
 import task.trak.Main;
 import task.trak.api.model.Session;
+import task.trak.api.dto.request.CreateUserRequest;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.UserService;
 import task.trak.app.client.cli.TTApp;
@@ -520,7 +521,7 @@ public class StepFunctions {
         File storeDir = new File(TTApp.storedir);
         if (!storeDir.exists()) storeDir.mkdirs();
         UserService userService = new TrakUserService();
-        userService.create(username, "Test", "User", username + "@example.com", password);
+        userService.create(new CreateUserRequest(username, "Test", "User", username + "@example.com", password));
     }
 
     @Given("the user {string} is currently logged in")
@@ -599,7 +600,7 @@ public class StepFunctions {
         // Create user with password and log in
         UserService userService = new TrakUserService();
         if (userService.getByUsername(username) == null) {
-            userService.create(username, "Test", "User", username + "@example.com", "testpass");
+            userService.create(new CreateUserRequest(username, "Test", "User", username + "@example.com", "testpass"));
         }
         Session s = new Session(username);
         SessionDAO.save(s);

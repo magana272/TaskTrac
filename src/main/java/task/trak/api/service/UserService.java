@@ -1,9 +1,11 @@
 package task.trak.api.service;
 
 import task.trak.api.dto.UserDTO;
+import task.trak.api.dto.request.CreateUserRequest;
+import task.trak.api.dto.request.UpdateUserRequest;
 
 public interface UserService {
-    UserDTO create(String username, String firstName, String lastName, String email, String password);
+    UserDTO create(CreateUserRequest request);
 
     UserDTO getByUsername(String username);
 
@@ -11,7 +13,7 @@ public interface UserService {
 
     boolean deleteByUsername(String username);
 
-    UserDTO updateByUsername(String username, String newFirstName, String newLastName, String newEmail, String newPassword);
+    UserDTO updateByUsername(UpdateUserRequest request);
 
     boolean authenticate(String username, String password);
 }

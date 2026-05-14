@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import task.trak.api.dto.BacklogDTO;
+import task.trak.api.dto.request.CreateBacklogRequest;
 import task.trak.api.service.BacklogService;
 
 public class BacklogHttpService implements BacklogService {
@@ -13,10 +14,10 @@ public class BacklogHttpService implements BacklogService {
             .create();
 
     @Override
-    public BacklogDTO create(String name, String projectName) {
+    public BacklogDTO create(CreateBacklogRequest request) {
         JsonObject body = new JsonObject();
-        body.addProperty("name", name);
-        body.addProperty("projectName", projectName);
+        body.addProperty("name", request.name());
+        body.addProperty("projectName", request.projectName());
         String response = ApiClient.post("/api/backlogs", body.toString());
         if (response == null) return null;
         return gson.fromJson(response, BacklogDTO.class);

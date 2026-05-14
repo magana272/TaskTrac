@@ -1,18 +1,19 @@
 package task.trak.api.service;
 
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateTaskRequest;
+import task.trak.api.dto.request.UpdateTaskRequest;
 
-import java.util.Date;
 import java.util.List;
 
 public interface TaskService {
-    TaskDTO create(String title, String projectName, String assignedTo, String summary, Date deadline, String estimate);
+    TaskDTO create(CreateTaskRequest request);
 
     TaskDTO getById(Long id);
 
     boolean deleteById(Long id);
 
-    TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary, String newEstimate);
+    TaskDTO updateById(UpdateTaskRequest request);
 
     List<TaskDTO> listAll();
 

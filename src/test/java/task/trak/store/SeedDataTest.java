@@ -2,6 +2,10 @@ package task.trak.store;
 
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateProjectRequest;
+import task.trak.api.dto.request.CreateTaskRequest;
+import task.trak.api.dto.request.CreateUserRequest;
+import task.trak.api.dto.request.UpdateTaskRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.TaskService;
 import task.trak.api.service.UserService;
@@ -85,13 +89,13 @@ public class SeedDataTest {
 
         // --- Create 20 users (including guest) ---
         List<String> usernames = new ArrayList<>();
-        userService.create("guest", "Guest", "Admin", "guest@trak", "guest");
+        userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
         usernames.add("guest");
 
         for (int i = 0; i < 19; i++) {
             String username = FIRST_NAMES[i].toLowerCase() + (i + 1);
-            userService.create(username, FIRST_NAMES[i], LAST_NAMES[i],
-                    FIRST_NAMES[i].toLowerCase() + "@company.com", "password");
+            userService.create(new CreateUserRequest(username, FIRST_NAMES[i], LAST_NAMES[i],
+                    FIRST_NAMES[i].toLowerCase() + "@company.com", "password"));
             usernames.add(username);
             Thread.sleep(2); // ensure unique IDs
         }
@@ -131,7 +135,7 @@ public class SeedDataTest {
             }
 
             String summary = "Project for " + PROJECT_NAMES[i] + " development";
-            projectService.create(PROJECT_NAMES[i], summary, owner, members);
+            projectService.create(new CreateProjectRequest(PROJECT_NAMES[i], summary, owner, members));
             projectNames.add(PROJECT_NAMES[i]);
             Thread.sleep(2);
         }
@@ -152,13 +156,13 @@ public class SeedDataTest {
             cal.add(Calendar.DAY_OF_MONTH, 1 + rand.nextInt(30));
             Date deadline = cal.getTime();
 
-            TaskDTO task = taskService.create(title, project, assignee, summary, deadline, estimate);
+            TaskDTO task = taskService.create(new CreateTaskRequest(title, project, assignee, summary, deadline, estimate));
             assertNotNull(task);
 
             // Set some tasks to INPROGRESS or COMPLETE
             String status = STATUSES[rand.nextInt(STATUSES.length)];
             if (!"READY".equals(status)) {
-                taskService.updateById(task.id(), null, status, null, null, null);
+                taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null));
             }
 
             Thread.sleep(1); // ensure unique IDs

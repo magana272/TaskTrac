@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.project;
 
 import task.trak.api.dto.ProjectDTO;
+import task.trak.api.dto.request.CreateProjectRequest;
 import task.trak.api.model.Session;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
@@ -83,7 +84,7 @@ public class ProjectAddCMD extends ProjectCMD {
             memberUsernames = parseMemberUsernames(membersStr);
         }
 
-        ProjectDTO project = projectService.create(this.project_name, summary, ownerUsername, memberUsernames);
+        ProjectDTO project = projectService.create(new CreateProjectRequest(this.project_name, summary, ownerUsername, memberUsernames));
         System.out.println("Project " + project.id() + " \"" + this.project_name + "\" created successfully.");
         return Optional.of(project);
     }

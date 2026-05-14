@@ -183,7 +183,7 @@ flowchart TB
         cli[cli/<br>TTApp, CMD_Factory, CMDs]
         viewmodel[gui/viewmodel/<br>TaskViewModel, ProjectViewModel, ...]
         controller[gui/controller/<br>GUIController, AuthController, ...]
-        views[gui/view/<br>task/, project/, sprint/,<br>auth/, error/, form/, panel/]
+        views[gui/view/<br>TrakTheme, GlassPanel,<br>task/ +TimeInputPanel, form/ +FormPanel,<br>project/, sprint/, auth/, error/, panel/]
     end
 
     subgraph server["task.trak.app.server"]
@@ -262,9 +262,68 @@ flowchart TB
         SprintView_Obs -->|addObserver| TaskVM2[TaskViewModel]
     end
 
+    subgraph Workspace Toggle
+        direction TB
+        Toggle[Mine/Team Toggle] -->|setTeamMode| MF[MainFrame]
+        MF -->|refreshTasks bool| TC2[TaskController]
+        MF -->|refreshProjects bool| PC2[ProjectController]
+        TC2 -->|"true: listAll()\nfalse: listByAssignee()"| TaskSvc[TaskService]
+        PC2 -->|"true: listAll()\nfalse: listByUser()"| ProjSvc[ProjectService]
+        TC2 -->|setAll| TaskVM3[TaskViewModel]
+        PC2 -->|setAll| ProjVM4[ProjectViewModel]
+    end
+
     style View fill:#e3f2fd,stroke:#1565c0
     style Controller fill:#fff3e0,stroke:#e65100
     style ViewModel fill:#f1f8e9,stroke:#558b2f
+```
+
+## Theme System
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: '#ffffff'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#000000'
+    lineColor: '#000000'
+    fontFamily: 'Georgia, Times New Roman, serif'
+    fontSize: '14px'
+title: Theme System
+---
+flowchart TB
+    GUIMain[GUIMain] -->|"1. setCrossPlatformLookAndFeel()"| UIManager[UIManager Defaults]
+    GUIMain -->|"2. applyDefaults()"| TrakTheme
+    TrakTheme -->|"sets ~50 UIManager keys"| UIManager
+    UIManager -->|"inherited by"| AllComponents[All Swing Components]
+
+    subgraph TrakTheme["TrakTheme Constants"]
+        direction LR
+        Colors["Colors<br>BG_DARK, ACCENT,<br>STATUS_*"]
+        Fonts["Typography<br>DISPLAY → CAPTION<br>+ MONO"]
+        Spacing["Spacing Grid<br>SP_XS(4) → SP_3XL(48)"]
+    end
+
+    subgraph Methods["Styling Methods"]
+        direction LR
+        BtnStyles["styleButtonPrimary<br>styleButtonNav<br>styleButtonAccent"]
+        TableStyles["styleTable<br>styleComboBox<br>styleStatusComboBox"]
+        CardStyles["cardBorder<br>cardBorderHover<br>statusColor"]
+    end
+
+    TrakTheme --> Methods
+
+    subgraph CustomPanels["Custom Panels"]
+        GlassPanel["GlassPanel<br>rounded gradient + shadow"]
+        FormPanel["FormPanel<br>two-column GridBag"]
+    end
+
+    style TrakTheme fill:#fff3e0,stroke:#e65100
+    style UIManager fill:#f1f8e9,stroke:#558b2f
+    style Methods fill:#e3f2fd,stroke:#1565c0
+    style CustomPanels fill:#fce4ec,stroke:#c62828
 ```
 
 ## Command Routing
