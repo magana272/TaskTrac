@@ -31,7 +31,11 @@ public abstract class ObservableViewModel<T> implements ViewModel<T>, Serializab
     protected void notifyObservers(ViewModelChangeType type) {
         if (listeners == null) return;
         for (ViewModelChangeListener listener : listeners) {
-            listener.onViewModelChanged(type);
+            try {
+                listener.onViewModelChanged(type);
+            } catch (Exception e) {
+                System.err.println("Observer notification failed: " + e.getMessage());
+            }
         }
     }
 
@@ -55,6 +59,13 @@ public abstract class ObservableViewModel<T> implements ViewModel<T>, Serializab
             loadFrom(loaded);
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Failed to load " + cacheFile + ": " + e.getMessage());
+        }
+    }
+
+    public void clearCache() {
+        File file = new File(CACHE_DIR, cacheFile);
+        if (file.exists()) {
+            file.delete();
         }
     }
 
