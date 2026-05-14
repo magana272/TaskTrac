@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.workspace;
 
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.UpdateTaskRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
 import task.trak.api.util.TimeUtil;
@@ -31,7 +32,7 @@ public class EndTaskCMD extends WorkspaceCMD {
         }
 
         // Stop the task via service
-        taskService.updateById(taskId, null, "READY", null, null, null);
+        taskService.updateById(new UpdateTaskRequest(taskId, null, "READY", null, null, null));
 
         // Calculate accumulated time for display
         long accumulated = task.timeSpentMs();

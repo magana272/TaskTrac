@@ -2,6 +2,9 @@ package task.trak.service;
 
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateProjectRequest;
+import task.trak.api.dto.request.CreateTaskRequest;
+import task.trak.api.dto.request.CreateUserRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.TaskService;
 import task.trak.api.service.UserService;
@@ -49,11 +52,11 @@ public class ServiceListTest {
     @Test
     public void TestTaskListAll() throws InterruptedException {
         TaskService taskService = new TrakTaskService();
-        taskService.create("Task 1", "Proj", "alice", null, null, null);
+        taskService.create(new CreateTaskRequest("Task 1", "Proj", "alice", null, null, null));
         Thread.sleep(5);
-        taskService.create("Task 2", "Proj", "bob", null, null, null);
+        taskService.create(new CreateTaskRequest("Task 2", "Proj", "bob", null, null, null));
         Thread.sleep(5);
-        taskService.create("Task 3", "Proj", "alice", null, null, null);
+        taskService.create(new CreateTaskRequest("Task 3", "Proj", "alice", null, null, null));
 
         List<TaskDTO> all = taskService.listAll();
         assertEquals(3, all.size());
@@ -62,11 +65,11 @@ public class ServiceListTest {
     @Test
     public void TestTaskListByAssignee() throws InterruptedException {
         TaskService taskService = new TrakTaskService();
-        taskService.create("Task A", "Proj", "alice", null, null, null);
+        taskService.create(new CreateTaskRequest("Task A", "Proj", "alice", null, null, null));
         Thread.sleep(5);
-        taskService.create("Task B", "Proj", "bob", null, null, null);
+        taskService.create(new CreateTaskRequest("Task B", "Proj", "bob", null, null, null));
         Thread.sleep(5);
-        taskService.create("Task C", "Proj", "alice", null, null, null);
+        taskService.create(new CreateTaskRequest("Task C", "Proj", "alice", null, null, null));
 
         List<TaskDTO> aliceTasks = taskService.listByAssignee("alice");
         assertEquals(2, aliceTasks.size());
@@ -86,11 +89,11 @@ public class ServiceListTest {
     @Test
     public void TestProjectListAll() {
         UserService userService = new TrakUserService();
-        userService.create("owner1", "Own", "Er", null, null);
+        userService.create(new CreateUserRequest("owner1", "Own", "Er", null, null));
 
         ProjectService projectService = new TrakProjectService();
-        projectService.create("Proj1", null, "owner1", null);
-        projectService.create("Proj2", null, "owner1", null);
+        projectService.create(new CreateProjectRequest("Proj1", null, "owner1", null));
+        projectService.create(new CreateProjectRequest("Proj2", null, "owner1", null));
 
         List<ProjectDTO> all = projectService.listAll();
         assertEquals(2, all.size());
@@ -99,12 +102,12 @@ public class ServiceListTest {
     @Test
     public void TestProjectListByOwner() {
         UserService userService = new TrakUserService();
-        userService.create("ownerA", "Own", "A", null, null);
-        userService.create("ownerB", "Own", "B", null, null);
+        userService.create(new CreateUserRequest("ownerA", "Own", "A", null, null));
+        userService.create(new CreateUserRequest("ownerB", "Own", "B", null, null));
 
         ProjectService projectService = new TrakProjectService();
-        projectService.create("ProjA", null, "ownerA", null);
-        projectService.create("ProjB", null, "ownerB", null);
+        projectService.create(new CreateProjectRequest("ProjA", null, "ownerA", null));
+        projectService.create(new CreateProjectRequest("ProjB", null, "ownerB", null));
 
         List<ProjectDTO> aProjects = projectService.listByUser("ownerA");
         assertEquals(1, aProjects.size());
@@ -114,11 +117,11 @@ public class ServiceListTest {
     @Test
     public void TestProjectListByMember() {
         UserService userService = new TrakUserService();
-        userService.create("projowner", "Own", "Er", null, null);
-        userService.create("member1", "Mem", "Ber", null, null);
+        userService.create(new CreateUserRequest("projowner", "Own", "Er", null, null));
+        userService.create(new CreateUserRequest("member1", "Mem", "Ber", null, null));
 
         ProjectService projectService = new TrakProjectService();
-        projectService.create("TeamProj", null, "projowner", List.of("member1"));
+        projectService.create(new CreateProjectRequest("TeamProj", null, "projowner", List.of("member1")));
 
         List<ProjectDTO> memberProjects = projectService.listByUser("member1");
         assertEquals(1, memberProjects.size());

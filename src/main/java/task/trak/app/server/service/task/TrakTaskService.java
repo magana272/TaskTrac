@@ -1,6 +1,9 @@
 package task.trak.app.server.service.task;
 
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateTaskRequest;
+import task.trak.api.dto.request.UpdateTaskRequest;
+import task.trak.api.exception.EntityNotFoundException;
 import task.trak.api.service.STATE;
 import task.trak.api.service.TaskService;
 import task.trak.app.server.dao.DAOFactory;
@@ -16,11 +19,12 @@ public class TrakTaskService implements TaskService {
     private final EntityDAO<Task> store = DAOFactory.taskDAO();
 
     @Override
-    public TaskDTO create(String title, String projectName, String assignedTo, String summary, Date deadline, String estimate) {
+    public TaskDTO create(CreateTaskRequest request) {
+        request.validate();
         Long id = System.currentTimeMillis();
-        Task task = new Task(id, projectName, assignedTo, title, STATE.READY, null, null, summary);
-        if (deadline != null) task.setDeadline(deadline);
-        if (estimate != null) task.setEstimate(estimate);
+        Task task = new Task(id, request.projectName(), request.assignedTo(), request.title(), STATE.READY, null, null, request.summary());
+        if (request.deadline() != null) task.setDeadline(request.deadline());
+        if (request.estimate() != null) task.setEstimate(request.estimate());
         store.save(task);
         return toDTO(task);
     }
@@ -37,30 +41,31 @@ public class TrakTaskService implements TaskService {
     }
 
     @Override
-    public TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary, String newEstimate) {
-        Task task = store.loadByKey(String.valueOf(id));
+    public TaskDTO updateById(UpdateTaskRequest request) {
+        request.validate();
+        Task task = store.loadByKey(String.valueOf(request.id()));
         if (task == null) {
-            throw new IllegalArgumentException("Task " + id + " not found.");
+            throw new EntityNotFoundException("Task " + request.id() + " not found.");
         }
 
-        if (newTitle != null) {
-            task.setTitle(newTitle);
+        if (request.title() != null) {
+            task.setTitle(request.title());
         }
-        if (newStatus != null) {
-            STATE status = STATE.valueOf(newStatus.toUpperCase());
+        if (request.status() != null) {
+            STATE status = STATE.valueOf(request.status().toUpperCase());
             task.setStatus(status);
             if (status == STATE.COMPLETE) {
                 task.setCompleted_at(new Date());
             }
         }
-        if (newAssignedTo != null) {
-            task.setAssigned_to(newAssignedTo);
+        if (request.assignedTo() != null) {
+            task.setAssigned_to(request.assignedTo());
         }
-        if (newSummary != null) {
-            task.setSummary(newSummary);
+        if (request.summary() != null) {
+            task.setSummary(request.summary());
         }
-        if (newEstimate != null) {
-            task.setEstimate(newEstimate);
+        if (request.estimate() != null) {
+            task.setEstimate(request.estimate());
         }
 
         store.save(task);

@@ -1,5 +1,6 @@
 package task.trak.app.client.cli;
 
+import task.trak.api.dto.request.CreateUserRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.http.ApiClient;
 import task.trak.app.client.config.WorkspaceConfig;
@@ -54,7 +55,7 @@ public class CLIMain {
     private static void ensureGuestAccount() {
         var userService = ServiceFactory.userService();
         if (userService.getByUsername("guest") == null) {
-            userService.create("guest", "Guest", "Admin", "guest@trak", "guest");
+            userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
         }
     }
 

@@ -3,6 +3,8 @@ package task.trak.app.client.cli.cmd.workspace;
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.SprintDTO;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateSprintRequest;
+import task.trak.api.dto.request.UpdateSprintRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.SprintService;
@@ -99,51 +101,53 @@ public class SprintPlanCMD extends WorkspaceCMD {
         }
 
         // 3. Create sprint
-        SprintDTO sprint = sprintService.create(sprintName, project.projectName());
-        String sprintKey = String.valueOf(sprint.id());
-        if (!startDate.isEmpty() || !endDate.isEmpty()) {
-            sprintService.updateByName(sprintKey,
-                    startDate.isEmpty() ? null : startDate,
-                    endDate.isEmpty() ? null : endDate);
-        }
+        SprintDTO sprint = sprintService.create(new CreateSprintRequest(sprintName, project.projectName()));
 
         // 4. List tasks for this project
         List<TaskDTO> projectTasks = taskService.listAll().stream()
                 .filter(t -> project.projectName().equals(t.projectName()))
                 .collect(Collectors.toList());
 
-        if (projectTasks.isEmpty()) {
+        List<Long> selectedIds = null;
+        if (!projectTasks.isEmpty()) {
+            System.out.println("\nTasks in " + project.projectName() + ":");
+            for (int i = 0; i < projectTasks.size(); i++) {
+                TaskDTO t = projectTasks.get(i);
+                System.out.println("  " + (i + 1) + ". [" + t.status() + "] " + t.title() + " (" + t.id() + ")");
+            }
+            System.out.print("Select tasks (e.g. 1,2,3 or blank for none): ");
+            String selection = scanner.nextLine().trim();
+
+            if (!selection.isEmpty()) {
+                selectedIds = new ArrayList<>();
+                String[] parts = selection.split(",");
+                for (String part : parts) {
+                    try {
+                        int idx = Integer.parseInt(part.trim()) - 1;
+                        if (idx >= 0 && idx < projectTasks.size()) {
+                            selectedIds.add(projectTasks.get(idx).id());
+                        } else {
+                            System.out.println("Skipping invalid selection: " + part.trim());
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Skipping invalid input: " + part.trim());
+                    }
+                }
+                if (selectedIds.isEmpty()) selectedIds = null;
+            }
+        } else {
             System.out.println("No tasks found for project \"" + project.projectName() + "\".");
+        }
+
+        if (!startDate.isEmpty() || !endDate.isEmpty() || selectedIds != null) {
+            sprintService.update(new UpdateSprintRequest(
+                    sprintName, project.projectName(),
+                    startDate.isEmpty() ? null : startDate,
+                    endDate.isEmpty() ? null : endDate,
+                    selectedIds));
+        } else if (projectTasks.isEmpty()) {
             System.out.println("Sprint \"" + sprintName + "\" created (empty).");
             return Optional.empty();
-        }
-
-        System.out.println("\nTasks in " + project.projectName() + ":");
-        for (int i = 0; i < projectTasks.size(); i++) {
-            TaskDTO t = projectTasks.get(i);
-            System.out.println("  " + (i + 1) + ". [" + t.status() + "] " + t.title() + " (" + t.id() + ")");
-        }
-        System.out.print("Select tasks (e.g. 1,2,3 or blank for none): ");
-        String selection = scanner.nextLine().trim();
-
-        if (!selection.isEmpty()) {
-            List<Long> selectedIds = new ArrayList<>();
-            String[] parts = selection.split(",");
-            for (String part : parts) {
-                try {
-                    int idx = Integer.parseInt(part.trim()) - 1;
-                    if (idx >= 0 && idx < projectTasks.size()) {
-                        selectedIds.add(projectTasks.get(idx).id());
-                    } else {
-                        System.out.println("Skipping invalid selection: " + part.trim());
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Skipping invalid input: " + part.trim());
-                }
-            }
-            if (!selectedIds.isEmpty()) {
-                sprintService.updateTaskIds(sprintKey, selectedIds);
-            }
         }
 
         System.out.println("Sprint \"" + sprintName + "\" planned for project \"" + project.projectName() + "\".");

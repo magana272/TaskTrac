@@ -3,6 +3,7 @@ package task.trak.app.client.gui.controller;
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.SprintDTO;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.*;
 import task.trak.api.model.Session;
 import task.trak.api.service.*;
 import task.trak.app.App;
@@ -139,7 +140,7 @@ public class GUIController implements App, CommandListener {
             try {
                 UserService userService = ServiceFactory.userService();
                 if (userService.getByUsername("guest") == null) {
-                    userService.create("guest", "Guest", "Admin", "guest@trak", "guest");
+                    userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
                 }
             } catch (Exception e) {
                 System.err.println("Warning: Could not connect to server to check guest account.");
@@ -155,7 +156,7 @@ public class GUIController implements App, CommandListener {
         // Ensure guest admin account exists
         UserService userService = ServiceFactory.userService();
         if (userService.getByUsername("guest") == null) {
-            userService.create("guest", "Guest", "Admin", "guest@trak", "guest");
+            userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
         }
     }
 
@@ -218,8 +219,8 @@ public class GUIController implements App, CommandListener {
         for (int i = 0; i < 19; i++) {
             String username = firstNames[i].toLowerCase() + (i + 1);
             if (userService.getByUsername(username) == null) {
-                userService.create(username, firstNames[i], lastNames[i],
-                        firstNames[i].toLowerCase() + "@company.com", "password");
+                userService.create(new CreateUserRequest(username, firstNames[i], lastNames[i],
+                        firstNames[i].toLowerCase() + "@company.com", "password"));
             }
             usernames.add(username);
         }
@@ -249,7 +250,7 @@ public class GUIController implements App, CommandListener {
                 members.addAll(picked);
             }
 
-            projectService.create(projectNames[i], "Project for " + projectNames[i] + " development", owner, members);
+            projectService.create(new CreateProjectRequest(projectNames[i], "Project for " + projectNames[i] + " development", owner, members));
         }
 
         // 1000 tasks
@@ -263,11 +264,11 @@ public class GUIController implements App, CommandListener {
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.DAY_OF_MONTH, 1 + rand.nextInt(30));
 
-            TaskDTO task = taskService.create(title, project, assignee, summary, cal.getTime(), estimate);
+            TaskDTO task = taskService.create(new CreateTaskRequest(title, project, assignee, summary, cal.getTime(), estimate));
 
             String status = statuses[rand.nextInt(statuses.length)];
             if (!"READY".equals(status)) {
-                taskService.updateById(task.id(), null, status, null, null, null);
+                taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null));
             }
         }
 
@@ -285,7 +286,7 @@ public class GUIController implements App, CommandListener {
 
             for (int s = 0; s < 2; s++) {
                 String sprintName = sprintNames[s];
-                SprintDTO sprint = sprintService.create(sprintName, project);
+                sprintService.create(new CreateSprintRequest(sprintName, project));
 
                 // Set dates: sprint 1 starts now, sprint 2 starts in 2 weeks
                 Calendar start = Calendar.getInstance();
@@ -295,7 +296,6 @@ public class GUIController implements App, CommandListener {
 
                 String startStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(start.getTime());
                 String endStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(end.getTime());
-                sprintService.updateByNameAndProject(sprintName, project, startStr, endStr);
 
                 // Assign half the project's tasks to each sprint
                 int from = s * (projectTasks.size() / 2);
@@ -304,7 +304,7 @@ public class GUIController implements App, CommandListener {
                 for (int t = from; t < to; t++) {
                     taskIds.add(projectTasks.get(t).id());
                 }
-                sprintService.updateTaskIds(String.valueOf(sprint.id()), taskIds);
+                sprintService.update(new UpdateSprintRequest(sprintName, project, startStr, endStr, taskIds));
             }
         }
 

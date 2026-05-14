@@ -1,9 +1,11 @@
 package task.trak.app.server.server;
 
-import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import task.trak.api.dto.ProjectDTO;
+import task.trak.api.dto.request.CreateProjectRequest;
+import task.trak.api.dto.request.UpdateProjectRequest;
+import task.trak.api.exception.TrakException;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
 
@@ -46,24 +48,13 @@ public class ProjectRoutes {
         private void handleCreate(HttpExchange exchange) throws IOException {
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, Object> req = JsonHelper.fromJson(body,
-                        new TypeToken<Map<String, Object>>() {
-                        }.getType());
-                String name = (String) req.get("name");
-                String summary = (String) req.get("summary");
-                String owner = (String) req.get("owner");
-                @SuppressWarnings("unchecked")
-                List<String> members = (List<String>) req.get("members");
-
-                if (name == null || name.isEmpty()) {
-                    JsonHelper.sendError(exchange, 400, "name is required");
-                    return;
-                }
+                CreateProjectRequest request = JsonHelper.fromJson(body, CreateProjectRequest.class);
+                request.validate();
 
                 ProjectService projectService = ServiceFactory.projectService();
-                ProjectDTO project = projectService.create(name, summary, owner, members);
+                ProjectDTO project = projectService.create(request);
                 JsonHelper.sendJson(exchange, 201, project);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
@@ -152,22 +143,23 @@ public class ProjectRoutes {
         private void handleUpdate(HttpExchange exchange, String name) throws IOException {
             try {
                 String body = JsonHelper.readBody(exchange);
-                Map<String, Object> req = JsonHelper.fromJson(body,
-                        new TypeToken<Map<String, Object>>() {
-                        }.getType());
-                String newName = (String) req.get("name");
-                String newSummary = (String) req.get("summary");
-                @SuppressWarnings("unchecked")
-                List<String> members = (List<String>) req.get("members");
+                UpdateProjectRequest bodyRequest = JsonHelper.fromJson(body, UpdateProjectRequest.class);
+                UpdateProjectRequest request = new UpdateProjectRequest(
+                        name,
+                        bodyRequest.newName(),
+                        bodyRequest.newSummary(),
+                        bodyRequest.newMemberUsernames()
+                );
+                request.validate();
 
                 ProjectService projectService = ServiceFactory.projectService();
-                ProjectDTO project = projectService.updateByName(name, newName, newSummary, members);
+                ProjectDTO project = projectService.updateByName(request);
                 if (project == null) {
                     JsonHelper.sendError(exchange, 404, "Project not found");
                     return;
                 }
                 JsonHelper.sendJson(exchange, 200, project);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
@@ -208,7 +200,7 @@ public class ProjectRoutes {
                     return;
                 }
                 JsonHelper.sendJson(exchange, 200, project);
-            } catch (IllegalArgumentException e) {
+            } catch (TrakException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());

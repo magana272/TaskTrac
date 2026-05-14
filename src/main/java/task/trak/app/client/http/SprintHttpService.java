@@ -3,6 +3,8 @@ package task.trak.app.client.http;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import task.trak.api.dto.SprintDTO;
+import task.trak.api.dto.request.CreateSprintRequest;
+import task.trak.api.dto.request.UpdateSprintRequest;
 import task.trak.api.service.SprintService;
 
 import java.lang.reflect.Type;
@@ -14,10 +16,10 @@ public class SprintHttpService implements SprintService {
             .create();
 
     @Override
-    public SprintDTO create(String name, String projectName) {
+    public SprintDTO create(CreateSprintRequest request) {
         JsonObject body = new JsonObject();
-        body.addProperty("name", name);
-        body.addProperty("projectName", projectName);
+        body.addProperty("name", request.name());
+        body.addProperty("projectName", request.projectName());
         String response = ApiClient.post("/api/sprints", body.toString());
         if (response == null) return null;
         return gson.fromJson(response, SprintDTO.class);
@@ -59,37 +61,23 @@ public class SprintHttpService implements SprintService {
     }
 
     @Override
-    public SprintDTO updateByName(String name, String newStartDate, String newEndDate) {
-        SprintDTO sprint = getByName(name);
-        if (sprint == null) throw new RuntimeException("Sprint not found: " + name);
+    public SprintDTO update(UpdateSprintRequest request) {
+        SprintDTO sprint;
+        if (request.projectName() != null) {
+            sprint = getByNameAndProject(request.name(), request.projectName());
+            if (sprint == null) throw new RuntimeException("Sprint not found: " + request.name() + " in project " + request.projectName());
+        } else {
+            sprint = getByName(request.name());
+            if (sprint == null) throw new RuntimeException("Sprint not found: " + request.name());
+        }
         JsonObject body = new JsonObject();
-        if (newStartDate != null) body.addProperty("startDate", newStartDate);
-        if (newEndDate != null) body.addProperty("endDate", newEndDate);
-        String response = ApiClient.put("/api/sprints/" + sprint.id(), body.toString());
-        if (response == null) return null;
-        return gson.fromJson(response, SprintDTO.class);
-    }
-
-    @Override
-    public SprintDTO updateByNameAndProject(String name, String projectName, String newStartDate, String newEndDate) {
-        SprintDTO sprint = getByNameAndProject(name, projectName);
-        if (sprint == null) throw new RuntimeException("Sprint not found: " + name + " in project " + projectName);
-        JsonObject body = new JsonObject();
-        if (newStartDate != null) body.addProperty("startDate", newStartDate);
-        if (newEndDate != null) body.addProperty("endDate", newEndDate);
-        String response = ApiClient.put("/api/sprints/" + sprint.id(), body.toString());
-        if (response == null) return null;
-        return gson.fromJson(response, SprintDTO.class);
-    }
-
-    @Override
-    public SprintDTO updateTaskIds(String name, List<Long> taskIds) {
-        SprintDTO sprint = getByName(name);
-        if (sprint == null) throw new RuntimeException("Sprint not found: " + name);
-        JsonObject body = new JsonObject();
-        JsonArray arr = new JsonArray();
-        taskIds.forEach(arr::add);
-        body.add("taskIds", arr);
+        if (request.startDate() != null) body.addProperty("startDate", request.startDate());
+        if (request.endDate() != null) body.addProperty("endDate", request.endDate());
+        if (request.taskIds() != null) {
+            JsonArray arr = new JsonArray();
+            request.taskIds().forEach(arr::add);
+            body.add("taskIds", arr);
+        }
         String response = ApiClient.put("/api/sprints/" + sprint.id(), body.toString());
         if (response == null) return null;
         return gson.fromJson(response, SprintDTO.class);

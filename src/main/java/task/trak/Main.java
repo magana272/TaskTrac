@@ -100,7 +100,7 @@ public class Main {
     private static void ensureGuestAccount() {
         var userService = ServiceFactory.userService();
         if (userService.getByUsername("guest") == null) {
-            userService.create("guest", "Guest", "Admin", "guest@trak", "guest");
+            userService.create(new task.trak.api.dto.request.CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
         }
     }
 

@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.backlog;
 
 import task.trak.api.dto.BacklogDTO;
+import task.trak.api.dto.request.CreateBacklogRequest;
 import task.trak.api.service.BacklogService;
 import task.trak.api.service.ServiceFactory;
 
@@ -48,7 +49,7 @@ public class BacklogAddCMD extends BacklogCMD {
             throw new IllegalArgumentException("--project is required. Usage: backlog add <name> --project <project_name>");
         }
 
-        BacklogDTO backlog = backlogService.create(this.backlogName, project);
+        BacklogDTO backlog = backlogService.create(new CreateBacklogRequest(this.backlogName, project));
         System.out.println("Backlog \"" + this.backlogName + "\" created successfully.");
         return Optional.of(backlog);
     }

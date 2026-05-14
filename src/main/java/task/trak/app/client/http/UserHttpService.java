@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import task.trak.api.dto.UserDTO;
+import task.trak.api.dto.request.CreateUserRequest;
+import task.trak.api.dto.request.UpdateUserRequest;
 import task.trak.api.service.UserService;
 
 public class UserHttpService implements UserService {
@@ -13,13 +15,13 @@ public class UserHttpService implements UserService {
             .create();
 
     @Override
-    public UserDTO create(String username, String firstName, String lastName, String email, String password) {
+    public UserDTO create(CreateUserRequest request) {
         JsonObject body = new JsonObject();
-        body.addProperty("username", username);
-        body.addProperty("firstName", firstName);
-        body.addProperty("lastName", lastName);
-        body.addProperty("email", email);
-        body.addProperty("password", password);
+        body.addProperty("username", request.username());
+        body.addProperty("firstName", request.firstName());
+        body.addProperty("lastName", request.lastName());
+        body.addProperty("email", request.email());
+        body.addProperty("password", request.password());
         String response = ApiClient.post("/api/users", body.toString());
         if (response == null) return null;
         return gson.fromJson(response, UserDTO.class);
@@ -50,13 +52,13 @@ public class UserHttpService implements UserService {
     }
 
     @Override
-    public UserDTO updateByUsername(String username, String newFirstName, String newLastName, String newEmail, String newPassword) {
+    public UserDTO updateByUsername(UpdateUserRequest request) {
         JsonObject body = new JsonObject();
-        if (newFirstName != null) body.addProperty("firstName", newFirstName);
-        if (newLastName != null) body.addProperty("lastName", newLastName);
-        if (newEmail != null) body.addProperty("email", newEmail);
-        if (newPassword != null) body.addProperty("password", newPassword);
-        String response = ApiClient.put("/api/users/" + username, body.toString());
+        if (request.firstName() != null) body.addProperty("firstName", request.firstName());
+        if (request.lastName() != null) body.addProperty("lastName", request.lastName());
+        if (request.email() != null) body.addProperty("email", request.email());
+        if (request.password() != null) body.addProperty("password", request.password());
+        String response = ApiClient.put("/api/users/" + request.username(), body.toString());
         if (response == null) return null;
         return gson.fromJson(response, UserDTO.class);
     }

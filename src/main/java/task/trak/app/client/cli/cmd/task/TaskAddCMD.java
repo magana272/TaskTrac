@@ -2,6 +2,7 @@ package task.trak.app.client.cli.cmd.task;
 
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateTaskRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
@@ -76,7 +77,7 @@ public class TaskAddCMD extends TaskCMD {
             deadline = new SimpleDateFormat("yyyy-MM-dd").parse(deadlineStr);
         }
 
-        TaskDTO task = taskService.create(title, project, assignedTo, summary, deadline, estimate);
+        TaskDTO task = taskService.create(new CreateTaskRequest(title, project, assignedTo, summary, deadline, estimate));
         System.out.println("Task " + task.id() + " created successfully.");
         return Optional.of(task);
     }

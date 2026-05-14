@@ -1,6 +1,7 @@
 package task.trak.app.client.cli.cmd.workspace;
 
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.UpdateTaskRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.TaskService;
 import task.trak.api.util.TimeUtil;
@@ -39,7 +40,7 @@ public class CompleteCMD extends WorkspaceCMD {
         }
 
         // Complete the task via service
-        taskService.updateById(this.taskId, null, "COMPLETE", null, null, null);
+        taskService.updateById(new UpdateTaskRequest(this.taskId, null, "COMPLETE", null, null, null));
 
         String timeStr = task.timeSpentMs() > 0
                 ? " - Total time: " + TimeUtil.formatDuration(task.timeSpentMs())

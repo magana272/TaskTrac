@@ -3,6 +3,8 @@ package task.trak.app.client.http;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import task.trak.api.dto.ProjectDTO;
+import task.trak.api.dto.request.CreateProjectRequest;
+import task.trak.api.dto.request.UpdateProjectRequest;
 import task.trak.api.service.ProjectService;
 
 import java.lang.reflect.Type;
@@ -14,23 +16,14 @@ public class ProjectHttpService implements ProjectService {
             .create();
 
     @Override
-    public ProjectDTO create(String name) {
+    public ProjectDTO create(CreateProjectRequest request) {
         JsonObject body = new JsonObject();
-        body.addProperty("name", name);
-        String response = ApiClient.post("/api/projects", body.toString());
-        if (response == null) return null;
-        return gson.fromJson(response, ProjectDTO.class);
-    }
-
-    @Override
-    public ProjectDTO create(String name, String summary, String ownerUsername, List<String> memberUsernames) {
-        JsonObject body = new JsonObject();
-        body.addProperty("name", name);
-        if (summary != null) body.addProperty("summary", summary);
-        if (ownerUsername != null) body.addProperty("ownerUsername", ownerUsername);
-        if (memberUsernames != null) {
+        body.addProperty("name", request.name());
+        if (request.summary() != null) body.addProperty("summary", request.summary());
+        if (request.ownerUsername() != null) body.addProperty("ownerUsername", request.ownerUsername());
+        if (request.memberUsernames() != null) {
             JsonArray members = new JsonArray();
-            memberUsernames.forEach(members::add);
+            request.memberUsernames().forEach(members::add);
             body.add("memberUsernames", members);
         }
         String response = ApiClient.post("/api/projects", body.toString());
@@ -65,16 +58,16 @@ public class ProjectHttpService implements ProjectService {
     }
 
     @Override
-    public ProjectDTO updateByName(String projectName, String newName, String newSummary, List<String> newMemberUsernames) {
+    public ProjectDTO updateByName(UpdateProjectRequest request) {
         JsonObject body = new JsonObject();
-        if (newName != null) body.addProperty("name", newName);
-        if (newSummary != null) body.addProperty("summary", newSummary);
-        if (newMemberUsernames != null) {
+        if (request.newName() != null) body.addProperty("name", request.newName());
+        if (request.newSummary() != null) body.addProperty("summary", request.newSummary());
+        if (request.newMemberUsernames() != null) {
             JsonArray members = new JsonArray();
-            newMemberUsernames.forEach(members::add);
+            request.newMemberUsernames().forEach(members::add);
             body.add("memberUsernames", members);
         }
-        String response = ApiClient.put("/api/projects/" + projectName, body.toString());
+        String response = ApiClient.put("/api/projects/" + request.projectName(), body.toString());
         if (response == null) return null;
         return gson.fromJson(response, ProjectDTO.class);
     }

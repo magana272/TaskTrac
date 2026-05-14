@@ -1,6 +1,8 @@
 package task.trak.app.client.gui.controller;
 
 import task.trak.api.dto.SprintDTO;
+import task.trak.api.dto.request.CreateSprintRequest;
+import task.trak.api.dto.request.UpdateSprintRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.gui.viewmodel.SprintViewModel;
 
@@ -20,18 +22,15 @@ public class SprintController {
     }
 
     public void addSprint(String name, String project, String startDate, String endDate, List<Long> taskIds) {
-        SprintDTO sprint = ServiceFactory.sprintService().create(name, project);
-        if (startDate != null || endDate != null) {
-            ServiceFactory.sprintService().updateByNameAndProject(name, project, startDate, endDate);
-        }
-        if (taskIds != null && !taskIds.isEmpty()) {
-            ServiceFactory.sprintService().updateTaskIds(String.valueOf(sprint.id()), taskIds);
+        ServiceFactory.sprintService().create(new CreateSprintRequest(name, project));
+        if (startDate != null || endDate != null || (taskIds != null && !taskIds.isEmpty())) {
+            ServiceFactory.sprintService().update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds));
         }
         refreshSprints();
     }
 
-    public void updateSprint(String id, String startDate, String endDate) {
-        ServiceFactory.sprintService().updateByName(id, startDate, endDate);
+    public void updateSprint(String name, String startDate, String endDate) {
+        ServiceFactory.sprintService().update(new UpdateSprintRequest(name, null, startDate, endDate, null));
         refreshSprints();
     }
 
@@ -46,7 +45,7 @@ public class SprintController {
         if (!taskIds.contains(taskId)) {
             taskIds.add(taskId);
         }
-        ServiceFactory.sprintService().updateTaskIds(String.valueOf(sprint.id()), taskIds);
+        ServiceFactory.sprintService().update(new UpdateSprintRequest(sprintName, project, null, null, taskIds));
         refreshSprints();
     }
 

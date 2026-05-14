@@ -1,6 +1,8 @@
 package task.trak.app.client.gui.controller;
 
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateTaskRequest;
+import task.trak.api.dto.request.UpdateTaskRequest;
 import task.trak.api.model.Session;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.gui.viewmodel.TaskViewModel;
@@ -24,12 +26,12 @@ public class TaskController {
     }
 
     public void addTask(String title, String projectName, String assignee, String summary, Date deadline, String estimate) {
-        ServiceFactory.taskService().create(title, projectName, assignee, summary, deadline, estimate);
+        ServiceFactory.taskService().create(new CreateTaskRequest(title, projectName, assignee, summary, deadline, estimate));
         refreshTasks();
     }
 
     public void updateTask(long id, String title, String status, String assignee, String summary, String estimate) {
-        ServiceFactory.taskService().updateById(id, title, status, assignee, summary, estimate);
+        ServiceFactory.taskService().updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
         refreshTasks();
     }
 
@@ -39,7 +41,7 @@ public class TaskController {
     }
 
     public void completeTask(long id) {
-        ServiceFactory.taskService().updateById(id, null, "COMPLETE", null, null, null);
+        ServiceFactory.taskService().updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
         refreshTasks();
     }
 

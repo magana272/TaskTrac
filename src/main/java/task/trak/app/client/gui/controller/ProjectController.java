@@ -1,6 +1,8 @@
 package task.trak.app.client.gui.controller;
 
 import task.trak.api.dto.ProjectDTO;
+import task.trak.api.dto.request.CreateProjectRequest;
+import task.trak.api.dto.request.UpdateProjectRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.gui.viewmodel.ProjectViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
@@ -26,12 +28,12 @@ public class ProjectController {
         String owner = userViewModel.getSession() != null
                 ? userViewModel.getSession().getLogged_in_user()
                 : "guest";
-        ServiceFactory.projectService().create(name, summary, owner, new ArrayList<>());
+        ServiceFactory.projectService().create(new CreateProjectRequest(name, summary, owner, new ArrayList<>()));
         refreshProjects();
     }
 
     public void updateProject(String name, String newName, String summary) {
-        ServiceFactory.projectService().updateByName(name, newName, summary, null);
+        ServiceFactory.projectService().updateByName(new UpdateProjectRequest(name, newName, summary, null));
         refreshProjects();
     }
 
@@ -46,7 +48,7 @@ public class ProjectController {
     }
 
     public void removeMember(String projectName, List<String> remainingMembers) {
-        ServiceFactory.projectService().updateByName(projectName, null, null, remainingMembers);
+        ServiceFactory.projectService().updateByName(new UpdateProjectRequest(projectName, null, null, remainingMembers));
         refreshProjects();
     }
 

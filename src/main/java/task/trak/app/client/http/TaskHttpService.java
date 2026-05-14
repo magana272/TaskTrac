@@ -6,11 +6,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import task.trak.api.dto.TaskDTO;
+import task.trak.api.dto.request.CreateTaskRequest;
+import task.trak.api.dto.request.UpdateTaskRequest;
 import task.trak.api.service.TaskService;
 
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 public class TaskHttpService implements TaskService {
@@ -19,17 +20,17 @@ public class TaskHttpService implements TaskService {
             .create();
 
     @Override
-    public TaskDTO create(String title, String projectName, String assignedTo, String summary, Date deadline, String estimate) {
+    public TaskDTO create(CreateTaskRequest request) {
         JsonObject body = new JsonObject();
-        body.addProperty("title", title);
-        if (projectName != null) body.addProperty("projectName", projectName);
-        if (assignedTo != null) body.addProperty("assignedTo", assignedTo);
-        if (summary != null) body.addProperty("summary", summary);
-        if (deadline != null) {
+        body.addProperty("title", request.title());
+        if (request.projectName() != null) body.addProperty("projectName", request.projectName());
+        if (request.assignedTo() != null) body.addProperty("assignedTo", request.assignedTo());
+        if (request.summary() != null) body.addProperty("summary", request.summary());
+        if (request.deadline() != null) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-            body.addProperty("deadline", sdf.format(deadline));
+            body.addProperty("deadline", sdf.format(request.deadline()));
         }
-        if (estimate != null) body.addProperty("estimate", estimate);
+        if (request.estimate() != null) body.addProperty("estimate", request.estimate());
         String response = ApiClient.post("/api/tasks", body.toString());
         if (response == null) return null;
         return gson.fromJson(response, TaskDTO.class);
@@ -53,14 +54,14 @@ public class TaskHttpService implements TaskService {
     }
 
     @Override
-    public TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary, String newEstimate) {
+    public TaskDTO updateById(UpdateTaskRequest request) {
         JsonObject body = new JsonObject();
-        if (newTitle != null) body.addProperty("title", newTitle);
-        if (newStatus != null) body.addProperty("status", newStatus);
-        if (newAssignedTo != null) body.addProperty("assignedTo", newAssignedTo);
-        if (newSummary != null) body.addProperty("summary", newSummary);
-        if (newEstimate != null) body.addProperty("estimate", newEstimate);
-        String response = ApiClient.put("/api/tasks/" + id, body.toString());
+        if (request.title() != null) body.addProperty("title", request.title());
+        if (request.status() != null) body.addProperty("status", request.status());
+        if (request.assignedTo() != null) body.addProperty("assignedTo", request.assignedTo());
+        if (request.summary() != null) body.addProperty("summary", request.summary());
+        if (request.estimate() != null) body.addProperty("estimate", request.estimate());
+        String response = ApiClient.put("/api/tasks/" + request.id(), body.toString());
         if (response == null) return null;
         return gson.fromJson(response, TaskDTO.class);
     }
