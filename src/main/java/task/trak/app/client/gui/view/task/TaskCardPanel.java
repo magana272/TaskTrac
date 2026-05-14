@@ -190,15 +190,13 @@ public class TaskCardPanel extends JPanel {
 
                         if (result == 0 && !noteArea.getText().trim().isEmpty()) {
                             String note = noteArea.getText().trim();
-                            String existing = task.summary() != null ? task.summary() : "";
-                            String newSummary = existing + (existing.isEmpty() ? "" : "\n\n") + "--- Completed ---\n" + note;
-                            taskController.updateTask(task.id(), null, "COMPLETE", null, newSummary, null);
+                            taskController.updateTask(task.id(), null, "COMPLETE", null, null, null, note);
                         } else {
                             taskController.completeTask(task.id());
                         }
                         return; // Don't fall through to the update logic below
                     } else {
-                        taskController.updateTask(task.id(), null, newStatus, null, null, null);
+                        taskController.updateTask(task.id(), null, newStatus, null, null, null, null);
                     }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(TaskCardPanel.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

@@ -68,7 +68,8 @@ public class DuckDBConnection {
                         deadline BIGINT,
                         estimate VARCHAR,
                         time_started BIGINT,
-                        time_spent_ms BIGINT
+                        time_spent_ms BIGINT,
+                        completion_note VARCHAR
                     )""");
 
             stmt.execute("""

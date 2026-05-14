@@ -50,7 +50,7 @@ public class ObserverPatternTest {
         List<ViewModelChangeType> received = new ArrayList<>();
         vm.addObserver(received::add);
 
-        vm.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0)));
+        vm.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
 
         assertEquals(1, received.size());
         assertEquals(ViewModelChangeType.TASKS, received.get(0));
@@ -84,7 +84,7 @@ public class ObserverPatternTest {
     @Test
     public void testObserverReceivesNotificationOnDelete() {
         TaskViewModel vm = new TaskViewModel();
-        TaskDTO task = new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0);
+        TaskDTO task = new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null);
         vm.setAll(List.of(task));
         List<ViewModelChangeType> received = new ArrayList<>();
         vm.addObserver(received::add);
@@ -161,7 +161,7 @@ public class ObserverPatternTest {
         sprintVM.addObserver(sprintViewObserver);
 
         // Changes in all 3 domains
-        taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0)));
+        taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
         projectVM.setAll(List.of(new ProjectDTO(1L, "P", "d", null, "o", List.of(), 0, 0, 0)));
         sprintVM.setAll(List.of(new SprintDTO(1L, "P", "S1", List.of(), null, null)));
 
@@ -274,7 +274,7 @@ public class ObserverPatternTest {
     public void testLoadOnMissingFileIsNoOp() {
         // load() when cache file doesn't exist should not throw or change state
         TaskViewModel vm = new TaskViewModel();
-        vm.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0)));
+        vm.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
 
         // Delete cache file if it exists
         File cacheFile = new File(TEST_CACHE, "task_viewmodel.ser");

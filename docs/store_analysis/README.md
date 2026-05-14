@@ -5,20 +5,20 @@ MongoDB excluded (requires external server). Redis included if available.
 
 | Store | Operation | Count | Total (ms) | Avg (ms) | P50 (ms) | P95 (ms) | P99 (ms) |
 |-------|-----------|-------|------------|----------|----------|----------|----------|
-| JSON | create | 1000 | 0 | 0.00 | 0 | 0 | 0 |
-| JSON | loadAll | 10 | 235 | 23.50 | 22 | 42 | 42 |
+| JSON | create | 1000 | 1 | 0.00 | 0 | 0 | 0 |
+| JSON | loadAll | 10 | 251 | 25.10 | 21 | 53 | 53 |
 | JSON | loadByKey | 100 | 0 | 0.00 | 0 | 0 | 0 |
 | JSON | delete | 100 | 0 | 0.00 | 0 | 0 | 0 |
-| PARQUET | create | 1000 | 9695 | 9.70 | 9 | 11 | 14 |
+| PARQUET | create | 1000 | 9929 | 9.93 | 9 | 11 | 15 |
 | PARQUET | loadAll | 10 | 41 | 4.10 | 4 | 5 | 5 |
-| PARQUET | loadByKey | 100 | 401 | 4.01 | 4 | 4 | 4 |
-| PARQUET | delete | 100 | 966 | 9.66 | 9 | 11 | 11 |
-| DUCKDB | create | 1000 | 1029 | 1.03 | 1 | 1 | 2 |
-| DUCKDB | loadAll | 10 | 37 | 3.70 | 4 | 5 | 5 |
+| PARQUET | loadByKey | 100 | 403 | 4.03 | 4 | 4 | 5 |
+| PARQUET | delete | 100 | 990 | 9.90 | 10 | 11 | 15 |
+| DUCKDB | create | 1000 | 1082 | 1.08 | 1 | 2 | 2 |
+| DUCKDB | loadAll | 10 | 38 | 3.80 | 4 | 4 | 4 |
 | DUCKDB | loadByKey | 100 | 0 | 0.00 | 0 | 0 | 0 |
-| DUCKDB | delete | 100 | 0 | 0.00 | 0 | 0 | 0 |
-| REDIS | create | 1000 | 0 | 0.00 | 0 | 0 | 0 |
-| REDIS | loadAll | 10 | 1635 | 163.50 | 164 | 173 | 173 |
+| DUCKDB | delete | 100 | 1 | 0.01 | 0 | 0 | 0 |
+| REDIS | create | 1000 | 1 | 0.00 | 0 | 0 | 0 |
+| REDIS | loadAll | 10 | 1715 | 171.50 | 171 | 181 | 181 |
 | REDIS | loadByKey | 100 | 0 | 0.00 | 0 | 0 | 0 |
 | REDIS | delete | 100 | 0 | 0.00 | 0 | 0 | 0 |
 
