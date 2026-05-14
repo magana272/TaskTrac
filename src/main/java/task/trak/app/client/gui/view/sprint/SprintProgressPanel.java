@@ -35,7 +35,7 @@ public class SprintProgressPanel extends JPanel {
         sprintLabel.setForeground(TrakTheme.TEXT_PRIMARY);
 
         addSprintBtn = new JButton("+ Add Sprint");
-        TrakTheme.styleButtonNav(addSprintBtn);
+        TrakTheme.styleButtonPrimary(addSprintBtn);
         addSprintBtn.addActionListener(e -> {
             // Open sprint add dialog
             List<task.trak.model.dto.ProjectDTO> projects = controller.getProjectController().getViewModel().get();

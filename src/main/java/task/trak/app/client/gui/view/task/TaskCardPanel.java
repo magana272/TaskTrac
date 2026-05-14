@@ -1,6 +1,7 @@
 package task.trak.app.client.gui.view.task;
 
 import task.trak.model.dto.TaskDTO;
+import task.trak.model.util.TimeUtil;
 import task.trak.app.client.gui.controller.TaskController;
 import task.trak.app.client.gui.view.TrakTheme;
 
@@ -19,8 +20,6 @@ import java.util.List;
  */
 public class TaskCardPanel extends JPanel {
 
-    private static final int CARD_WIDTH = 350;
-    private static final int CARD_HEIGHT = 230;
     private static final int CORNER = TrakTheme.RADIUS_MD;
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("MMM dd");
 
@@ -28,6 +27,8 @@ public class TaskCardPanel extends JPanel {
     private final TaskController taskController;
     private final List<String> assignees;
     private boolean hovered = false;
+    private double timerRatio = -1; // -1 means no timer
+    private long timerElapsedMs = 0;
 
     public TaskCardPanel(TaskDTO task, TaskController taskController, List<String> assignees) {
         this.task = task;
@@ -35,8 +36,7 @@ public class TaskCardPanel extends JPanel {
         this.assignees = assignees;
 
         setLayout(new BorderLayout(4, 4));
-        setMinimumSize(new Dimension(280, CARD_HEIGHT));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, CARD_HEIGHT));
+        setMinimumSize(new Dimension(250, 180));
         setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_MD, TrakTheme.SP_LG));
@@ -62,6 +62,17 @@ public class TaskCardPanel extends JPanel {
 
         buildContent();
     }
+
+    public void setTimerState(double ratio, long elapsedMs) {
+        this.timerRatio = ratio;
+        this.timerElapsedMs = elapsedMs;
+    }
+
+    public boolean isInProgress() {
+        return "INPROGRESS".equals(task.status());
+    }
+
+    public TaskDTO getTask() { return task; }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -95,6 +106,37 @@ public class TaskCardPanel extends JPanel {
         g2.setStroke(new BasicStroke(hovered ? 1.5f : 1f));
         g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, w - 1, h - 1, CORNER, CORNER));
 
+        // Timer bar at bottom of card
+        if (timerRatio >= 0) {
+            int barHeight = 6;
+            int barY = h - barHeight;
+            int barInset = CORNER / 2;
+            int barWidth = w - barInset * 2;
+
+            // Track background
+            g2.setColor(TrakTheme.BG_ELEVATED);
+            g2.fillRoundRect(barInset, barY, barWidth, barHeight, 4, 4);
+
+            // Filled portion
+            Color barColor;
+            if (timerRatio < 0.7) barColor = TrakTheme.STATUS_COMPLETE; // green
+            else if (timerRatio < 1.0) barColor = TrakTheme.STATUS_INPROGRESS; // amber
+            else barColor = TrakTheme.STATUS_READY; // red
+
+            int fillWidth = (int)(barWidth * Math.min(timerRatio, 1.0));
+            if (fillWidth > 0) {
+                g2.setColor(barColor);
+                g2.fillRoundRect(barInset, barY, fillWidth, barHeight, 4, 4);
+            }
+
+            // Time text
+            String timeText = TimeUtil.formatDuration(timerElapsedMs);
+            g2.setFont(TrakTheme.FONT_CAPTION);
+            g2.setColor(TrakTheme.TEXT_SECONDARY);
+            FontMetrics fm = g2.getFontMetrics();
+            g2.drawString(timeText, barInset + barWidth - fm.stringWidth(timeText), barY - 2);
+        }
+
         g2.dispose();
         super.paintComponent(g);
     }
@@ -125,7 +167,37 @@ public class TaskCardPanel extends JPanel {
                 statusCombo.setForeground(TrakTheme.statusColor(newStatus));
                 try {
                     if ("COMPLETE".equals(newStatus)) {
-                        taskController.completeTask(task.id());
+                        // Completion prompt
+                        JTextArea noteArea = new JTextArea(4, 30);
+                        noteArea.setFont(TrakTheme.FONT_BODY);
+                        noteArea.setLineWrap(true);
+                        noteArea.setWrapStyleWord(true);
+                        JScrollPane noteScroll = new JScrollPane(noteArea);
+
+                        String timeInfo = "";
+                        if (task.estimate() != null) {
+                            timeInfo = "\nTime spent: " + TimeUtil.formatDuration(timerElapsedMs)
+                                    + " (est: " + task.estimate() + ")";
+                        }
+
+                        Object[] message = {
+                            "What did you accomplish on \"" + task.title() + "\"?" + timeInfo,
+                            noteScroll
+                        };
+
+                        int result = JOptionPane.showOptionDialog(TaskCardPanel.this, message, "Task Complete",
+                                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+                                new String[]{"Save", "Skip"}, "Save");
+
+                        if (result == 0 && !noteArea.getText().trim().isEmpty()) {
+                            String note = noteArea.getText().trim();
+                            String existing = task.summary() != null ? task.summary() : "";
+                            String newSummary = existing + (existing.isEmpty() ? "" : "\n\n") + "--- Completed ---\n" + note;
+                            taskController.updateTask(task.id(), null, "COMPLETE", null, newSummary, null);
+                        } else {
+                            taskController.completeTask(task.id());
+                        }
+                        return; // Don't fall through to the update logic below
                     } else {
                         taskController.updateTask(task.id(), null, newStatus, null, null, null);
                     }
