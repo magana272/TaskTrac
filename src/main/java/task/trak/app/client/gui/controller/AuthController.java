@@ -1,16 +1,20 @@
 package task.trak.app.client.gui.controller;
 
 import task.trak.model.Session;
+import task.trak.model.dto.request.UpdateUserRequest;
 import task.trak.app.client.http.AuthHttpService;
+import task.trak.app.client.http.UserHttpService;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 
 public class AuthController {
 
     private final AuthHttpService authService;
+    private final UserHttpService userService;
     private final UserViewModel userViewModel;
 
-    public AuthController(AuthHttpService authService, UserViewModel userViewModel) {
+    public AuthController(AuthHttpService authService, UserHttpService userService, UserViewModel userViewModel) {
         this.authService = authService;
+        this.userService = userService;
         this.userViewModel = userViewModel;
     }
 
@@ -48,6 +52,32 @@ public class AuthController {
             userViewModel.setError(e.getMessage());
             return false;
         }
+    }
+
+    public void changePassword(String currentPassword, String newPassword) {
+        Session session = userViewModel.getSession();
+        if (session == null) throw new RuntimeException("Not logged in.");
+        String username = session.getLogged_in_user();
+
+        if (!userService.authenticate(username, currentPassword)) {
+            throw new RuntimeException("Current password is incorrect.");
+        }
+
+        userService.updateByUsername(new UpdateUserRequest(username, null, null, null, newPassword));
+    }
+
+    public void deleteAccount(String password) {
+        Session session = userViewModel.getSession();
+        if (session == null) throw new RuntimeException("Not logged in.");
+        String username = session.getLogged_in_user();
+
+        if (!userService.authenticate(username, password)) {
+            throw new RuntimeException("Password is incorrect.");
+        }
+
+        userService.deleteByUsername(username);
+        try { authService.logout(); } catch (Exception ignored) { }
+        userViewModel.setSession(null);
     }
 
     public Session getSession() {
