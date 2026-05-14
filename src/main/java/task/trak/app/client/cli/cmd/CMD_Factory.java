@@ -1,6 +1,6 @@
 package task.trak.app.client.cli.cmd;
 
-import task.trak.api.util.TeeOutputStream;
+import task.trak.model.util.TeeOutputStream;
 import task.trak.app.client.cli.cmd.backlog.BacklogCMD;
 import task.trak.app.client.cli.cmd.cmdtype.CMD;
 import task.trak.app.client.cli.cmd.project.ProjectCMD;

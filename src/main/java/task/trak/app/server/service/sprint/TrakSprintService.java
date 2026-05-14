@@ -1,9 +1,9 @@
 package task.trak.app.server.service.sprint;
 
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.dto.request.CreateSprintRequest;
-import task.trak.api.dto.request.UpdateSprintRequest;
-import task.trak.api.exception.EntityNotFoundException;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
+import task.trak.model.dto.request.UpdateSprintRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.SprintService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;

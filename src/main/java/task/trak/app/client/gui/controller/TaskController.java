@@ -1,10 +1,10 @@
 package task.trak.app.client.gui.controller;
 
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.dto.request.CreateTaskRequest;
-import task.trak.api.dto.request.UpdateTaskRequest;
-import task.trak.api.model.Session;
-import task.trak.api.service.ServiceFactory;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.CreateTaskRequest;
+import task.trak.model.dto.request.UpdateTaskRequest;
+import task.trak.model.Session;
+import task.trak.app.client.http.TaskHttpService;
 import task.trak.app.client.gui.viewmodel.TaskViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 
@@ -13,10 +13,12 @@ import java.util.List;
 
 public class TaskController {
 
+    private final TaskHttpService taskService;
     private final TaskViewModel taskViewModel;
     private final UserViewModel userViewModel;
 
-    public TaskController(TaskViewModel taskViewModel, UserViewModel userViewModel) {
+    public TaskController(TaskHttpService taskService, TaskViewModel taskViewModel, UserViewModel userViewModel) {
+        this.taskService = taskService;
         this.taskViewModel = taskViewModel;
         this.userViewModel = userViewModel;
     }
@@ -26,22 +28,22 @@ public class TaskController {
     }
 
     public void addTask(String title, String projectName, String assignee, String summary, Date deadline, String estimate) {
-        ServiceFactory.taskService().create(new CreateTaskRequest(title, projectName, assignee, summary, deadline, estimate));
+        this.taskService.create(new CreateTaskRequest(title, projectName, assignee, summary, deadline, estimate));
         refreshTasks();
     }
 
     public void updateTask(long id, String title, String status, String assignee, String summary, String estimate) {
-        ServiceFactory.taskService().updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
+        this.taskService.updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
         refreshTasks();
     }
 
     public void deleteTask(long id) {
-        ServiceFactory.taskService().deleteById(id);
+        this.taskService.deleteById(id);
         refreshTasks();
     }
 
     public void completeTask(long id) {
-        ServiceFactory.taskService().updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
+        this.taskService.updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
         refreshTasks();
     }
 
@@ -54,8 +56,8 @@ public class TaskController {
         List<TaskDTO> tasks;
         if (session != null && session.getLogged_in_user() != null) {
             tasks = teamMode
-                    ? ServiceFactory.taskService().listAll()
-                    : ServiceFactory.taskService().listByAssignee(session.getLogged_in_user());
+                    ? this.taskService.listAll()
+                    : this.taskService.listByAssignee(session.getLogged_in_user());
         } else {
             tasks = List.of();
         }
@@ -63,6 +65,6 @@ public class TaskController {
     }
 
     public TaskDTO getTaskById(long id) {
-        return ServiceFactory.taskService().getById(id);
+        return this.taskService.getById(id);
     }
 }

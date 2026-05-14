@@ -1,8 +1,8 @@
 package task.trak.app.client.gui.view.project;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.util.TimeUtil;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.util.TimeUtil;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.DataView;
 import task.trak.app.client.gui.view.TrakTheme;

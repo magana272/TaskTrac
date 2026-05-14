@@ -1,6 +1,6 @@
 package task.trak.model;
 
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.server.dao.SessionDAO;
 import org.junit.After;

@@ -1,6 +1,6 @@
 package task.trak.app.client.cli;
 
-import task.trak.api.dto.request.CreateUserRequest;
+import task.trak.model.dto.request.CreateUserRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.http.ApiClient;
 import task.trak.app.client.config.WorkspaceConfig;

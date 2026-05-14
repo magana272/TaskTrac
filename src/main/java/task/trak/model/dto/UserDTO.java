@@ -1,4 +1,4 @@
-package task.trak.api.dto;
+package task.trak.model.dto;
 
 public record UserDTO(
         Long id,

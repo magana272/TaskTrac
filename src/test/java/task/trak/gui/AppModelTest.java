@@ -1,8 +1,8 @@
 package task.trak.gui;
 
 import org.junit.Test;
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.model.Session;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.Session;
 import task.trak.app.client.gui.viewmodel.*;
 
 import java.util.ArrayList;

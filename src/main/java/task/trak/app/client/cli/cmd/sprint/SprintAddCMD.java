@@ -1,7 +1,7 @@
 package task.trak.app.client.cli.cmd.sprint;
 
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.dto.request.CreateSprintRequest;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.SprintService;
 

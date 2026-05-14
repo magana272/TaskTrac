@@ -1,4 +1,4 @@
-package task.trak.api.util;
+package task.trak.model.util;
 
 import java.util.Date;
 

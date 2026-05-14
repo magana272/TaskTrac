@@ -2,10 +2,10 @@ package task.trak.app.server.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.dto.request.CreateSprintRequest;
-import task.trak.api.dto.request.UpdateSprintRequest;
-import task.trak.api.exception.TrakException;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
+import task.trak.model.dto.request.UpdateSprintRequest;
+import task.trak.model.exception.TrakException;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.SprintService;
 

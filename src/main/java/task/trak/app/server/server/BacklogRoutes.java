@@ -3,9 +3,9 @@ package task.trak.app.server.server;
 import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.dto.BacklogDTO;
-import task.trak.api.dto.request.CreateBacklogRequest;
-import task.trak.api.exception.TrakException;
+import task.trak.model.dto.BacklogDTO;
+import task.trak.model.dto.request.CreateBacklogRequest;
+import task.trak.model.exception.TrakException;
 import task.trak.api.service.BacklogService;
 import task.trak.api.service.ServiceFactory;
 

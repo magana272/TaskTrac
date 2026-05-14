@@ -1,10 +1,10 @@
 package task.trak.service;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.dto.request.CreateProjectRequest;
-import task.trak.api.dto.request.CreateTaskRequest;
-import task.trak.api.dto.request.CreateUserRequest;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.CreateTaskRequest;
+import task.trak.model.dto.request.CreateUserRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.TaskService;
 import task.trak.api.service.UserService;

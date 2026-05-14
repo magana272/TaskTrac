@@ -1,7 +1,7 @@
 package task.trak.api.service;
 
-import task.trak.api.dto.BacklogDTO;
-import task.trak.api.dto.request.CreateBacklogRequest;
+import task.trak.model.dto.BacklogDTO;
+import task.trak.model.dto.request.CreateBacklogRequest;
 
 public interface BacklogService {
     BacklogDTO create(CreateBacklogRequest request);

@@ -1,9 +1,9 @@
 package task.trak.app.server.service.task;
 
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.dto.request.CreateTaskRequest;
-import task.trak.api.dto.request.UpdateTaskRequest;
-import task.trak.api.exception.EntityNotFoundException;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.CreateTaskRequest;
+import task.trak.model.dto.request.UpdateTaskRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.STATE;
 import task.trak.api.service.TaskService;
 import task.trak.app.server.dao.DAOFactory;

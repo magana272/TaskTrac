@@ -1,6 +1,6 @@
 package task.trak.app.client.gui.view.panel;
 
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.auth.LoginView;

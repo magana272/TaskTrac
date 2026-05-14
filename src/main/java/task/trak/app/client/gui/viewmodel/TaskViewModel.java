@@ -1,6 +1,6 @@
 package task.trak.app.client.gui.viewmodel;
 
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.TaskDTO;
 
 import java.util.ArrayList;
 import java.util.List;

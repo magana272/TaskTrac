@@ -1,6 +1,6 @@
 package task.trak.app.client.gui.view.task;
 
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.TaskDTO;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.DataView;
 import task.trak.app.client.gui.view.TrakTheme;

@@ -3,10 +3,10 @@ package task.trak.gui;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.model.Session;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.Session;
 import task.trak.app.client.gui.viewmodel.*;
 
 import java.io.File;

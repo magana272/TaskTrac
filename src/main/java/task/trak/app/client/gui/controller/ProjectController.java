@@ -1,9 +1,9 @@
 package task.trak.app.client.gui.controller;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.request.CreateProjectRequest;
-import task.trak.api.dto.request.UpdateProjectRequest;
-import task.trak.api.service.ServiceFactory;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.UpdateProjectRequest;
+import task.trak.app.client.http.ProjectHttpService;
 import task.trak.app.client.gui.viewmodel.ProjectViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 
@@ -12,10 +12,12 @@ import java.util.List;
 
 public class ProjectController {
 
+    private final ProjectHttpService projectService;
     private final ProjectViewModel projectViewModel;
     private final UserViewModel userViewModel;
 
-    public ProjectController(ProjectViewModel projectViewModel, UserViewModel userViewModel) {
+    public ProjectController(ProjectHttpService projectService, ProjectViewModel projectViewModel, UserViewModel userViewModel) {
+        this.projectService = projectService;
         this.projectViewModel = projectViewModel;
         this.userViewModel = userViewModel;
     }
@@ -28,27 +30,27 @@ public class ProjectController {
         String owner = userViewModel.getSession() != null
                 ? userViewModel.getSession().getLogged_in_user()
                 : "guest";
-        ServiceFactory.projectService().create(new CreateProjectRequest(name, summary, owner, new ArrayList<>()));
+        this.projectService.create(new CreateProjectRequest(name, summary, owner, new ArrayList<>()));
         refreshProjects();
     }
 
     public void updateProject(String name, String newName, String summary) {
-        ServiceFactory.projectService().updateByName(new UpdateProjectRequest(name, newName, summary, null));
+        this.projectService.updateByName(new UpdateProjectRequest(name, newName, summary, null));
         refreshProjects();
     }
 
     public void deleteProject(String name) {
-        ServiceFactory.projectService().deleteByName(name);
+        this.projectService.deleteByName(name);
         refreshProjects();
     }
 
     public void addMember(String projectName, String username) {
-        ServiceFactory.projectService().addMember(projectName, username);
+        this.projectService.addMember(projectName, username);
         refreshProjects();
     }
 
     public void removeMember(String projectName, List<String> remainingMembers) {
-        ServiceFactory.projectService().updateByName(new UpdateProjectRequest(projectName, null, null, remainingMembers));
+        this.projectService.updateByName(new UpdateProjectRequest(projectName, null, null, remainingMembers));
         refreshProjects();
     }
 
@@ -59,23 +61,23 @@ public class ProjectController {
     public void refreshProjects(boolean teamMode) {
         List<ProjectDTO> projects;
         if (teamMode) {
-            projects = ServiceFactory.projectService().listAll();
+            projects = this.projectService.listAll();
         } else {
             String user = userViewModel.getSession() != null
                     ? userViewModel.getSession().getLogged_in_user() : null;
             projects = user != null
-                    ? ServiceFactory.projectService().listByUser(user)
-                    : ServiceFactory.projectService().listAll();
+                    ? this.projectService.listByUser(user)
+                    : this.projectService.listAll();
         }
         projectViewModel.setAll(projects);
     }
 
     public List<ProjectDTO> getProjectsForUser(String username) {
-        return ServiceFactory.projectService().listByUser(username);
+        return this.projectService.listByUser(username);
     }
 
     public List<String> getProjectMembers(String projectName) {
-        ProjectDTO project = ServiceFactory.projectService().getByName(projectName);
+        ProjectDTO project = this.projectService.getByName(projectName);
         if (project == null) return new ArrayList<>();
         List<String> result = new ArrayList<>();
         if (project.ownerUsername() != null) {

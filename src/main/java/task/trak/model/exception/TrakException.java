@@ -1,4 +1,4 @@
-package task.trak.api.exception;
+package task.trak.model.exception;
 
 public class TrakException extends RuntimeException {
     public TrakException(String message) {

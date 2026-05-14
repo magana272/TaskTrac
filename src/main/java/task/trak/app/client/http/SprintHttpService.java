@@ -2,9 +2,9 @@ package task.trak.app.client.http;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.dto.request.CreateSprintRequest;
-import task.trak.api.dto.request.UpdateSprintRequest;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.request.CreateSprintRequest;
+import task.trak.model.dto.request.UpdateSprintRequest;
 import task.trak.api.service.SprintService;
 
 import java.lang.reflect.Type;

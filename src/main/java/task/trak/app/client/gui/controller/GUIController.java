@@ -1,14 +1,19 @@
 package task.trak.app.client.gui.controller;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.dto.request.*;
-import task.trak.api.model.Session;
-import task.trak.api.service.*;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.*;
+import task.trak.model.Session;
 import task.trak.app.App;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.client.cli.cmd.CMD_Factory;
+import task.trak.app.client.http.TaskHttpService;
+import task.trak.app.client.http.ProjectHttpService;
+import task.trak.app.client.http.SprintHttpService;
+import task.trak.app.client.http.UserHttpService;
+import task.trak.app.client.http.BacklogHttpService;
+import task.trak.app.client.http.AuthHttpService;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 import task.trak.app.client.gui.viewmodel.event.CommandEvent;
 import task.trak.app.client.gui.viewmodel.event.CommandEventBus;
@@ -31,14 +36,33 @@ public class GUIController implements App, CommandListener {
     private final SprintController sprintController;
     private final UserViewModel userViewModel;
 
+    private final TaskHttpService taskService;
+    private final ProjectHttpService projectService;
+    private final SprintHttpService sprintService;
+    private final UserHttpService userService;
+    private final BacklogHttpService backlogService;
+    private final AuthHttpService authService;
+
     private Consumer<Session> sessionSaver;
     private Supplier<Session> sessionLoader;
 
-    public GUIController(AuthController authController,
+    public GUIController(TaskHttpService taskService,
+                         ProjectHttpService projectService,
+                         SprintHttpService sprintService,
+                         UserHttpService userService,
+                         BacklogHttpService backlogService,
+                         AuthHttpService authService,
+                         AuthController authController,
                          TaskController taskController,
                          ProjectController projectController,
                          SprintController sprintController,
                          UserViewModel userViewModel) {
+        this.taskService = taskService;
+        this.projectService = projectService;
+        this.sprintService = sprintService;
+        this.userService = userService;
+        this.backlogService = backlogService;
+        this.authService = authService;
         this.authController = authController;
         this.taskController = taskController;
         this.projectController = projectController;
@@ -138,9 +162,8 @@ public class GUIController implements App, CommandListener {
             // In REMOTE mode, no local store setup needed
             // Ensure guest exists on the server
             try {
-                UserService userService = ServiceFactory.userService();
-                if (userService.getByUsername("guest") == null) {
-                    userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+                if (this.userService.getByUsername("guest") == null) {
+                    this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
                 }
             } catch (Exception e) {
                 System.err.println("Warning: Could not connect to server to check guest account.");
@@ -154,9 +177,8 @@ public class GUIController implements App, CommandListener {
         }
 
         // Ensure guest admin account exists
-        UserService userService = ServiceFactory.userService();
-        if (userService.getByUsername("guest") == null) {
-            userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+        if (this.userService.getByUsername("guest") == null) {
+            this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
         }
     }
 
@@ -186,12 +208,8 @@ public class GUIController implements App, CommandListener {
     }
 
     private void seedData() {
-        UserService userService = ServiceFactory.userService();
-        ProjectService projectService = ServiceFactory.projectService();
-        TaskService taskService = ServiceFactory.taskService();
-
         // Skip if data already exists
-        if (taskService.listAll().size() > 0) return;
+        if (this.taskService.listAll().size() > 0) return;
 
         Random rand = new Random(42);
 
@@ -218,8 +236,8 @@ public class GUIController implements App, CommandListener {
         usernames.add("guest");
         for (int i = 0; i < 19; i++) {
             String username = firstNames[i].toLowerCase() + (i + 1);
-            if (userService.getByUsername(username) == null) {
-                userService.create(new CreateUserRequest(username, firstNames[i], lastNames[i],
+            if (this.userService.getByUsername(username) == null) {
+                this.userService.create(new CreateUserRequest(username, firstNames[i], lastNames[i],
                         firstNames[i].toLowerCase() + "@company.com", "password"));
             }
             usernames.add(username);
@@ -227,7 +245,7 @@ public class GUIController implements App, CommandListener {
 
         // 10 projects -- guest owns 0-3, member of 4-6
         for (int i = 0; i < 10; i++) {
-            if (projectService.getByName(projectNames[i]) != null) continue;
+            if (this.projectService.getByName(projectNames[i]) != null) continue;
 
             String owner;
             List<String> members = new ArrayList<>();
@@ -250,7 +268,7 @@ public class GUIController implements App, CommandListener {
                 members.addAll(picked);
             }
 
-            projectService.create(new CreateProjectRequest(projectNames[i], "Project for " + projectNames[i] + " development", owner, members));
+            this.projectService.create(new CreateProjectRequest(projectNames[i], "Project for " + projectNames[i] + " development", owner, members));
         }
 
         // 1000 tasks
@@ -264,17 +282,16 @@ public class GUIController implements App, CommandListener {
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.DAY_OF_MONTH, 1 + rand.nextInt(30));
 
-            TaskDTO task = taskService.create(new CreateTaskRequest(title, project, assignee, summary, cal.getTime(), estimate));
+            TaskDTO task = this.taskService.create(new CreateTaskRequest(title, project, assignee, summary, cal.getTime(), estimate));
 
             String status = statuses[rand.nextInt(statuses.length)];
             if (!"READY".equals(status)) {
-                taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null));
+                this.taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null));
             }
         }
 
         // 2 sprints per project (20 total), each with ~50 tasks
-        SprintService sprintService = ServiceFactory.sprintService();
-        List<TaskDTO> allTasks = taskService.listAll();
+        List<TaskDTO> allTasks = this.taskService.listAll();
         String[] sprintNames = {"Sprint 1", "Sprint 2"};
 
         for (int i = 0; i < 10; i++) {
@@ -286,7 +303,7 @@ public class GUIController implements App, CommandListener {
 
             for (int s = 0; s < 2; s++) {
                 String sprintName = sprintNames[s];
-                sprintService.create(new CreateSprintRequest(sprintName, project));
+                this.sprintService.create(new CreateSprintRequest(sprintName, project));
 
                 // Set dates: sprint 1 starts now, sprint 2 starts in 2 weeks
                 Calendar start = Calendar.getInstance();
@@ -304,7 +321,7 @@ public class GUIController implements App, CommandListener {
                 for (int t = from; t < to; t++) {
                     taskIds.add(projectTasks.get(t).id());
                 }
-                sprintService.update(new UpdateSprintRequest(sprintName, project, startStr, endStr, taskIds));
+                this.sprintService.update(new UpdateSprintRequest(sprintName, project, startStr, endStr, taskIds));
             }
         }
 

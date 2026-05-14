@@ -1,6 +1,6 @@
 package task.trak.api.service;
 
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 
 public interface AuthService {
     Session login(String username, String password);

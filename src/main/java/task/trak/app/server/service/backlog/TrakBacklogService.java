@@ -1,8 +1,8 @@
 package task.trak.app.server.service.backlog;
 
-import task.trak.api.dto.BacklogDTO;
-import task.trak.api.dto.request.CreateBacklogRequest;
-import task.trak.api.exception.EntityNotFoundException;
+import task.trak.model.dto.BacklogDTO;
+import task.trak.model.dto.request.CreateBacklogRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.BacklogService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;

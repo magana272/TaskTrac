@@ -1,9 +1,9 @@
 package task.trak.app.server.service.user;
 
-import task.trak.api.dto.UserDTO;
-import task.trak.api.dto.request.CreateUserRequest;
-import task.trak.api.dto.request.UpdateUserRequest;
-import task.trak.api.exception.EntityNotFoundException;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
+import task.trak.model.dto.request.UpdateUserRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.UserService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;

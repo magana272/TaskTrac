@@ -5,9 +5,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.dto.request.CreateTaskRequest;
-import task.trak.api.dto.request.UpdateTaskRequest;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.dto.request.CreateTaskRequest;
+import task.trak.model.dto.request.UpdateTaskRequest;
 import task.trak.api.service.TaskService;
 
 import java.lang.reflect.Type;

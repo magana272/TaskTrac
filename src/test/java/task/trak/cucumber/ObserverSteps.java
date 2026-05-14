@@ -1,9 +1,9 @@
 package task.trak.cucumber;
 
 import io.cucumber.java.en.*;
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.TaskDTO;
-import task.trak.api.model.Session;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.TaskDTO;
+import task.trak.model.Session;
 import task.trak.app.client.gui.viewmodel.*;
 
 import java.util.ArrayList;

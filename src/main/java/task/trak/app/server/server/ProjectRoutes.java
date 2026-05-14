@@ -2,10 +2,10 @@ package task.trak.app.server.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.request.CreateProjectRequest;
-import task.trak.api.dto.request.UpdateProjectRequest;
-import task.trak.api.exception.TrakException;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.UpdateProjectRequest;
+import task.trak.model.exception.TrakException;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
 
