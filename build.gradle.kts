@@ -24,6 +24,7 @@ dependencies {
     }
     implementation("org.slf4j:slf4j-nop:2.0.16")
     implementation("org.duckdb:duckdb_jdbc:1.5.2.1")
+    implementation("redis.clients:jedis:7.5.0")
     implementation("org.apache.avro:avro:1.12.1")
     testImplementation(platform("org.junit:junit-bom:6.0.0"))
     testImplementation("io.cucumber:cucumber-java:7.34.3")

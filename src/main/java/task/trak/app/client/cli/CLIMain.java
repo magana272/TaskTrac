@@ -49,6 +49,8 @@ public class CLIMain {
             DAOFactory.setFormat(DAOFactory.Format.MONGO);
         } else if ("duckdb".equalsIgnoreCase(fmt)) {
             DAOFactory.setFormat(DAOFactory.Format.DUCKDB);
+        } else if ("redis".equalsIgnoreCase(fmt)) {
+            DAOFactory.setFormat(DAOFactory.Format.REDIS);
         } else {
             DAOFactory.setFormat(DAOFactory.Format.PARQUET);
         }
