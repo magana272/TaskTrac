@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DuckDBProjectDAO implements EntityDAO<Project> {
 
@@ -28,8 +29,10 @@ public class DuckDBProjectDAO implements EntityDAO<Project> {
 
     @Override
     public void save(Project entity) {
-        String sql = "INSERT OR REPLACE INTO projects (id, project_name, summary, created_at, owner_json, members_json) VALUES (?, ?, ?, ?, ?, ?)";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "INSERT OR REPLACE INTO projects (id, project_name, summary, created_at, owner_json, members_json) VALUES (?, ?, ?, ?, ?, ?)";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, entity.getId());
@@ -42,13 +45,17 @@ public class DuckDBProjectDAO implements EntityDAO<Project> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to save project: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public Project loadByKey(String key) {
-        String sql = "SELECT * FROM projects WHERE project_name = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "SELECT * FROM projects WHERE project_name = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, key);
@@ -60,14 +67,18 @@ public class DuckDBProjectDAO implements EntityDAO<Project> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to load project: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
         return null;
     }
 
     @Override
     public boolean deleteByKey(String key) {
-        String sql = "DELETE FROM projects WHERE project_name = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "DELETE FROM projects WHERE project_name = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, key);
@@ -76,14 +87,18 @@ public class DuckDBProjectDAO implements EntityDAO<Project> {
         } catch (SQLException e) {
             System.err.println("Failed to delete project: " + e.getMessage());
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public List<Project> loadAll() {
-        List<Project> projects = new ArrayList<>();
-        String sql = "SELECT * FROM projects";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            List<Project> projects = new ArrayList<>();
+            String sql = "SELECT * FROM projects";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
@@ -91,10 +106,13 @@ public class DuckDBProjectDAO implements EntityDAO<Project> {
                     projects.add(fromResultSet(rs));
                 }
             }
+            return projects;
         } catch (SQLException e) {
             System.err.println("Failed to load all projects: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
-        return projects;
+        return new ArrayList<>();
     }
 
     private Project fromResultSet(ResultSet rs) throws SQLException {

@@ -66,7 +66,7 @@ public class TrakServer {
         server.createContext("/api/backlogs", AuthFilter.requireAuth(new BacklogRoutes.BacklogListHandler()));
         server.createContext("/api/backlogs/", AuthFilter.requireAuth(new BacklogRoutes.BacklogDetailHandler()));
 
-        server.setExecutor(null);
+        server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(4));
     }
 
     public static void main(String[] args) throws IOException {

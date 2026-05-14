@@ -54,9 +54,11 @@ public class DashboardView extends JPanel implements ViewModelChangeListener {
             switch (type) {
                 case PROJECTS -> {
                     projectSelector.refresh(projectViewModel.get());
-                    // Also sync task filter with selected project
+                    // Sync task filter only if it actually changed (prevents cascade)
                     String selected = projectViewModel.getSelectedProject();
-                    taskViewModel.setProjectFilter(selected);
+                    if (!selected.equals(taskViewModel.getProjectFilter())) {
+                        taskViewModel.setProjectFilter(selected);
+                    }
                 }
                 case TASKS -> {
                     tasksView.render();

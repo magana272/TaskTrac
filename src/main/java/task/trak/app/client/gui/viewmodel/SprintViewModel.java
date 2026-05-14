@@ -41,6 +41,10 @@ public class SprintViewModel extends ObservableViewModel<SprintDTO> {
         notifyObservers(ViewModelChangeType.SPRINTS);
     }
 
+    public void setAllSilent(List<SprintDTO> sprints) {
+        this.sprints = sprints != null ? new ArrayList<>(sprints) : new ArrayList<>();
+    }
+
     @Override
     protected void loadFrom(ObservableViewModel<?> loaded) {
         if (loaded instanceof SprintViewModel other) {

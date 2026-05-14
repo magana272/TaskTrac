@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DuckDBUserDAO implements EntityDAO<User> {
 
@@ -24,8 +25,10 @@ public class DuckDBUserDAO implements EntityDAO<User> {
 
     @Override
     public void save(User entity) {
-        String sql = "INSERT OR REPLACE INTO users (user_name, id, first_name, last_name, email, password_hash, tasks, projects) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "INSERT OR REPLACE INTO users (user_name, id, first_name, last_name, email, password_hash, tasks, projects) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, entity.getUser_name());
@@ -40,13 +43,17 @@ public class DuckDBUserDAO implements EntityDAO<User> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to save user: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public User loadByKey(String key) {
-        String sql = "SELECT * FROM users WHERE user_name = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "SELECT * FROM users WHERE user_name = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, key);
@@ -58,14 +65,18 @@ public class DuckDBUserDAO implements EntityDAO<User> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to load user: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
         return null;
     }
 
     @Override
     public boolean deleteByKey(String key) {
-        String sql = "DELETE FROM users WHERE user_name = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "DELETE FROM users WHERE user_name = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, key);
@@ -74,14 +85,18 @@ public class DuckDBUserDAO implements EntityDAO<User> {
         } catch (SQLException e) {
             System.err.println("Failed to delete user: " + e.getMessage());
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public List<User> loadAll() {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM users";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            List<User> users = new ArrayList<>();
+            String sql = "SELECT * FROM users";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
@@ -89,10 +104,13 @@ public class DuckDBUserDAO implements EntityDAO<User> {
                     users.add(fromResultSet(rs));
                 }
             }
+            return users;
         } catch (SQLException e) {
             System.err.println("Failed to load all users: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
-        return users;
+        return new ArrayList<>();
     }
 
     private User fromResultSet(ResultSet rs) throws SQLException {

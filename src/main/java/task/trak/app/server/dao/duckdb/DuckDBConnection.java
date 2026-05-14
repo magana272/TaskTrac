@@ -6,10 +6,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DuckDBConnection {
 
     private static Connection connection;
+    private static final ReentrantLock lock = new ReentrantLock();
+
+    public static ReentrantLock getLock() {
+        return lock;
+    }
 
     public static Connection getConnection() {
         if (connection == null) {

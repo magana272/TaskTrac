@@ -11,13 +11,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DuckDBTaskDAO implements EntityDAO<Task> {
 
     @Override
     public void save(Task entity) {
-        String sql = "INSERT OR REPLACE INTO tasks (id, project_name, assigned_to, title, status, created_at, completed_at, summary, deadline, estimate, time_started, time_spent_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "INSERT OR REPLACE INTO tasks (id, project_name, assigned_to, title, status, created_at, completed_at, summary, deadline, estimate, time_started, time_spent_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, entity.getId());
@@ -36,13 +39,17 @@ public class DuckDBTaskDAO implements EntityDAO<Task> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to save task: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public Task loadByKey(String key) {
-        String sql = "SELECT * FROM tasks WHERE id = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "SELECT * FROM tasks WHERE id = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, Long.parseLong(key));
@@ -54,14 +61,18 @@ public class DuckDBTaskDAO implements EntityDAO<Task> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to load task: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
         return null;
     }
 
     @Override
     public boolean deleteByKey(String key) {
-        String sql = "DELETE FROM tasks WHERE id = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "DELETE FROM tasks WHERE id = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, Long.parseLong(key));
@@ -70,14 +81,18 @@ public class DuckDBTaskDAO implements EntityDAO<Task> {
         } catch (SQLException e) {
             System.err.println("Failed to delete task: " + e.getMessage());
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public List<Task> loadAll() {
-        List<Task> tasks = new ArrayList<>();
-        String sql = "SELECT * FROM tasks";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            List<Task> tasks = new ArrayList<>();
+            String sql = "SELECT * FROM tasks";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
@@ -85,10 +100,13 @@ public class DuckDBTaskDAO implements EntityDAO<Task> {
                     tasks.add(fromResultSet(rs));
                 }
             }
+            return tasks;
         } catch (SQLException e) {
             System.err.println("Failed to load all tasks: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
-        return tasks;
+        return new ArrayList<>();
     }
 
     private Task fromResultSet(ResultSet rs) throws SQLException {

@@ -28,7 +28,7 @@ public abstract class ObservableViewModel<T> implements ViewModel<T>, Serializab
         if (listeners != null) listeners.remove(observer);
     }
 
-    protected void notifyObservers(ViewModelChangeType type) {
+    public void notifyObservers(ViewModelChangeType type) {
         if (listeners == null) return;
         for (ViewModelChangeListener listener : listeners) {
             try {
