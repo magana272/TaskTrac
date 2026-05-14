@@ -33,6 +33,7 @@ public class ProjectSelectorPanel extends JPanel {
         TrakTheme.styleComboBox(projectCombo);
         projectCombo.setPreferredSize(new Dimension(200, 28));
         projectCombo.addActionListener(e -> {
+            if (refreshing) return;
             String selected = (String) projectCombo.getSelectedItem();
             if (selected != null) {
                 projectViewModel.setSelectedProject(selected);
@@ -46,20 +47,27 @@ public class ProjectSelectorPanel extends JPanel {
         add(addBtn);
     }
 
+    private boolean refreshing = false;
+
     public void refresh(List<ProjectDTO> projects) {
-        String current = projectViewModel.getSelectedProject();
-        projectCombo.removeAllItems();
-        projectCombo.addItem("All");
-        for (ProjectDTO p : projects) {
-            projectCombo.addItem(p.projectName());
-        }
-        // Restore selection if still valid
-        for (int i = 0; i < projectCombo.getItemCount(); i++) {
-            if (projectCombo.getItemAt(i).equals(current)) {
-                projectCombo.setSelectedIndex(i);
-                return;
+        refreshing = true;
+        try {
+            String current = projectViewModel.getSelectedProject();
+            projectCombo.removeAllItems();
+            projectCombo.addItem("All");
+            for (ProjectDTO p : projects) {
+                projectCombo.addItem(p.projectName());
             }
+            // Restore selection if still valid
+            for (int i = 0; i < projectCombo.getItemCount(); i++) {
+                if (projectCombo.getItemAt(i).equals(current)) {
+                    projectCombo.setSelectedIndex(i);
+                    return;
+                }
+            }
+            projectCombo.setSelectedIndex(0);
+        } finally {
+            refreshing = false;
         }
-        projectCombo.setSelectedIndex(0);
     }
 }

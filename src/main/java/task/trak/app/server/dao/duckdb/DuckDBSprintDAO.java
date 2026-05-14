@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DuckDBSprintDAO implements EntityDAO<Sprint> {
 
@@ -25,8 +26,10 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
 
     @Override
     public void save(Sprint entity) {
-        String sql = "INSERT OR REPLACE INTO sprints (id, project_name, name, task_ids, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "INSERT OR REPLACE INTO sprints (id, project_name, name, task_ids, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, entity.getId());
@@ -39,11 +42,15 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to save sprint: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public Sprint loadByKey(String key) {
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
             Connection conn = DuckDBConnection.getConnection();
             // Try by ID first, fall back to name
@@ -65,12 +72,16 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to load sprint: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
         return null;
     }
 
     @Override
     public boolean deleteByKey(String key) {
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
             Connection conn = DuckDBConnection.getConnection();
             // Try by ID first, fall back to name
@@ -88,14 +99,18 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
         } catch (SQLException e) {
             System.err.println("Failed to delete sprint: " + e.getMessage());
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public List<Sprint> loadAll() {
-        List<Sprint> sprints = new ArrayList<>();
-        String sql = "SELECT * FROM sprints";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            List<Sprint> sprints = new ArrayList<>();
+            String sql = "SELECT * FROM sprints";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
@@ -103,10 +118,13 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
                     sprints.add(fromResultSet(rs));
                 }
             }
+            return sprints;
         } catch (SQLException e) {
             System.err.println("Failed to load all sprints: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
-        return sprints;
+        return new ArrayList<>();
     }
 
     private Sprint fromResultSet(ResultSet rs) throws SQLException {

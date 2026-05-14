@@ -172,9 +172,10 @@ public class GUIController implements App, CommandListener {
             return;
         }
 
-        if (this.sessionLoader != null) {
-            Session session = this.sessionLoader.get();
-            userViewModel.setSession(session);
+        // Clear stale session — embedded server starts fresh with no tokens
+        userViewModel.setSession(null);
+        if (this.sessionSaver != null) {
+            this.sessionSaver.accept(null);
         }
 
         // Ensure guest admin account exists (create is unprotected; ignore if already exists)
@@ -191,6 +192,40 @@ public class GUIController implements App, CommandListener {
         taskController.getViewModel().clearCache();
         projectController.getViewModel().clearCache();
         sprintController.getViewModel().clearCache();
+    }
+
+    /**
+     * Refresh all data off-EDT, then fire notifications in one batch.
+     * Call from a background thread.
+     */
+    public void refreshAll() {
+        try {
+            Session session = userViewModel.getSession();
+            String user = session != null ? session.getLogged_in_user() : null;
+
+            var tasks = user != null
+                    ? taskService.listByAssignee(user)
+                    : java.util.List.<task.trak.model.dto.TaskDTO>of();
+            var projects = user != null
+                    ? projectService.listByUser(user)
+                    : projectService.listAll();
+            var sprints = sprintService.listAll();
+
+            taskController.getViewModel().setAllSilent(tasks);
+            projectController.getViewModel().setAllSilent(projects);
+            sprintController.getViewModel().setAllSilent(sprints);
+
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                projectController.getViewModel().notifyObservers(
+                        task.trak.app.client.gui.viewmodel.ViewModelChangeType.PROJECTS);
+                taskController.getViewModel().notifyObservers(
+                        task.trak.app.client.gui.viewmodel.ViewModelChangeType.TASKS);
+                sprintController.getViewModel().notifyObservers(
+                        task.trak.app.client.gui.viewmodel.ViewModelChangeType.SPRINTS);
+            });
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public AuthController getAuthController() {

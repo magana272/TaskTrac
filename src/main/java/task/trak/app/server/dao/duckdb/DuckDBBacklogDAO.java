@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DuckDBBacklogDAO implements EntityDAO<BackLog> {
 
@@ -25,8 +26,10 @@ public class DuckDBBacklogDAO implements EntityDAO<BackLog> {
 
     @Override
     public void save(BackLog entity) {
-        String sql = "INSERT OR REPLACE INTO backlogs (id, name, project_name, task_ids, created_at) VALUES (?, ?, ?, ?, ?)";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "INSERT OR REPLACE INTO backlogs (id, name, project_name, task_ids, created_at) VALUES (?, ?, ?, ?, ?)";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, entity.getId());
@@ -38,13 +41,17 @@ public class DuckDBBacklogDAO implements EntityDAO<BackLog> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to save backlog: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public BackLog loadByKey(String key) {
-        String sql = "SELECT * FROM backlogs WHERE name = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "SELECT * FROM backlogs WHERE name = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, key);
@@ -56,14 +63,18 @@ public class DuckDBBacklogDAO implements EntityDAO<BackLog> {
             }
         } catch (SQLException e) {
             System.err.println("Failed to load backlog: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
         return null;
     }
 
     @Override
     public boolean deleteByKey(String key) {
-        String sql = "DELETE FROM backlogs WHERE name = ?";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            String sql = "DELETE FROM backlogs WHERE name = ?";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, key);
@@ -72,14 +83,18 @@ public class DuckDBBacklogDAO implements EntityDAO<BackLog> {
         } catch (SQLException e) {
             System.err.println("Failed to delete backlog: " + e.getMessage());
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
     public List<BackLog> loadAll() {
-        List<BackLog> backlogs = new ArrayList<>();
-        String sql = "SELECT * FROM backlogs";
+        ReentrantLock lock = DuckDBConnection.getLock();
+        lock.lock();
         try {
+            List<BackLog> backlogs = new ArrayList<>();
+            String sql = "SELECT * FROM backlogs";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql);
                  ResultSet rs = ps.executeQuery()) {
@@ -87,10 +102,13 @@ public class DuckDBBacklogDAO implements EntityDAO<BackLog> {
                     backlogs.add(fromResultSet(rs));
                 }
             }
+            return backlogs;
         } catch (SQLException e) {
             System.err.println("Failed to load all backlogs: " + e.getMessage());
+        } finally {
+            lock.unlock();
         }
-        return backlogs;
+        return new ArrayList<>();
     }
 
     private BackLog fromResultSet(ResultSet rs) throws SQLException {

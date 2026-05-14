@@ -70,10 +70,8 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                     if (userViewModel.getSession() == null) {
                         controller.clearViewModels();
                     } else {
-                        controller.getTaskController().refreshTasks();
-                        controller.getProjectController().refreshProjects();
-                        controller.getSprintController().refreshSprints();
-                        dashboardView.render();
+                        // Refresh all data off-EDT, fires notifications when done
+                        new Thread(() -> controller.refreshAll(), "session-refresh").start();
                     }
                 }
                 case ERROR -> {
