@@ -1,3 +1,5 @@
+package task.trak.model;
+
 import task.trak.app.server.model.sprint.Sprint;
 import org.junit.Test;
 

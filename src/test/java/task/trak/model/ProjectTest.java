@@ -1,3 +1,5 @@
+package task.trak.model;
+
 import task.trak.app.server.model.project.Project;
 import task.trak.app.server.model.project.TrakProjectBuilder;
 import task.trak.app.server.model.user.TrakBuilderUser;

@@ -1,3 +1,5 @@
+package task.trak.cli;
+
 import task.trak.Main;
 import task.trak.app.client.cli.TTApp;
 import org.junit.Before;

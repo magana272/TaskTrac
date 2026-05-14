@@ -1,7 +1,9 @@
+package task.trak.gui;
+
+import org.junit.Test;
 import task.trak.api.dto.TaskDTO;
 import task.trak.api.model.Session;
 import task.trak.app.client.gui.viewmodel.*;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,8 +31,6 @@ public class AppModelTest {
     private TaskDTO taskWithEstimate(long id, String title, String estimate) {
         return new TaskDTO(id, "P", "user", title, "READY", null, null, null, null, estimate, 0);
     }
-
-    // --- TaskViewModel tests ---
 
     @Test
     public void testInitialStateIsEmpty() {

@@ -1,3 +1,5 @@
+package task.trak.cucumber;
+
 import io.cucumber.java.en.*;
 import task.trak.api.dto.TaskDTO;
 import task.trak.api.model.Session;

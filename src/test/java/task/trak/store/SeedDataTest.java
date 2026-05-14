@@ -1,3 +1,5 @@
+package task.trak.store;
+
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
 import task.trak.api.service.ProjectService;

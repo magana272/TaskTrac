@@ -1,3 +1,5 @@
+package task.trak.cucumber;
+
 import io.cucumber.java.en.*;
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;

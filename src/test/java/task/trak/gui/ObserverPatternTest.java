@@ -1,3 +1,5 @@
+package task.trak.gui;
+
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
 import task.trak.api.dto.SprintDTO;
@@ -228,18 +230,12 @@ public class ObserverPatternTest {
         // Second observer records
         vm.addObserver(received::add);
 
-        try {
-            vm.setAll(List.of());
-        } catch (RuntimeException e) {
-            // CopyOnWriteArrayList iteration may propagate the exception;
-            // this test documents current behavior
-        }
+        vm.setAll(List.of());
 
-        // Even if exception propagated, first observer ran before it
-        // The key test: does the second observer still get notified?
-        // With current implementation (no try-catch in notifyObservers),
-        // the exception from observer 1 prevents observer 2 from running.
-        // This documents the behavior for future improvement.
+        // With exception isolation, second observer should still be notified
+        assertEquals("Second observer should receive notification despite first observer throwing",
+                1, received.size());
+        assertEquals(ViewModelChangeType.TASKS, received.get(0));
     }
 
     // --- Serialization ---

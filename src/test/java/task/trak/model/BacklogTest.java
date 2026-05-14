@@ -1,3 +1,5 @@
+package task.trak.model;
+
 import task.trak.app.server.model.backlog.BackLog;
 import org.junit.Test;
 

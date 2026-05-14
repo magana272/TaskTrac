@@ -1,3 +1,5 @@
+package task.trak.store;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import task.trak.app.client.cli.TTApp;

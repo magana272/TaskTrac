@@ -1,3 +1,5 @@
+package task.trak.model;
+
 import task.trak.app.server.model.user.TrakBuilderUser;
 import task.trak.app.server.model.user.User;
 import task.trak.app.server.util.PasswordUtil;

@@ -1,3 +1,5 @@
+package task.trak.model;
+
 import task.trak.app.server.util.PasswordUtil;
 import org.junit.Test;
 

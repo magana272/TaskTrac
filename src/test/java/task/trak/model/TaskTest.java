@@ -1,3 +1,5 @@
+package task.trak.model;
+
 import task.trak.api.service.STATE;
 import task.trak.app.server.model.task.Task;
 import org.junit.Test;
