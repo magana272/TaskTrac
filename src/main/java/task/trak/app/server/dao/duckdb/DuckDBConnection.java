@@ -79,7 +79,9 @@ public class DuckDBConnection {
                         name VARCHAR,
                         task_ids VARCHAR,
                         start_date BIGINT,
-                        end_date BIGINT
+                        end_date BIGINT,
+                        completed BOOLEAN DEFAULT FALSE,
+                        completed_at BIGINT
                     )""");
 
             stmt.execute("""

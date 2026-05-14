@@ -22,7 +22,7 @@ public class LogoutViewClearTest {
 
         taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
         projectVM.setAll(List.of(new ProjectDTO(1L, "P", "d", null, "o", List.of(), 0, 0, 0)));
-        sprintVM.setAll(List.of(new SprintDTO(1L, "P", "S1", List.of(), null, null)));
+        sprintVM.setAll(List.of(new SprintDTO(1L, "P", "S1", List.of(), null, null, false)));
 
         assertEquals(1, taskVM.get().size());
         assertEquals(1, projectVM.get().size());

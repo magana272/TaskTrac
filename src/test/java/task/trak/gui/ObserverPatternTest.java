@@ -71,11 +71,11 @@ public class ObserverPatternTest {
     @Test
     public void testObserverReceivesNotificationOnUpdate() {
         SprintViewModel vm = new SprintViewModel();
-        vm.setAll(List.of(new SprintDTO(1L, "Proj", "Sprint1", List.of(), null, null)));
+        vm.setAll(List.of(new SprintDTO(1L, "Proj", "Sprint1", List.of(), null, null, false)));
         List<ViewModelChangeType> received = new ArrayList<>();
         vm.addObserver(received::add);
 
-        vm.update(new SprintDTO(1L, "Proj", "Sprint1-Updated", List.of(), null, null));
+        vm.update(new SprintDTO(1L, "Proj", "Sprint1-Updated", List.of(), null, null, false));
 
         assertEquals(1, received.size());
         assertEquals(ViewModelChangeType.SPRINTS, received.get(0));
@@ -163,7 +163,7 @@ public class ObserverPatternTest {
         // Changes in all 3 domains
         taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
         projectVM.setAll(List.of(new ProjectDTO(1L, "P", "d", null, "o", List.of(), 0, 0, 0)));
-        sprintVM.setAll(List.of(new SprintDTO(1L, "P", "S1", List.of(), null, null)));
+        sprintVM.setAll(List.of(new SprintDTO(1L, "P", "S1", List.of(), null, null, false)));
 
         assertEquals(3, received.size());
         assertTrue(received.contains(ViewModelChangeType.TASKS));

@@ -18,7 +18,9 @@ public class SprintProgressPanel extends JPanel {
     private final JLabel statsLabel;
     private final JPanel progressBar;
     private final JButton addSprintBtn;
+    private final JButton completeSprintBtn;
     private double progress = 0;
+    private SprintDTO activeSprint = null;
 
     public SprintProgressPanel(GUIController controller) {
         this.controller = controller;
@@ -43,8 +45,26 @@ public class SprintProgressPanel extends JPanel {
             new SprintAddView(this, controller.getSprintController(), projects, tasks).show();
         });
 
+        completeSprintBtn = new JButton("Complete Sprint");
+        TrakTheme.styleButtonNav(completeSprintBtn);
+        completeSprintBtn.setVisible(false);
+        completeSprintBtn.addActionListener(e -> {
+            if (activeSprint == null) return;
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Complete sprint \"" + activeSprint.name() + "\"? It will be archived.",
+                    "Complete Sprint", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                controller.getSprintController().completeSprint(activeSprint.name(), activeSprint.projectName());
+            }
+        });
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
+        btnPanel.setOpaque(false);
+        btnPanel.add(completeSprintBtn);
+        btnPanel.add(addSprintBtn);
+
         topRow.add(sprintLabel, BorderLayout.WEST);
-        topRow.add(addSprintBtn, BorderLayout.EAST);
+        topRow.add(btnPanel, BorderLayout.EAST);
         add(topRow, BorderLayout.NORTH);
 
         // Progress bar (custom painted)
@@ -79,18 +99,26 @@ public class SprintProgressPanel extends JPanel {
     }
 
     public void refresh(List<SprintDTO> sprints, List<TaskDTO> allTasks, String selectedProject) {
-        // Find active sprint for selected project
+        // Find active (non-completed) sprint for selected project
         SprintDTO active = null;
         if (!"All".equals(selectedProject)) {
             for (SprintDTO s : sprints) {
-                if (selectedProject.equals(s.projectName())) {
+                if (selectedProject.equals(s.projectName()) && !s.completed()) {
                     active = s;
-                    break; // first sprint for this project
+                    break; // first non-completed sprint for this project
                 }
             }
-        } else if (!sprints.isEmpty()) {
-            active = sprints.get(0);
+        } else {
+            for (SprintDTO s : sprints) {
+                if (!s.completed()) {
+                    active = s;
+                    break;
+                }
+            }
         }
+
+        this.activeSprint = active;
+        completeSprintBtn.setVisible(active != null);
 
         if (active == null) {
             sprintLabel.setText("No active sprint");

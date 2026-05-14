@@ -156,7 +156,8 @@ public class SprintRoutes {
                         existing.projectName(),
                         bodyRequest.startDate(),
                         bodyRequest.endDate(),
-                        taskIds
+                        taskIds,
+                        bodyRequest.completed()
                 );
                 request.validate();
 
