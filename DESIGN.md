@@ -1,224 +1,315 @@
-# DESIGN: DuckDB + Redis Stores, Store Benchmarks, UI Redesign
+# DESIGN: UI Polish, Responsive Cards, and Focus Timer
 
 ---
 
-## Goal
+## 1. Goal
 
-Add DuckDB (new default) and Redis as storage backends, benchmark all 5 stores with response time data, and redesign the GUI into a project-scoped dashboard with larger task cards and a sprint progress timeline.
+Transform the Trak GUI from a functional prototype into a polished solo-dev productivity tool. Three changes:
 
-## Success Criteria
+1. **UI Consistency** — Standardize all button sizes, fonts, and spacing so the interface feels cohesive
+2. **Responsive Task Cards** — Cards resize to fill the window; when space is too tight, switch to a compact row layout
+3. **Focus Timer Bar** — When a task is IN PROGRESS in a sprint, show a live countdown bar (green→yellow→red) on the card. On completion, prompt the user for a reflection note.
 
-- DuckDB store works as default (embedded, zero config)
-- Redis store works with running Redis server (env vars for connection)
-- Benchmark script tests all stores: Parquet, JSON, MongoDB, DuckDB, Redis
-- Benchmark results in `docs/store_analysis/` with response time data
-- GUI shows project-scoped view: project selector → task cards → sprint progress
-- Task cards are larger, more prominent than current 270x190 cards
-- Sprint section shows progress bar with completion percentage
-- Solo dev can watch task completion and effort in real time
+## 2. Success Criteria
 
-## Constraints
+- [ ] All "+" buttons (Add Project, Add Task, Add Sprint) are identical size and style
+- [ ] All combo boxes are the same height
+- [ ] Cards expand to fill available width with no horizontal scroll
+- [ ] Below ~400px per card, layout switches to compact single-row list
+- [ ] IN PROGRESS tasks with an estimate show a live timer bar (updates every second)
+- [ ] Timer bar transitions: green (0-70%), amber (70-100%), red (>100%)
+- [ ] Completing a task opens a "What did you accomplish?" dialog
+- [ ] Timer bar only appears on tasks that belong to a sprint
+- [ ] No new external dependencies
 
-- Follow existing `EntityDAO<T>` interface (save, loadByKey, deleteByKey, loadAll)
-- Follow existing `DAOFactory.Format` enum pattern for store selection
-- No changes to service layer — stores are swapped transparently via DAOFactory
-- Dependencies approved: DuckDB (`org.duckdb:duckdb_jdbc`), Redis (`redis.clients:jedis`)
+## 3. Constraints
 
-## UX Expectations
+- Must work with existing `EntityDAO<T>` interface — no schema changes
+- Timer display is client-side only — no server polling every second
+- `TaskDTO.timeSpentMs` is a server-side snapshot; client interpolates locally
+- Must preserve all existing functionality (edit, delete, status change, sort, filter)
+- No new dependencies
 
+## 4. UX Expectations
+
+### Card Layout — Wide Window (>800px)
 ```
-┌──────────────────────────────────────────────────────┐
-│ TRAK  │ ● user                    [⚙ Settings] [Logout] │
-├──────────────────────────────────────────────────────┤
-│ Project: [ MobileApp ▼ ]           [+ Add Project]   │
-├──────────────────────────────────────────────────────┤
-│                                                       │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│  │  Task 1     │  │  Task 2     │  │  Task 3     │  │
-│  │  Setup RN   │  │  Login UI   │  │  CI/CD      │  │
-│  │             │  │             │  │             │  │
-│  │  ● READY    │  │  ● PROGRESS │  │  ✓ DONE     │  │
-│  │  4h est     │  │  8h est     │  │  3h actual  │  │
-│  │  Due: 5d    │  │  Due: 7d    │  │  Completed  │  │
-│  └─────────────┘  └─────────────┘  └─────────────┘  │
-│                                                       │
-│  [+ Add Task]                     Sort: [Due Date ▼]  │
-├──────────────────────────────────────────────────────┤
-│ Sprint: Sprint 1  (May 19 – Jun 1)                    │
-│ ████████████░░░░░░░░░  3/5 tasks   60%               │
-│ Ready: 1  In Progress: 1  Complete: 3                 │
-└──────────────────────────────────────────────────────┘
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│ Setup CI/CD      │  │ Login Screen     │  │ Write Tests      │
+│ ● INPROGRESS  [X]│  │ ● READY       [X]│  │ ✓ COMPLETE    [X]│
+│ MobileApp        │  │ MobileApp        │  │ MobileApp        │
+│ Configure pipe...│  │ Figma mockups    │  │ Unit + integ     │
+│ Due: May 21      │  │ Due: May 22      │  │ Completed        │
+│ Est: 3h   #1234  │  │ Est: 8h   #1235  │  │ 2h 15m    #1236  │
+│ ████████░░ 2h/3h │  │                  │  │                  │
+│ [GREEN────→]     │  │                  │  │                  │
+└──────────────────┘  └──────────────────┘  └──────────────────┘
 ```
 
-Key changes from current UI:
-- **Project selector at top** replaces separate Projects tab
-- **Tasks and Sprint on same screen** instead of separate tabs
-- **Larger task cards** (350x220 min) with more visible status, estimate, deadline
-- **Sprint progress bar** below tasks — shows real-time completion
-- **No more Projects/Sprints table views** — replaced by project-scoped dashboard
-
----
-
-## Architecture Decisions
-
-### Feature Branch 1: `feature/duckdb-store`
-
-#### New dependency
-- `org.duckdb:duckdb_jdbc:1.2.2` (~20MB, embedded SQL, no external server)
-- **Why:** Embedded columnar database, faster than Parquet for CRUD operations, SQL interface
-- **Alternatives:** SQLite (row-based, less suited for analytics), H2 (heavier)
-
-#### New files (5 DAO classes + 1 helper)
-| File | Purpose |
-|------|---------|
-| `dao/duckdb/DuckDBConnection.java` | Singleton JDBC connection to `.store/trak.duckdb` |
-| `dao/duckdb/DuckDBUserDAO.java` | User CRUD via SQL |
-| `dao/duckdb/DuckDBProjectDAO.java` | Project CRUD via SQL |
-| `dao/duckdb/DuckDBTaskDAO.java` | Task CRUD via SQL |
-| `dao/duckdb/DuckDBSprintDAO.java` | Sprint CRUD via SQL |
-| `dao/duckdb/DuckDBBacklogDAO.java` | Backlog CRUD via SQL |
-
-#### Modified files
-| File | Change |
-|------|--------|
-| `dao/DAOFactory.java` | Add `DUCKDB` to Format enum, add switch cases |
-| `app/client/config/WorkspaceConfig.java` | Default changes from `"parquet"` to `"duckdb"` |
-| `app/server/server/TrakServer.java` | Handle `"duckdb"` format string |
-| `build.gradle.kts` | Add DuckDB dependency |
-
-#### Data flow
+### Card Layout — Narrow Window (<400px per card)
 ```
-DuckDBConnection.getConnection() → java.sql.Connection to .store/trak.duckdb
-DuckDBTaskDAO.save(task) → INSERT OR REPLACE INTO tasks (id, title, ...) VALUES (?, ?, ...)
-DuckDBTaskDAO.loadByKey(id) → SELECT * FROM tasks WHERE id = ?
-DuckDBTaskDAO.loadAll() → SELECT * FROM tasks
-DuckDBTaskDAO.deleteByKey(id) → DELETE FROM tasks WHERE id = ?
+● INPROG  Setup CI/CD          MobileApp   3h  May 21  ████ 2h/3h
+● READY   Login Screen         MobileApp   8h  May 22
+✓ DONE    Write Tests          MobileApp   2h  Completed
 ```
 
-#### Schema (auto-created on first connection)
-```sql
-CREATE TABLE IF NOT EXISTS users (user_name VARCHAR PRIMARY KEY, first_name VARCHAR, ...);
-CREATE TABLE IF NOT EXISTS projects (id BIGINT PRIMARY KEY, project_name VARCHAR, ...);
-CREATE TABLE IF NOT EXISTS tasks (id BIGINT PRIMARY KEY, project_name VARCHAR, ...);
-CREATE TABLE IF NOT EXISTS sprints (id BIGINT PRIMARY KEY, name VARCHAR, ...);
-CREATE TABLE IF NOT EXISTS backlogs (id BIGINT PRIMARY KEY, name VARCHAR, ...);
+### Timer Bar States
+```
+0%──────────────────50%──────────────────100%──────────→ overtime
+[         GREEN          ][    AMBER    ][ RED →→→→→→→→→→ ]
+```
+
+### Completion Dialog
+```
+┌─────────────────────────────────────┐
+│  Task Complete: "Setup CI/CD"       │
+│                                     │
+│  What did you accomplish?           │
+│  ┌─────────────────────────────┐   │
+│  │ Configured GitHub Actions   │   │
+│  │ pipeline for staging deploy │   │
+│  └─────────────────────────────┘   │
+│                                     │
+│  Time spent: 2h 47m (est: 3h)     │
+│                                     │
+│            [Save]  [Skip]           │
+└─────────────────────────────────────┘
 ```
 
 ---
 
-### Feature Branch 2: `feature/redis-store`
+## 5. Architecture Decisions
 
-#### New dependency
-- `redis.clients:jedis:5.2.0` (~1MB, requires running Redis server)
-- **Why:** In-memory data store, sub-millisecond reads, excellent for high-frequency operations
-- **Alternatives:** Lettuce (async, more complex), Redisson (heavier)
+### 5.1 Client-Side Timer Interpolation
 
-#### New files (5 DAO classes + 1 helper)
-| File | Purpose |
-|------|---------|
-| `dao/redis/RedisConnection.java` | Singleton JedisPool from `REDIS_URL` env var |
-| `dao/redis/RedisUserDAO.java` | User CRUD via Redis hashes |
-| `dao/redis/RedisProjectDAO.java` | Project CRUD |
-| `dao/redis/RedisTaskDAO.java` | Task CRUD |
-| `dao/redis/RedisSprintDAO.java` | Sprint CRUD |
-| `dao/redis/RedisBacklogDAO.java` | Backlog CRUD |
+**Problem:** `TaskDTO.timeSpentMs` is a snapshot from the server. The client can't poll every second.
 
-#### Modified files
-| File | Change |
-|------|--------|
-| `dao/DAOFactory.java` | Add `REDIS` to Format enum, add switch cases |
-| `app/server/server/TrakServer.java` | Handle `"redis"` format string |
-| `build.gradle.kts` | Add Jedis dependency |
+**Solution:** Track `lastRefreshTimestamp` per task view render. For INPROGRESS tasks:
+```
+displayTime = dto.timeSpentMs + (System.currentTimeMillis() - lastRefreshTimestamp)
+```
 
-#### Data pattern
-- Each entity stored as Redis Hash: `trak:tasks:{id}` → `{field: value, ...}`
-- Entity lists via key pattern scan: `KEYS trak:tasks:*`
-- Config: `REDIS_URL` env var (default: `redis://localhost:6379`)
+This gives a smoothly incrementing display without any server calls. On the next data refresh (status change, manual refresh), the server provides the authoritative accumulated time, and the client resets its local offset.
 
----
+**Why this works:**
+- At refresh time t0: server says `timeSpentMs = X` (includes running time up to t0)
+- At t0+1s: client shows `X + 1000ms` — correct
+- At next refresh t1: server says `timeSpentMs = X + (t1-t0)` — client resets
+- No drift, no double-counting
 
-### Feature Branch 3: `feature/store-benchmark`
+**Alternative considered:** Expose `time_started` in TaskDTO and have client compute elapsed. Rejected because it leaks server-side internal state and requires DTO/schema change.
 
-#### New files
-| File | Purpose |
-|------|---------|
-| `src/test/java/task/trak/benchmark/StoreBenchmark.java` | JUnit test that benchmarks all stores |
-| `docs/store_analysis/README.md` | Benchmark methodology and results |
-| `docs/store_analysis/results.csv` | Raw timing data |
+### 5.2 Compact Layout Switch
 
-#### Benchmark methodology
-- Operations tested: create 1000 tasks, loadAll, loadByKey (100x), deleteByKey (100x)
-- Stores tested: JSON, Parquet, DuckDB, MongoDB (if available), Redis (if available)
-- Metrics: avg response time (ms), p50, p95, p99
-- Results written to CSV and markdown summary
+**Problem:** Fixed-size cards scroll horizontally or leave gaps when window is narrow.
 
----
+**Solution:** `TasksView.layoutCards()` already calculates `cols = max(1, (width+gap) / (minWidth+gap))`. Add a threshold: if `cols == 1` AND `containerWidth < 400`, switch to compact row mode.
 
-### Feature Branch 4: `feature/ui-redesign`
+Compact mode renders each task as a single `JPanel` row with `BoxLayout.X_AXIS`:
+```
+[StatusDot 12px] [Title 40%] [Project 20%] [Estimate 10%] [Deadline 15%] [TimerBar 15%]
+```
 
-#### Modified files
-| File | Change |
-|------|---------|
-| `view/MainFrame.java` | Replace CardLayout tabs with single project-scoped dashboard |
-| `view/task/TasksView.java` | Larger cards, embedded in dashboard (not separate tab) |
-| `view/task/TaskCardPanel.java` | Increase card size to 350x220, more prominent fields |
-| `view/sprint/SprintProgressPanel.java` (NEW) | Sprint progress bar with completion % |
-| `view/project/ProjectSelectorPanel.java` (NEW) | Project dropdown selector at top |
-| `view/DashboardView.java` (NEW) | Combines project selector + tasks + sprint progress |
+Card mode and compact mode share the same data source (`getFiltered()`). The switch is purely visual.
 
-#### Component responsibilities
-- **ProjectSelectorPanel** — dropdown with project list, fires project change events
-- **TasksView** — renders task cards filtered by selected project (reused, larger cards)
-- **SprintProgressPanel** — horizontal progress bar, task counts by status, sprint dates
-- **DashboardView** — composes the three above in a vertical layout
-- **MainFrame** — hosts DashboardView as primary view (replaces tab switching)
+### 5.3 Timer Bar as Custom Paint
 
-#### State management
-- Selected project stored in `ProjectViewModel` (new field: `selectedProject`)
-- Sprint progress derived from `SprintViewModel` + `TaskViewModel` (filtered by project)
-- Real-time updates via existing Observer pattern
+**Problem:** Adding a Swing component for the timer bar adds complexity.
+
+**Solution:** Paint the timer bar directly in `TaskCardPanel.paintComponent()`, below the existing card content. This is:
+- Zero-allocation (no new components)
+- Consistent with existing gradient/glow painting
+- Updates via `repaint()` called from a shared `javax.swing.Timer`
+
+The bar is 6px tall, drawn at the bottom of the card's rounded rectangle. Color determined by `elapsed / estimate` ratio.
+
+### 5.4 Shared Swing Timer
+
+**Problem:** Each card creating its own timer is wasteful.
+
+**Solution:** `TasksView` owns a single `javax.swing.Timer(1000, ...)` that calls `repaint()` on all visible INPROGRESS cards. Timer starts when TasksView is shown, stops when hidden. One timer, many cards.
+
+### 5.5 Completion Prompt
+
+**Problem:** Need to capture reflection when task completes without blocking the status change.
+
+**Solution:** When status combo changes to COMPLETE, show a `JOptionPane` with a `JTextArea`. If user clicks Save, append the note to the task's summary via `taskController.updateTask(id, null, null, null, newSummary, null)`. If Skip, complete without note.
+
+The completion prompt only fires when the user manually changes status to COMPLETE via the combo box — not on data refresh or external changes.
 
 ---
 
-## Testing Strategy
+## 6. Data Flow
 
-### Cucumber scenarios (new)
-- `duckdb_store.feature` — CRUD operations with DuckDB backend
-- `redis_store.feature` — CRUD operations with Redis backend
-- `store_switching.feature` — switch between stores, verify data persistence
+### Timer Bar
+```
+TasksView.render()
+  → stores lastRefreshTimestamp = System.currentTimeMillis()
+  → creates TaskCardPanel for each task
 
-### Unit tests
-- DuckDB: schema creation, CRUD for all 5 entity types, connection pooling
-- Redis: connection, CRUD for all 5 entity types, serialization
-- Benchmark: timing accuracy, CSV output format
-- UI: ProjectSelectorPanel fires events, SprintProgressPanel calculates correctly
+javax.swing.Timer (every 1s)
+  → for each visible INPROGRESS card:
+      elapsed = dto.timeSpentMs + (now - lastRefreshTimestamp)
+      ratio = elapsed / TimeUtil.parseDurationToMs(dto.estimate)
+      card.setTimerRatio(ratio, elapsed)  // stores values
+      card.repaint()  // triggers paintComponent
+
+TaskCardPanel.paintComponent()
+  → draws existing card (gradient, border, glow)
+  → if task.status == INPROGRESS && estimate != null:
+      draws timer bar at bottom (6px tall)
+      color = ratio < 0.7 ? GREEN : ratio < 1.0 ? AMBER : RED
+      fills rounded rect proportional to min(ratio, 1.0)
+      if ratio > 1.0: full bar in RED
+```
+
+### Completion Prompt
+```
+StatusCombo.actionListener fires "COMPLETE"
+  → show JOptionPane with JTextArea
+  → if SAVE:
+      note = textArea.getText()
+      existingSummary = task.summary()
+      newSummary = existingSummary + "\n\n--- Completed ---\n" + note
+      taskController.updateTask(id, null, "COMPLETE", null, newSummary, null)
+  → if SKIP:
+      taskController.completeTask(id)
+```
+
+### Responsive Layout
+```
+Window resizes → ComponentListener fires
+  → containerWidth = panel.getWidth()
+  → cols = max(1, (containerWidth + gap) / (minCardWidth + gap))
+  → if cols == 1 && containerWidth < 400:
+      renderCompactMode(tasks)  // single-row per task
+  → else:
+      renderCardMode(tasks, cols)  // existing grid
+```
 
 ---
 
-## Tradeoffs
+## 7. State Management
+
+| State | Where | Lifecycle |
+|-------|-------|-----------|
+| `lastRefreshTimestamp` | `TasksView` field | Set on each `render()`, reset on re-render |
+| `timerRatio`, `elapsedMs` | `TaskCardPanel` fields | Set by Timer callback, read by paintComponent |
+| `javax.swing.Timer` | `TasksView` field | Started on first render, stopped on 0 visible INPROGRESS tasks |
+| Compact vs card mode | `TasksView` local variable | Recalculated on each layout pass |
+
+No new ViewModel state. No server changes. No DTO changes.
+
+---
+
+## 8. Component Responsibilities
+
+| Component | Responsibility |
+|-----------|---------------|
+| `TrakTheme` | Button height constant, timer bar colors |
+| `TaskCardPanel` | Paints timer bar, handles completion prompt, responsive sizing |
+| `TasksView` | Owns swing Timer, calculates elapsed offsets, responsive layout switch |
+| `TaskController` | Unchanged — existing updateTask/completeTask handle status + summary |
+| `TimeUtil` | Unchanged — existing parseDurationToMs for estimate parsing |
+
+---
+
+## 9. Testing Strategy
+
+### Cucumber Scenarios (new feature file: `timer.feature`)
+```gherkin
+Feature: Focus Timer
+  Scenario: Timer bar appears on INPROGRESS task with estimate
+    Given a task with estimate "2h" in sprint "Sprint1"
+    When the task status changes to INPROGRESS
+    Then the task card shows a timer bar
+
+  Scenario: Timer bar not shown on READY task
+    Given a task with estimate "2h" in sprint "Sprint1"
+    And the task status is READY
+    Then the task card does not show a timer bar
+
+  Scenario: Completion prompt on status change
+    Given a task with status INPROGRESS
+    When the user changes status to COMPLETE
+    Then a completion dialog appears
+    And the user can enter accomplishment text
+```
+
+### Unit Tests
+- `TimeUtil.parseDurationToMs("2h")` → 7200000
+- `TimeUtil.parseDurationToMs("1d 4h 30m")` → 102600000
+- Timer ratio calculation: elapsed=3600000, estimate=7200000 → ratio=0.5
+- Color thresholds: ratio=0.5→GREEN, ratio=0.8→AMBER, ratio=1.2→RED
+- Compact mode threshold: width=350→compact, width=500→cards
+
+### Edge Cases
+- Task with no estimate → no timer bar (just shows card normally)
+- Task not in any sprint → no timer bar
+- Estimate of "0d 0h 0m" → treated as no estimate
+- Timer ratio > 2.0 → cap red bar at full width, keep counting time text
+- Window resize during timer → layout recalculates, timer continues
+- Multiple INPROGRESS tasks → each has independent timer bar
+- Task completes via CLI while GUI is open → next refresh removes timer bar
+
+### Failure Cases
+- `parseDurationToMs` returns 0 for invalid estimate → no timer bar
+- Timer fires but card has been removed (task deleted) → card not in list, skip
+- Completion dialog cancelled → no summary change, status still changes to COMPLETE
+
+---
+
+## 10. Tradeoffs
 
 | Decision | Alternative | Rationale |
 |----------|-------------|-----------|
-| DuckDB as default over Parquet | Keep Parquet default | DuckDB is faster for CRUD, has SQL interface, still embedded |
-| Jedis over Lettuce for Redis | Lettuce (async) | Jedis is simpler, synchronous matches our DAO interface |
-| Redis hashes over JSON strings | Store JSON in Redis | Hashes allow field-level reads, more idiomatic |
-| Single dashboard vs tabs | Keep tab layout | Project-scoped view is better for solo devs |
-| Sprint progress bar vs timeline | Gantt chart | Progress bar is simpler, shows what matters |
-
-## Risks
-
-- DuckDB JDBC driver is ~20MB, increases jar size significantly
-- Redis requires external server (unlike DuckDB/JSON/Parquet which are embedded)
-- UI redesign is breaking change — removes familiar Projects/Sprints tabs
-- DuckDB concurrent write behavior differs from file-based stores
+| Client-side interpolation | Server push / WebSocket | Overkill for localhost; interpolation is accurate enough |
+| Paint timer in paintComponent | Separate JPanel component | Less overhead, consistent with existing card painting |
+| Single shared javax.swing.Timer | Per-card timer | One timer manages all cards, scales to any count |
+| Compact row at <400px | Always cards | Dense information display when space is tight |
+| Append note to summary | New "reflection" field | Avoids DTO/schema change; summary is the right place |
+| Timer only for sprint tasks | All INPROGRESS tasks | Sprint context gives the "focus session" meaning |
 
 ---
 
-## Implementation Order
+## 11. Risks and Known Limitations
 
-1. `feature/duckdb-store` — new default, all CRUD, tests
-2. `feature/redis-store` — Redis support, tests
-3. `feature/store-benchmark` — benchmark all 5 stores, generate docs/store_analysis
-4. `feature/ui-redesign` — project-scoped dashboard, larger cards, sprint progress
+- **Timer accuracy:** Client interpolation drifts ~1s between refreshes. Acceptable for a focus timer.
+- **Compact mode is new code:** No existing compact row renderer. Must be built from scratch.
+- **Completion prompt blocking:** JOptionPane blocks EDT. Keep it simple (no async).
+- **timeSpentMs not set by GUI:** Currently only CLI sets `time_started` via StartTaskCMD. The GUI status change to INPROGRESS should also start the timer server-side. **This requires a server-side fix:** `TrakTaskService.updateById()` must set `time_started = System.currentTimeMillis()` when status changes to INPROGRESS, and accumulate time when status changes FROM INPROGRESS.
 
-Each branch merges to dev independently after tests pass and user approval.
+---
+
+## 12. Files to Modify
+
+| File | Changes |
+|------|---------|
+| `gui/view/task/TaskCardPanel.java` | Remove fixed CARD_WIDTH/CARD_HEIGHT. Add timer bar paint. Add completion prompt. Add timerRatio/elapsedMs fields. |
+| `gui/view/task/TasksView.java` | Responsive layout with compact fallback. javax.swing.Timer for 1s ticks. Store lastRefreshTimestamp. |
+| `gui/view/sprint/SprintProgressPanel.java` | Change addSprintBtn from styleButtonNav to styleButtonPrimary |
+| `gui/view/TrakTheme.java` | Add TIMER_GREEN, TIMER_AMBER, TIMER_RED constants (can reuse existing STATUS colors). Add BUTTON_HEIGHT constant. |
+| `app/server/service/task/TrakTaskService.java` | Set time_started on INPROGRESS, accumulate time_spent_ms on status change FROM INPROGRESS |
+
+## 13. Files to Create
+
+| File | Purpose |
+|------|---------|
+| `gui/view/task/CompactTaskRow.java` | Single-row task display for narrow windows |
+
+## 14. Implementation Order
+
+1. **Server fix:** TrakTaskService time tracking on status change (prerequisite for timer)
+2. **UI polish:** Button consistency, font standardization
+3. **Responsive cards:** Remove fixed dimensions, compact fallback
+4. **Timer bar:** Paint in TaskCardPanel, swing Timer in TasksView
+5. **Completion prompt:** Dialog on COMPLETE status change
+
+## 15. Verification
+
+- `./gradlew compileJava` — success
+- `./gradlew test --rerun` — all pass
+- Manual: resize window wide→narrow→wide, verify card↔compact transition
+- Manual: all buttons identical size
+- Manual: create task with 1-minute estimate, set to INPROGRESS → watch bar go green→amber→red
+- Manual: complete task → prompted for note → note appears in task summary

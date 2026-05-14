@@ -52,9 +52,26 @@ public class TrakTaskService implements TaskService {
             task.setTitle(request.title());
         }
         if (request.status() != null) {
-            STATE status = STATE.valueOf(request.status().toUpperCase());
-            task.setStatus(status);
-            if (status == STATE.COMPLETE) {
+            STATE oldStatus = task.getStatus();
+            STATE newStatus = STATE.valueOf(request.status().toUpperCase());
+
+            // Leaving INPROGRESS: accumulate elapsed time
+            if (oldStatus == STATE.INPROGRESS && newStatus != STATE.INPROGRESS) {
+                long accumulated = task.getTime_spent_ms() != null ? task.getTime_spent_ms() : 0;
+                if (task.getTime_started() != null) {
+                    accumulated += System.currentTimeMillis() - task.getTime_started();
+                }
+                task.setTime_spent_ms(accumulated);
+                task.setTime_started(null);
+            }
+
+            // Entering INPROGRESS: start timer
+            if (newStatus == STATE.INPROGRESS && oldStatus != STATE.INPROGRESS) {
+                task.setTime_started(System.currentTimeMillis());
+            }
+
+            task.setStatus(newStatus);
+            if (newStatus == STATE.COMPLETE) {
                 task.setCompleted_at(new Date());
             }
         }

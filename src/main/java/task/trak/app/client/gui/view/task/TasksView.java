@@ -7,6 +7,8 @@ import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeListener;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeType;
 
+import task.trak.model.util.TimeUtil;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -22,6 +24,9 @@ public class TasksView extends DataView implements ViewModelChangeListener {
 
     private final GUIController guiController;
     private final JPanel taskCardsContainer;
+    private javax.swing.Timer timerTick;
+    private long lastRefreshTimestamp;
+    private List<TaskCardPanel> activeCards = new ArrayList<>();
 
     public TasksView(GUIController guiController) {
         this.guiController = guiController;
@@ -97,6 +102,16 @@ public class TasksView extends DataView implements ViewModelChangeListener {
             layoutCards(gridPanel, cards);
             taskCardsContainer.add(gridPanel, BorderLayout.CENTER);
 
+            // Store card panels for timer updates
+            this.activeCards = new ArrayList<>();
+            for (JComponent c : cards) {
+                if (c instanceof TaskCardPanel tcp) {
+                    this.activeCards.add(tcp);
+                }
+            }
+            this.lastRefreshTimestamp = System.currentTimeMillis();
+            startTimerIfNeeded();
+
             taskCardsContainer.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
@@ -170,7 +185,7 @@ public class TasksView extends DataView implements ViewModelChangeListener {
 
     private void layoutCards(JPanel panel, List<JComponent> cards) {
         panel.removeAll();
-        int minCardWidth = 320;
+        int minCardWidth = 280;
         int gap = TrakTheme.SP_SM;
         int containerWidth = taskCardsContainer.getWidth() - gap;
         if (containerWidth <= 0) containerWidth = 900;
@@ -194,5 +209,31 @@ public class TasksView extends DataView implements ViewModelChangeListener {
         gbc.gridwidth = cols;
         gbc.weighty = 1.0;
         panel.add(Box.createGlue(), gbc);
+    }
+
+    private void startTimerIfNeeded() {
+        boolean hasInProgress = activeCards.stream().anyMatch(TaskCardPanel::isInProgress);
+        if (hasInProgress && timerTick == null) {
+            timerTick = new javax.swing.Timer(1000, e -> updateTimers());
+            timerTick.start();
+        } else if (!hasInProgress && timerTick != null) {
+            timerTick.stop();
+            timerTick = null;
+        }
+    }
+
+    private void updateTimers() {
+        long now = System.currentTimeMillis();
+        long offset = now - lastRefreshTimestamp;
+        for (TaskCardPanel card : activeCards) {
+            if (card.isInProgress()) {
+                TaskDTO t = card.getTask();
+                long elapsed = t.timeSpentMs() + offset;
+                long estimateMs = TimeUtil.parseDurationToMs(t.estimate());
+                double ratio = estimateMs > 0 ? (double) elapsed / estimateMs : -1;
+                card.setTimerState(ratio, elapsed);
+                card.repaint();
+            }
+        }
     }
 }
