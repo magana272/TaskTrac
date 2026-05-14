@@ -169,12 +169,19 @@ config:
 title: Package Dependencies
 ---
 flowchart TB
-    subgraph api["task.trak.api (shared)"]
+    subgraph api["task.trak.api"]
+        direction LR
+        sf[ServiceFactory]
+        svc_if[service/ interfaces]
+    end
+
+    subgraph model["task.trak.model"]
         direction LR
         dto[dto/]
-        svc_if[service/ interfaces]
-        session[model/ Session]
+        dto_req[dto/request/]
+        exception[exception/]
         util[util/]
+        session[Session]
     end
 
     subgraph client["task.trak.app.client"]
@@ -194,13 +201,16 @@ flowchart TB
         models[model/<br>Task, User, Project, ...]
     end
 
-    client --> api
+    client --> model
+    http -->|implements service interfaces| api
     server --> api
+    server --> model
     client -.-x|never| server
 
     style client fill:#e3f2fd,stroke:#1565c0
     style server fill:#fce4ec,stroke:#c62828
     style api fill:#f1f8e9,stroke:#558b2f
+    style model fill:#fff3e0,stroke:#e65100
 ```
 
 ## ServiceFactory Flow
@@ -226,6 +236,31 @@ flowchart LR
     style SF fill:#fff3e0,stroke:#e65100
     style Direct fill:#f1f8e9,stroke:#558b2f
     style HTTP fill:#e3f2fd,stroke:#1565c0
+```
+
+## AuthFilter
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: '#ffffff'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#000000'
+    lineColor: '#000000'
+    fontFamily: 'Georgia, Times New Roman, serif'
+    fontSize: '14px'
+title: AuthFilter — Request Authentication
+---
+flowchart LR
+    Req[Request] --> AF[AuthFilter]
+    AF -->|valid Bearer token| Handler[Handler processes request]
+    AF -->|missing / invalid token| Reject[401 Authentication required]
+
+    style AF fill:#fff3e0,stroke:#e65100
+    style Handler fill:#f1f8e9,stroke:#558b2f
+    style Reject fill:#fce4ec,stroke:#c62828
 ```
 
 ## GUI MVC Observer Pattern
@@ -260,17 +295,6 @@ flowchart TB
         SprintView_Obs[SprintView] -->|addObserver| SprintVM[SprintViewModel]
         SprintView_Obs -->|addObserver| ProjVM3[ProjectViewModel]
         SprintView_Obs -->|addObserver| TaskVM2[TaskViewModel]
-    end
-
-    subgraph Workspace Toggle
-        direction TB
-        Toggle[Mine/Team Toggle] -->|setTeamMode| MF[MainFrame]
-        MF -->|refreshTasks bool| TC2[TaskController]
-        MF -->|refreshProjects bool| PC2[ProjectController]
-        TC2 -->|"true: listAll()\nfalse: listByAssignee()"| TaskSvc[TaskService]
-        PC2 -->|"true: listAll()\nfalse: listByUser()"| ProjSvc[ProjectService]
-        TC2 -->|setAll| TaskVM3[TaskViewModel]
-        PC2 -->|setAll| ProjVM4[ProjectViewModel]
     end
 
     style View fill:#e3f2fd,stroke:#1565c0
