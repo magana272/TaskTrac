@@ -99,10 +99,6 @@ public class AuthRoutes {
             }
             try {
                 String token = SessionManager.extractToken(exchange);
-                if (token == null || SessionManager.getUsername(token) == null) {
-                    JsonHelper.sendError(exchange, 401, "Not authenticated");
-                    return;
-                }
                 SessionManager.removeToken(token);
                 Map<String, String> resp = new LinkedHashMap<>();
                 resp.put("message", "Logged out");
