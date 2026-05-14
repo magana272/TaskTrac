@@ -36,9 +36,9 @@ public class TaskController {
         }
     }
 
-    public void updateTask(long id, String title, String status, String assignee, String summary, String estimate) {
+    public void updateTask(long id, String title, String status, String assignee, String summary, String estimate, String completionNote) {
         try {
-            this.taskService.updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
+            this.taskService.updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate, completionNote));
             refreshTasks();
         } catch (Exception e) {
             userViewModel.setError(e.getMessage());
@@ -56,7 +56,7 @@ public class TaskController {
 
     public void completeTask(long id) {
         try {
-            this.taskService.updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
+            this.taskService.updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null, null));
             refreshTasks();
         } catch (Exception e) {
             userViewModel.setError(e.getMessage());

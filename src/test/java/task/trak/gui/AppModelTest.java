@@ -21,15 +21,15 @@ public class AppModelTest {
     }
 
     private TaskDTO task(long id, String project, String title, String status) {
-        return new TaskDTO(id, project, "user", title, status, null, null, null, null, null, 0);
+        return new TaskDTO(id, project, "user", title, status, null, null, null, null, null, 0, 0, 0, null);
     }
 
     private TaskDTO taskWithDeadline(long id, String title, Date deadline) {
-        return new TaskDTO(id, "P", "user", title, "READY", null, null, null, deadline, null, 0);
+        return new TaskDTO(id, "P", "user", title, "READY", null, null, null, deadline, null, 0, 0, 0, null);
     }
 
     private TaskDTO taskWithEstimate(long id, String title, String estimate) {
-        return new TaskDTO(id, "P", "user", title, "READY", null, null, null, null, estimate, 0);
+        return new TaskDTO(id, "P", "user", title, "READY", null, null, null, null, estimate, 0, 0, 0, null);
     }
 
     @Test

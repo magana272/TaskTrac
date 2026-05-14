@@ -20,7 +20,7 @@ public class DuckDBTaskDAO implements EntityDAO<Task> {
         ReentrantLock lock = DuckDBConnection.getLock();
         lock.lock();
         try {
-            String sql = "INSERT OR REPLACE INTO tasks (id, project_name, assigned_to, title, status, created_at, completed_at, summary, deadline, estimate, time_started, time_spent_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT OR REPLACE INTO tasks (id, project_name, assigned_to, title, status, created_at, completed_at, summary, deadline, estimate, time_started, time_spent_ms, completion_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, entity.getId());
@@ -35,6 +35,7 @@ public class DuckDBTaskDAO implements EntityDAO<Task> {
                 ps.setString(10, entity.getEstimate());
                 ps.setObject(11, entity.getTime_started());
                 ps.setObject(12, entity.getTime_spent_ms());
+                ps.setString(13, entity.getCompletion_note());
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
@@ -129,6 +130,7 @@ public class DuckDBTaskDAO implements EntityDAO<Task> {
         task.setEstimate(rs.getString("estimate"));
         task.setTime_started(rs.getObject("time_started") != null ? rs.getLong("time_started") : null);
         task.setTime_spent_ms(rs.getObject("time_spent_ms") != null ? rs.getLong("time_spent_ms") : null);
+        task.setCompletion_note(rs.getString("completion_note"));
 
         return task;
     }

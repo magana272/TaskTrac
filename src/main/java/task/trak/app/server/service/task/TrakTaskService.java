@@ -84,6 +84,9 @@ public class TrakTaskService implements TaskService {
         if (request.estimate() != null) {
             task.setEstimate(request.estimate());
         }
+        if (request.completionNote() != null) {
+            task.setCompletion_note(request.completionNote());
+        }
 
         store.save(task);
         return toDTO(task);
@@ -105,8 +108,14 @@ public class TrakTaskService implements TaskService {
     }
 
     private TaskDTO toDTO(Task t) {
+        long progressMs = t.getElapsedMs();
+        long readyMs = 0;
+        if (t.getCreated_at() != null) {
+            readyMs = Math.max(0, System.currentTimeMillis() - t.getCreated_at().getTime() - progressMs);
+        }
         return new TaskDTO(t.getId(), t.getProject_name(), t.getAssigned_to(), t.getTitle(),
                 t.getStatus().name(), t.getCreated_at(), t.getCompleted_at(), t.getSummary(),
-                t.getDeadline(), t.getEstimate(), t.getElapsedMs());
+                t.getDeadline(), t.getEstimate(), t.getElapsedMs(),
+                readyMs, progressMs, t.getCompletion_note());
     }
 }

@@ -324,7 +324,7 @@ public class GUIController implements App, CommandListener {
 
                 String status = statuses[rand.nextInt(statuses.length)];
                 if (!"READY".equals(status)) {
-                    this.taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null));
+                    this.taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null, null));
                 }
             }
 

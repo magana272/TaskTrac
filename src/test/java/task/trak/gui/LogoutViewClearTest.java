@@ -20,7 +20,7 @@ public class LogoutViewClearTest {
         ProjectViewModel projectVM = new ProjectViewModel();
         SprintViewModel sprintVM = new SprintViewModel();
 
-        taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0)));
+        taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
         projectVM.setAll(List.of(new ProjectDTO(1L, "P", "d", null, "o", List.of(), 0, 0, 0)));
         sprintVM.setAll(List.of(new SprintDTO(1L, "P", "S1", List.of(), null, null)));
 
@@ -57,7 +57,7 @@ public class LogoutViewClearTest {
         ProjectViewModel projectVM = new ProjectViewModel();
         SprintViewModel sprintVM = new SprintViewModel();
 
-        taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0)));
+        taskVM.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
 
         List<ViewModelChangeType> received = new ArrayList<>();
         taskVM.addObserver(received::add);
@@ -79,7 +79,7 @@ public class LogoutViewClearTest {
         TaskViewModel taskVM = new TaskViewModel();
 
         userVM.setSession(new Session("user1"));
-        taskVM.setAll(List.of(new TaskDTO(1L, "P", "user1", "T1", "READY", null, null, null, null, null, 0)));
+        taskVM.setAll(List.of(new TaskDTO(1L, "P", "user1", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
         assertEquals(1, taskVM.get().size());
 
         userVM.setSession(null);

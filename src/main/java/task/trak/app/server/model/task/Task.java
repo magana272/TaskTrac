@@ -17,6 +17,9 @@ public class Task {
     private String estimate;
     private Long time_started;
     private Long time_spent_ms;
+    private Long time_in_ready_ms;
+    private Long time_in_progress_ms;
+    private String completion_note;
 
     public Task(Long id, String projectName, String assignedTo, String title, STATE status, Date createdAt, Date completedAt, String summary) {
         this.id = id;
@@ -111,6 +114,30 @@ public class Task {
 
     public void setTime_spent_ms(Long time_spent_ms) {
         this.time_spent_ms = time_spent_ms;
+    }
+
+    public Long getTime_in_ready_ms() {
+        return this.time_in_ready_ms;
+    }
+
+    public void setTime_in_ready_ms(Long time_in_ready_ms) {
+        this.time_in_ready_ms = time_in_ready_ms;
+    }
+
+    public Long getTime_in_progress_ms() {
+        return this.time_in_progress_ms;
+    }
+
+    public void setTime_in_progress_ms(Long time_in_progress_ms) {
+        this.time_in_progress_ms = time_in_progress_ms;
+    }
+
+    public String getCompletion_note() {
+        return this.completion_note;
+    }
+
+    public void setCompletion_note(String completion_note) {
+        this.completion_note = completion_note;
     }
 
     public long getElapsedMs() {
