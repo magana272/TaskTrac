@@ -55,20 +55,11 @@ public class ProjectController {
     }
 
     public void refreshProjects() {
-        refreshProjects(false);
-    }
-
-    public void refreshProjects(boolean teamMode) {
-        List<ProjectDTO> projects;
-        if (teamMode) {
-            projects = this.projectService.listAll();
-        } else {
-            String user = userViewModel.getSession() != null
-                    ? userViewModel.getSession().getLogged_in_user() : null;
-            projects = user != null
-                    ? this.projectService.listByUser(user)
-                    : this.projectService.listAll();
-        }
+        String user = userViewModel.getSession() != null
+                ? userViewModel.getSession().getLogged_in_user() : null;
+        List<ProjectDTO> projects = user != null
+                ? this.projectService.listByUser(user)
+                : this.projectService.listAll();
         projectViewModel.setAll(projects);
     }
 

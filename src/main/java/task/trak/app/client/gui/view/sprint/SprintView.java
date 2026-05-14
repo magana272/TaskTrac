@@ -123,6 +123,26 @@ public class SprintView extends DataView implements ViewModelChangeListener {
             saveBtn.addActionListener(e -> saveSprintEdits(table, model, sprints));
             bottomBar.add(saveBtn);
 
+            JButton deleteBtn = new JButton("Delete Sprint");
+            TrakTheme.styleButtonNav(deleteBtn);
+            deleteBtn.addActionListener(e -> {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow < 0) {
+                    JOptionPane.showMessageDialog(this, "Select a sprint to delete",
+                            "No Selection", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                String name = model.getValueAt(selectedRow, 1).toString();
+                int confirm = JOptionPane.showConfirmDialog(this,
+                        "Delete sprint: \"" + name + "\"?",
+                        "Confirm Delete",
+                        JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    guiController.getSprintController().deleteSprint(name);
+                }
+            });
+            bottomBar.add(deleteBtn);
+
             add(bottomBar, BorderLayout.SOUTH);
         }
 

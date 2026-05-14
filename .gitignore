@@ -51,5 +51,5 @@ src/test/.cache/
 /tasktracker-gui
 qodana.yaml
 trak-cli
-trak-gui
+examples/trak-gui
 trak-server

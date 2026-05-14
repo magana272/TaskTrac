@@ -130,7 +130,33 @@ public class TaskCardPanel extends JPanel {
                 }
             }
         });
-        topRow.add(statusCombo, BorderLayout.EAST);
+
+        JButton deleteBtn = new JButton("X");
+        deleteBtn.setFont(TrakTheme.FONT_CAPTION);
+        deleteBtn.setForeground(TrakTheme.STATUS_READY);
+        deleteBtn.setBackground(new Color(0, 0, 0, 0));
+        deleteBtn.setOpaque(false);
+        deleteBtn.setBorderPainted(false);
+        deleteBtn.setFocusPainted(false);
+        deleteBtn.setContentAreaFilled(false);
+        deleteBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        deleteBtn.addActionListener(e -> {
+            String title = task.title() != null ? task.title() : "(untitled)";
+            int confirm = JOptionPane.showConfirmDialog(
+                    TaskCardPanel.this,
+                    "Delete task: \"" + title + "\"?",
+                    "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                taskController.deleteTask(task.id());
+            }
+        });
+
+        JPanel eastPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        eastPanel.setOpaque(false);
+        eastPanel.add(statusCombo);
+        eastPanel.add(deleteBtn);
+        topRow.add(eastPanel, BorderLayout.EAST);
         return topRow;
     }
 
