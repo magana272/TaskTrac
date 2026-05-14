@@ -27,60 +27,95 @@ public class ProjectController {
     }
 
     public void addProject(String name, String summary) {
-        String owner = userViewModel.getSession() != null
-                ? userViewModel.getSession().getLogged_in_user()
-                : "guest";
-        this.projectService.create(new CreateProjectRequest(name, summary, owner, new ArrayList<>()));
-        refreshProjects();
+        try {
+            String owner = userViewModel.getSession() != null
+                    ? userViewModel.getSession().getLogged_in_user()
+                    : "guest";
+            this.projectService.create(new CreateProjectRequest(name, summary, owner, new ArrayList<>()));
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void updateProject(String name, String newName, String summary) {
-        this.projectService.updateByName(new UpdateProjectRequest(name, newName, summary, null));
-        refreshProjects();
+        try {
+            this.projectService.updateByName(new UpdateProjectRequest(name, newName, summary, null));
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void deleteProject(String name) {
-        this.projectService.deleteByName(name);
-        refreshProjects();
+        try {
+            this.projectService.deleteByName(name);
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void addMember(String projectName, String username) {
-        this.projectService.addMember(projectName, username);
-        refreshProjects();
+        try {
+            this.projectService.addMember(projectName, username);
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void removeMember(String projectName, List<String> remainingMembers) {
-        this.projectService.updateByName(new UpdateProjectRequest(projectName, null, null, remainingMembers));
-        refreshProjects();
+        try {
+            this.projectService.updateByName(new UpdateProjectRequest(projectName, null, null, remainingMembers));
+            refreshProjects();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void refreshProjects() {
-        String user = userViewModel.getSession() != null
-                ? userViewModel.getSession().getLogged_in_user() : null;
-        List<ProjectDTO> projects = user != null
-                ? this.projectService.listByUser(user)
-                : this.projectService.listAll();
-        projectViewModel.setAll(projects);
+        try {
+            String user = userViewModel.getSession() != null
+                    ? userViewModel.getSession().getLogged_in_user() : null;
+            List<ProjectDTO> projects = user != null
+                    ? this.projectService.listByUser(user)
+                    : this.projectService.listAll();
+            projectViewModel.setAll(projects);
+        } catch (Exception e) {
+            projectViewModel.setAll(List.of());
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public List<ProjectDTO> getProjectsForUser(String username) {
-        return this.projectService.listByUser(username);
+        try {
+            return this.projectService.listByUser(username);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return List.of();
+        }
     }
 
     public List<String> getProjectMembers(String projectName) {
-        ProjectDTO project = this.projectService.getByName(projectName);
-        if (project == null) return new ArrayList<>();
-        List<String> result = new ArrayList<>();
-        if (project.ownerUsername() != null) {
-            result.add(project.ownerUsername());
-        }
-        if (project.memberUsernames() != null) {
-            for (String m : project.memberUsernames()) {
-                if (!m.equals(project.ownerUsername())) {
-                    result.add(m);
+        try {
+            ProjectDTO project = this.projectService.getByName(projectName);
+            if (project == null) return new ArrayList<>();
+            List<String> result = new ArrayList<>();
+            if (project.ownerUsername() != null) {
+                result.add(project.ownerUsername());
+            }
+            if (project.memberUsernames() != null) {
+                for (String m : project.memberUsernames()) {
+                    if (!m.equals(project.ownerUsername())) {
+                        result.add(m);
+                    }
                 }
             }
+            return result;
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return new ArrayList<>();
         }
-        return result;
     }
 }

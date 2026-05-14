@@ -100,9 +100,25 @@ public class SprintAddView extends FormDialogView {
         String name = nameField.getText().trim();
         String selectedProject = (String) projectDropdown.getSelectedItem();
 
+        if (name.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "Sprint name is required.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (selectedProject == null || selectedProject.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "A project must be selected.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String startDate = sdf.format((Date) startDateSpinner.getValue());
-        String endDate = sdf.format((Date) endDateSpinner.getValue());
+        Date startDateVal = (Date) startDateSpinner.getValue();
+        Date endDateVal = (Date) endDateSpinner.getValue();
+        String startDate = sdf.format(startDateVal);
+        String endDate = sdf.format(endDateVal);
+
+        if (startDateVal.after(endDateVal)) {
+            JOptionPane.showMessageDialog(parent, "Start date must not be after end date.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         List<Long> selectedTaskIds = new ArrayList<>();
         for (int i = 0; i < taskCheckboxes.size(); i++) {
@@ -111,6 +127,10 @@ public class SprintAddView extends FormDialogView {
             }
         }
 
-        sprintController.addSprint(name, selectedProject, startDate, endDate, selectedTaskIds);
+        try {
+            sprintController.addSprint(name, selectedProject, startDate, endDate, selectedTaskIds);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

@@ -15,22 +15,39 @@ public class AuthController {
     }
 
     public void login(String username, String password) {
-        Session session = this.authService.login(username, password);
-        userViewModel.setSession(session);
+        try {
+            Session session = this.authService.login(username, password);
+            userViewModel.setSession(session);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void signup(String username, String firstName, String lastName, String email, String password) {
-        Session session = this.authService.signup(firstName, lastName, username, email, password);
-        userViewModel.setSession(session);
+        try {
+            Session session = this.authService.signup(firstName, lastName, username, email, password);
+            userViewModel.setSession(session);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void logout() {
-        this.authService.logout();
-        userViewModel.setSession(null);
+        try {
+            this.authService.logout();
+            userViewModel.setSession(null);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public boolean isLoggedIn() {
-        return this.authService.isLoggedIn();
+        try {
+            return this.authService.isLoggedIn();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return false;
+        }
     }
 
     public Session getSession() {

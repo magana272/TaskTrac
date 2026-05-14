@@ -123,10 +123,14 @@ public class TaskCardPanel extends JPanel {
             String newStatus = (String) statusCombo.getSelectedItem();
             if (newStatus != null && !newStatus.equals(task.status())) {
                 statusCombo.setForeground(TrakTheme.statusColor(newStatus));
-                if ("COMPLETE".equals(newStatus)) {
-                    taskController.completeTask(task.id());
-                } else {
-                    taskController.updateTask(task.id(), null, newStatus, null, null, null);
+                try {
+                    if ("COMPLETE".equals(newStatus)) {
+                        taskController.completeTask(task.id());
+                    } else {
+                        taskController.updateTask(task.id(), null, newStatus, null, null, null);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(TaskCardPanel.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -148,7 +152,11 @@ public class TaskCardPanel extends JPanel {
                     "Confirm Delete",
                     JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                taskController.deleteTask(task.id());
+                try {
+                    taskController.deleteTask(task.id());
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(TaskCardPanel.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 

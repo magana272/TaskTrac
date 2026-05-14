@@ -24,35 +24,56 @@ public class SprintController {
     }
 
     public void addSprint(String name, String project, String startDate, String endDate, List<Long> taskIds) {
-        this.sprintService.create(new CreateSprintRequest(name, project));
-        if (startDate != null || endDate != null || (taskIds != null && !taskIds.isEmpty())) {
-            this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds));
+        try {
+            this.sprintService.create(new CreateSprintRequest(name, project));
+            if (startDate != null || endDate != null || (taskIds != null && !taskIds.isEmpty())) {
+                this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds));
+            }
+            refreshSprints();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
         }
-        refreshSprints();
     }
 
     public void updateSprint(String name, String startDate, String endDate) {
-        this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null));
-        refreshSprints();
+        try {
+            this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null));
+            refreshSprints();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
     }
 
     public void deleteSprint(String name) {
-        this.sprintService.deleteByName(name);
-        refreshSprints();
+        try {
+            this.sprintService.deleteByName(name);
+            refreshSprints();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
     }
 
     public void addTaskToSprint(String sprintName, String project, long taskId) {
-        SprintDTO sprint = this.sprintService.getByNameAndProject(sprintName, project);
-        List<Long> taskIds = new ArrayList<>(sprint.taskIds());
-        if (!taskIds.contains(taskId)) {
-            taskIds.add(taskId);
+        try {
+            SprintDTO sprint = this.sprintService.getByNameAndProject(sprintName, project);
+            List<Long> taskIds = new ArrayList<>(sprint.taskIds());
+            if (!taskIds.contains(taskId)) {
+                taskIds.add(taskId);
+            }
+            this.sprintService.update(new UpdateSprintRequest(sprintName, project, null, null, taskIds));
+            refreshSprints();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
         }
-        this.sprintService.update(new UpdateSprintRequest(sprintName, project, null, null, taskIds));
-        refreshSprints();
     }
 
     public void refreshSprints() {
-        List<SprintDTO> sprints = this.sprintService.listAll();
-        sprintViewModel.setAll(sprints);
+        try {
+            List<SprintDTO> sprints = this.sprintService.listAll();
+            sprintViewModel.setAll(sprints);
+        } catch (Exception e) {
+            sprintViewModel.setAll(List.of());
+            System.err.println("Error: " + e.getMessage());
+        }
     }
 }

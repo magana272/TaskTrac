@@ -28,37 +28,63 @@ public class TaskController {
     }
 
     public void addTask(String title, String projectName, String assignee, String summary, Date deadline, String estimate) {
-        this.taskService.create(new CreateTaskRequest(title, projectName, assignee, summary, deadline, estimate));
-        refreshTasks();
+        try {
+            this.taskService.create(new CreateTaskRequest(title, projectName, assignee, summary, deadline, estimate));
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void updateTask(long id, String title, String status, String assignee, String summary, String estimate) {
-        this.taskService.updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
-        refreshTasks();
+        try {
+            this.taskService.updateById(new UpdateTaskRequest(id, title, status, assignee, summary, estimate));
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void deleteTask(long id) {
-        this.taskService.deleteById(id);
-        refreshTasks();
+        try {
+            this.taskService.deleteById(id);
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void completeTask(long id) {
-        this.taskService.updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
-        refreshTasks();
+        try {
+            this.taskService.updateById(new UpdateTaskRequest(id, null, "COMPLETE", null, null, null));
+            refreshTasks();
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
     }
 
     public void refreshTasks() {
-        Session session = userViewModel.getSession();
-        List<TaskDTO> tasks;
-        if (session != null && session.getLogged_in_user() != null) {
-            tasks = this.taskService.listByAssignee(session.getLogged_in_user());
-        } else {
-            tasks = List.of();
+        try {
+            Session session = userViewModel.getSession();
+            List<TaskDTO> tasks;
+            if (session != null && session.getLogged_in_user() != null) {
+                tasks = this.taskService.listByAssignee(session.getLogged_in_user());
+            } else {
+                tasks = List.of();
+            }
+            taskViewModel.setAll(tasks);
+        } catch (Exception e) {
+            taskViewModel.setAll(List.of());
+            userViewModel.setError(e.getMessage());
         }
-        taskViewModel.setAll(tasks);
     }
 
     public TaskDTO getTaskById(long id) {
-        return this.taskService.getById(id);
+        try {
+            return this.taskService.getById(id);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return null;
+        }
     }
 }
