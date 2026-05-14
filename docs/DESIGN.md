@@ -94,6 +94,11 @@ A task tracking system with three executables:
 - The system shall support sorting tasks by due date and estimate in GUI
 - The system shall support filtering tasks by project in GUI
 - The system shall allow seeding test data via `--test` flag (20 users, 10 projects, 1000 tasks, 20 sprints)
+- The system shall provide a centralized dark theme (TrakTheme) applied via UIManager defaults
+- The system shall allow toggling between personal workspace (Mine) and team workspace (Team) in the GUI
+- The system shall provide structured duration input (days/hours/minutes spinners) for task estimates
+- The system shall support editing task estimates in the GUI edit dialog
+- The system shall use FormPanel for consistent two-column layout in all form dialogs
 
 ---
 
@@ -185,8 +190,8 @@ task.trak.app.client/       ← Client (never imports from server)
                                   ProjectViewModel, SprintViewModel, UserViewModel
   gui/controller/                 GUIController, AuthController, TaskController,
                                   ProjectController, SprintController
-  gui/view/                       DataView (abstract), MainFrame
-  gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView
+  gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel
+  gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView, TimeInputPanel
   gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView
   gui/view/sprint/                SprintView, SprintAddView
   gui/view/auth/                  LoginView, SignUpView, LogOutView
@@ -194,7 +199,7 @@ task.trak.app.client/       ← Client (never imports from server)
                                   UserNameAlreadyExistErrorView,
                                   EmailAlreadyExistErrorView,
                                   TaskBeforeProjectErrorView
-  gui/view/form/                  FormDialogView
+  gui/view/form/                  FormDialogView, FormPanel
   gui/view/panel/                 OutputPanel, StatusPanel
   config/                         WorkspaceConfig
 ```
@@ -228,6 +233,13 @@ Features:
 - Double-click cells for member management, task management, summary editing
 - Sort by due date/estimate, filter by project, archive completed tasks
 - Login/Signup/Guest dialogs, error alerts
+- Dark cinematic theme via TrakTheme (deep charcoal + warm gold accent, 8px spacing grid)
+- Workspace toggle (Mine/Team) with filtered data fetching
+- Structured duration spinners (TimeInputPanel) for task estimate input
+- Green CTA button for primary actions (Add Task)
+- GlassPanel rounded containers with gradient background and optional drop shadow
+- FormPanel two-column layout for all form dialogs
+- Task cards with custom-painted rounded corners, gradient background, gold glow hover
 
 ---
 
@@ -301,15 +313,16 @@ java -jar trak-gui [--local] [--test]     # GUI (remote default, --local for sta
 ## Makefile Targets
 ```bash
 make build          # Build all 3 jars
+make build-gui      # Build GUI jar only
+make build-cli      # Build CLI jar only
+make build-server   # Build server jar only
 make test           # Run tests
 make clean          # Clean artifacts
-make server         # Start server
-make gui            # GUI local
-make gui-test       # GUI local + test data
-make gui-server     # GUI remote
-make cli            # CLI usage
-make all            # Build all
-make all-test       # Build all + test data
+make reset          # Clean + remove .store and .cache
+make cli            # Build + CLI usage
+make cli-test       # Build + quick CLI test
+make all            # Build + run tests
+make all-test       # Build + run tests + show usage
 ```
 
 ## Authentication

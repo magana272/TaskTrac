@@ -68,3 +68,35 @@
   2. Make `ObservableViewModel.CACHE_DIR` package-accessible and redirect `ObserverPatternTest` to `src/test/.cache`
   3. Add `src/test/.store/` and `src/test/.cache/` to `.gitignore`
 - **Impact**: Tests no longer pollute `.store` or `.cache` at the project root. All test artifacts go to `src/test/` and are cleaned up after each run.
+
+## feature/MainView-UXUI (Dark Cinematic Theme)
+
+### Design Changes
+- **Files**: `TrakTheme.java` (new), `GlassPanel.java` (new), `FormPanel.java` (new), `MainFrame.java`, `StatusPanel.java`, `CommandInputPanel.java`, `OutputPanel.java`, `FormDialogView.java`, `GUIMain.java`, all form views (LoginView, SignUpView, LogOutView, ProjectAddView, ProjectCreateView, SprintAddView, TaskAddView, TaskEditView)
+- **Goal**: Replace default Swing look with a dark cinematic theme — deep charcoal background, warm gold accent, consistent typography and spacing.
+- **Solution**: Created `TrakTheme.java` as a centralized theme with color palette, 8px spacing grid, typography scale (DISPLAY through CAPTION), and `applyDefaults()` for ~50 UIManager keys. `GlassPanel` provides rounded-corner gradient panels with optional drop shadow. `FormPanel` provides consistent two-column GridBagLayout for all form dialogs. `GUIMain` switched to cross-platform L&F for full color control. All form views refactored to return `FormPanel` from `buildPanel()`.
+- **Impact**: Entire GUI renders in a consistent dark theme. All hardcoded colors replaced with TrakTheme constants. Form layout standardized across all 8 dialog views.
+
+## feature/MainView-UXUI (Workspace Toggle)
+
+### Design Changes
+- **Files**: `MainFrame.java`, `TaskController.java`, `ProjectController.java`
+- **Goal**: Allow users to toggle between personal workspace ("Mine" — filtered by logged-in user) and team workspace ("Team" — all data).
+- **Solution**: Added `myWorkspaceBtn` and `teamWorkspaceBtn` to MainFrame nav bar with gold active / muted inactive toggle styling. `setTeamMode(boolean)` calls `refreshTasks(bool)` and `refreshProjects(bool)`. `TaskController.refreshTasks(true)` calls `listAll()`, `false` calls `listByAssignee()`. `ProjectController.refreshProjects(true)` calls `listAll()`, `false` calls `listByUser()`. State resets to Mine on logout.
+- **Impact**: Users can now see all team tasks/projects or just their own. Existing behavior (Mine mode) is preserved as the default.
+
+## feature/MainView-UXUI (TimeInput)
+
+### Design Changes
+- **Files**: `TimeInputPanel.java` (new), `TimeUtil.java`, `TaskAddView.java`, `TaskEditView.java`, `TaskController.java`, `TaskService.java`, `TrakTaskService.java`, `TaskHttpService.java`
+- **Goal**: Replace free-text estimate field with structured duration spinners (days/hours/minutes).
+- **Solution**: Created `TimeInputPanel` with three JSpinners (days 0–30, hours 0–24, minutes 0–59). `getDurationString()` returns `"Xd Yh Zm"` format. `setDuration()` parses existing estimates via `TimeUtil.parseDurationToComponents()`. `TaskEditView` now supports estimate editing (previously missing). `TaskService.updateById()` and `TaskController.updateTask()` gain `String estimate` parameter. CLI commands pass `null` for backward compatibility.
+- **Impact**: Estimates are structured and validated. TaskEditView can modify estimates. Full stack supports estimate updates (service interface, server impl, HTTP client).
+
+## feature/MainView-UXUI (Makefile + Build)
+
+### Design Changes
+- **Files**: `Makefile`, `gradle.properties` (new)
+- **Goal**: Simplify Makefile targets and add per-component build targets.
+- **Solution**: Added `build-gui`, `build-cli`, `build-server` targets for building individual jars. Added `reset` target (clean + rm .store .cache). Removed `server`, `gui`, `gui-test`, `gui-server`, `gui-test-server` shortcut targets — users now run jars directly. Added `gradle.properties` with daemon, parallel, and caching optimizations.
+- **Impact**: Faster incremental builds. Cleaner Makefile. Users run `java -jar trak-gui --local --test` instead of `make gui-test`.
