@@ -12,7 +12,7 @@ public abstract class FormDialogView {
         this.title = title;
     }
 
-    protected abstract JPanel buildPanel();
+    protected abstract FormPanel buildPanel();
 
     protected abstract void onConfirm();
 

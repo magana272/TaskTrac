@@ -2,7 +2,9 @@ package task.trak.app.client.gui.view.task;
 
 import task.trak.api.dto.ProjectDTO;
 import task.trak.app.client.gui.controller.TaskController;
+import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.form.FormDialogView;
+import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,7 +23,7 @@ public class TaskAddView extends FormDialogView {
     private JTextField summaryField;
     private JSpinner deadlineSpinner;
     private JCheckBox deadlineCheck;
-    private JTextField estimateField;
+    private TimeInputPanel estimatePanel;
 
     public TaskAddView(Component parent, TaskController taskController, List<ProjectDTO> projects) {
         this(parent, taskController, projects, 0);
@@ -45,10 +47,12 @@ public class TaskAddView extends FormDialogView {
     }
 
     @Override
-    protected JPanel buildPanel() {
-        JPanel panel = new JPanel(new GridLayout(6, 2, 4, 4));
+    protected FormPanel buildPanel() {
+        FormPanel form = new FormPanel();
 
         titleField = new JTextField();
+        form.addField("Title:", titleField);
+
         projectCombo = new JComboBox<>();
         for (ProjectDTO p : projects) {
             projectCombo.addItem(p.projectName() + "  (#" + p.id() + ")");
@@ -56,6 +60,8 @@ public class TaskAddView extends FormDialogView {
         if (defaultProjectIndex >= 0 && defaultProjectIndex < projects.size()) {
             projectCombo.setSelectedIndex(defaultProjectIndex);
         }
+        TrakTheme.styleComboBox(projectCombo);
+        form.addField("Project:", projectCombo);
 
         assignedCombo = new JComboBox<>();
         Runnable updateAssignees = () -> {
@@ -77,8 +83,11 @@ public class TaskAddView extends FormDialogView {
         };
         updateAssignees.run();
         projectCombo.addActionListener(e -> updateAssignees.run());
+        TrakTheme.styleComboBox(assignedCombo);
+        form.addField("Assigned To:", assignedCombo);
 
         summaryField = new JTextField();
+        form.addField("Summary:", summaryField);
 
         SpinnerDateModel dateModel = new SpinnerDateModel();
         deadlineSpinner = new JSpinner(dateModel);
@@ -90,23 +99,12 @@ public class TaskAddView extends FormDialogView {
         JPanel deadlinePanel = new JPanel(new BorderLayout(4, 0));
         deadlinePanel.add(deadlineCheck, BorderLayout.WEST);
         deadlinePanel.add(deadlineSpinner, BorderLayout.CENTER);
+        form.addField("Deadline:", deadlinePanel);
 
-        estimateField = new JTextField();
+        estimatePanel = new TimeInputPanel();
+        form.addField("Estimate:", estimatePanel);
 
-        panel.add(new JLabel("Title:"));
-        panel.add(titleField);
-        panel.add(new JLabel("Project:"));
-        panel.add(projectCombo);
-        panel.add(new JLabel("Assigned To:"));
-        panel.add(assignedCombo);
-        panel.add(new JLabel("Summary:"));
-        panel.add(summaryField);
-        panel.add(new JLabel("Deadline:"));
-        panel.add(deadlinePanel);
-        panel.add(new JLabel("Estimate:"));
-        panel.add(estimateField);
-
-        return panel;
+        return form;
     }
 
     @Override
@@ -126,7 +124,7 @@ public class TaskAddView extends FormDialogView {
         if (deadlineCheck.isSelected()) {
             deadline = (Date) deadlineSpinner.getValue();
         }
-        String estimate = estimateField.getText().trim();
+        String estimate = estimatePanel.isZero() ? null : estimatePanel.getDurationString();
 
         taskController.addTask(
                 title,
@@ -134,7 +132,7 @@ public class TaskAddView extends FormDialogView {
                 assignee != null && !assignee.isEmpty() ? assignee : null,
                 summary.isEmpty() ? null : summary,
                 deadline,
-                estimate.isEmpty() ? null : estimate
+                estimate
         );
     }
 }

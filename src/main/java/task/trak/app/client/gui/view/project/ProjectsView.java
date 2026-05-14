@@ -1,19 +1,25 @@
 package task.trak.app.client.gui.view.project;
 
 import task.trak.api.dto.ProjectDTO;
+import task.trak.api.dto.TaskDTO;
+import task.trak.api.util.TimeUtil;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.DataView;
+import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeListener;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeType;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ProjectsView extends DataView implements ViewModelChangeListener {
 
@@ -22,7 +28,7 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
     public ProjectsView(GUIController guiController) {
         this.guiController = guiController;
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(TrakTheme.BG_DARK);
 
         guiController.getProjectController().getViewModel().addObserver(this);
     }
@@ -48,12 +54,25 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
 
         if (projects == null || projects.isEmpty()) {
             JButton addBtn = new JButton("+ Create a Project");
+            TrakTheme.styleButtonPrimary(addBtn);
             addBtn.addActionListener(e -> openCreateDialog());
             JPanel placeholder = new JPanel(new GridBagLayout());
+            placeholder.setBackground(TrakTheme.BG_DARK);
             placeholder.add(addBtn);
             add(placeholder, BorderLayout.CENTER);
         } else {
-            String[] columns = {"ID", "Name", "Description", "Owner", "Members", "Tasks", "Sprints"};
+            // Compute total estimate per project
+            Map<String, Long> projectEstimateMs = new HashMap<>();
+            List<TaskDTO> allTasks = guiController.getTaskController().getViewModel().get();
+            if (allTasks != null) {
+                for (TaskDTO t : allTasks) {
+                    if (t.projectName() != null && t.estimate() != null && !t.estimate().isBlank()) {
+                        projectEstimateMs.merge(t.projectName(), TimeUtil.parseDurationToMs(t.estimate()), Long::sum);
+                    }
+                }
+            }
+
+            String[] columns = {"ID", "Name", "Description", "Owner", "Members", "Tasks", "Estimate", "Sprints"};
             DefaultTableModel model = new DefaultTableModel(columns, 0) {
                 @Override
                 public boolean isCellEditable(int row, int col) {
@@ -68,6 +87,8 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
             };
 
             for (ProjectDTO p : projects) {
+                long estMs = projectEstimateMs.getOrDefault(p.projectName(), 0L);
+                String estDisplay = estMs > 0 ? TimeUtil.formatDuration(estMs) : "-";
                 model.addRow(new Object[]{
                         p.id(),
                         p.projectName() != null ? p.projectName() : "",
@@ -75,13 +96,13 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
                         p.ownerUsername() != null ? p.ownerUsername() : "-",
                         p.memberCount(),
                         p.taskCount(),
+                        estDisplay,
                         p.sprintCount()
                 });
             }
 
             JTable table = createCopyableTable(model);
-            table.setRowHeight(28);
-            table.getTableHeader().setReorderingAllowed(false);
+            TrakTheme.styleTable(table);
 
             table.addMouseListener(new MouseAdapter() {
                 @Override
@@ -114,15 +135,22 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
 
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setBorder(BorderFactory.createEmptyBorder());
-            add(scrollPane, BorderLayout.CENTER);
+            scrollPane.getViewport().setBackground(TrakTheme.BG_DARK);
 
-            JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+            JPanel tableWrapper = new JPanel(new BorderLayout());
+            tableWrapper.setBackground(TrakTheme.BG_DARK);
+            tableWrapper.setBorder(new EmptyBorder(TrakTheme.SP_MD, 0, 0, 0));
+            tableWrapper.add(scrollPane, BorderLayout.CENTER);
+            add(tableWrapper, BorderLayout.CENTER);
+
+            JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, TrakTheme.SP_SM));
+            bottomBar.setBackground(TrakTheme.BG_SURFACE);
             JButton addBtn = new JButton("+ Add Project");
-            addBtn.setFocusPainted(false);
+            TrakTheme.styleButtonPrimary(addBtn);
             addBtn.addActionListener(e -> openCreateDialog());
 
             JButton saveBtn = new JButton("Save Changes");
-            saveBtn.setFocusPainted(false);
+            TrakTheme.styleButtonNav(saveBtn);
             saveBtn.addActionListener(e -> saveProjectEdits(table, model, projects));
 
             bottomBar.add(addBtn);
@@ -142,7 +170,7 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
         JTextArea textArea = new JTextArea(project.summary() != null ? project.summary() : "", 8, 40);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
-        textArea.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        textArea.setFont(TrakTheme.FONT_BODY);
         JScrollPane scroll = new JScrollPane(textArea);
 
         int result = JOptionPane.showConfirmDialog(this, scroll,

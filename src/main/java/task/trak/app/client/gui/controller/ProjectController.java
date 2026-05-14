@@ -51,7 +51,20 @@ public class ProjectController {
     }
 
     public void refreshProjects() {
-        List<ProjectDTO> projects = ServiceFactory.projectService().listAll();
+        refreshProjects(false);
+    }
+
+    public void refreshProjects(boolean teamMode) {
+        List<ProjectDTO> projects;
+        if (teamMode) {
+            projects = ServiceFactory.projectService().listAll();
+        } else {
+            String user = userViewModel.getSession() != null
+                    ? userViewModel.getSession().getLogged_in_user() : null;
+            projects = user != null
+                    ? ServiceFactory.projectService().listByUser(user)
+                    : ServiceFactory.projectService().listAll();
+        }
         projectViewModel.setAll(projects);
     }
 

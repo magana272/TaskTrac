@@ -51,7 +51,7 @@ public class TaskUpdateCMD extends TaskCMD {
         String newAssignedTo = this.options.get("assigned_to");
         String newSummary = this.options.get("summary");
 
-        TaskDTO updated = taskService.updateById(this.taskId, newTitle, newStatus, newAssignedTo, newSummary);
+        TaskDTO updated = taskService.updateById(this.taskId, newTitle, newStatus, newAssignedTo, newSummary, null);
         System.out.println("Task " + this.taskId + " updated successfully.");
         return Optional.of(updated);
     }

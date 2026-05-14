@@ -134,9 +134,10 @@ public class TaskRoutes {
                 String status = req.get("status");
                 String assignedTo = req.get("assignedTo");
                 String summary = req.get("summary");
+                String estimate = req.get("estimate");
 
                 TaskService taskService = ServiceFactory.taskService();
-                TaskDTO task = taskService.updateById(id, title, status, assignedTo, summary);
+                TaskDTO task = taskService.updateById(id, title, status, assignedTo, summary, estimate);
                 if (task == null) {
                     JsonHelper.sendError(exchange, 404, "Task not found");
                     return;

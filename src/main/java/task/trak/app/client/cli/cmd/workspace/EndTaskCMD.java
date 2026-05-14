@@ -31,7 +31,7 @@ public class EndTaskCMD extends WorkspaceCMD {
         }
 
         // Stop the task via service
-        taskService.updateById(taskId, null, "READY", null, null);
+        taskService.updateById(taskId, null, "READY", null, null, null);
 
         // Calculate accumulated time for display
         long accumulated = task.timeSpentMs();

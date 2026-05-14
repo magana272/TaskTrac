@@ -12,7 +12,7 @@ public interface TaskService {
 
     boolean deleteById(Long id);
 
-    TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary);
+    TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary, String newEstimate);
 
     List<TaskDTO> listAll();
 

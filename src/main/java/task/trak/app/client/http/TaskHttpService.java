@@ -53,12 +53,13 @@ public class TaskHttpService implements TaskService {
     }
 
     @Override
-    public TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary) {
+    public TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary, String newEstimate) {
         JsonObject body = new JsonObject();
         if (newTitle != null) body.addProperty("title", newTitle);
         if (newStatus != null) body.addProperty("status", newStatus);
         if (newAssignedTo != null) body.addProperty("assignedTo", newAssignedTo);
         if (newSummary != null) body.addProperty("summary", newSummary);
+        if (newEstimate != null) body.addProperty("estimate", newEstimate);
         String response = ApiClient.put("/api/tasks/" + id, body.toString());
         if (response == null) return null;
         return gson.fromJson(response, TaskDTO.class);
