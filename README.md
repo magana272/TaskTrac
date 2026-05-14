@@ -170,6 +170,22 @@ Example scripts demonstrating the REST API and CLI workflows:
 - [`examples/api-demo.sh`](examples/api-demo.sh) — REST API curl demo (authentication, CRUD operations)
 - [`examples/cli-demo.sh`](examples/cli-demo.sh) — CLI workflow demo (login, project/task/sprint management)
 
+## Store Benchmark
+
+Performance comparison of JSON, Parquet, DuckDB, and Redis storage backends. See [results.csv](docs/store_analysis/results.csv) for raw data.
+
+### Average Latency by Operation
+
+![Average Latency](docs/store_analysis/avg_latency.png)
+
+### Tail Latency (P95 & P99)
+
+![Tail Latency](docs/store_analysis/tail_latency.png)
+
+### Total Time by Store
+
+![Total Time](docs/store_analysis/total_time.png)
+
 ## Tests
 
 ```bash
