@@ -11,6 +11,8 @@ public class Sprint {
     private List<Long> task_ids;
     private Date start_date;
     private Date end_date;
+    private boolean completed = false;
+    private Date completed_at;
 
     public Sprint(Long id, String projectName, String name, List<Long> taskIds, Date startDate, Date endDate) {
         this.id = id;
@@ -59,5 +61,21 @@ public class Sprint {
 
     public void setEnd_date(Date end_date) {
         this.end_date = end_date;
+    }
+
+    public boolean isCompleted() {
+        return this.completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+
+    public Date getCompleted_at() {
+        return this.completed_at;
+    }
+
+    public void setCompleted_at(Date completed_at) {
+        this.completed_at = completed_at;
     }
 }

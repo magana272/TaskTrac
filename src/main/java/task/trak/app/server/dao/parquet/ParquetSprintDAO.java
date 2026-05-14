@@ -25,7 +25,9 @@ public class ParquetSprintDAO implements EntityDAO<Sprint> {
                 {"name": "name", "type": ["null", "string"], "default": null},
                 {"name": "task_ids", "type": {"type": "array", "items": "long"}, "default": []},
                 {"name": "start_date", "type": ["null", "long"], "default": null},
-                {"name": "end_date", "type": ["null", "long"], "default": null}
+                {"name": "end_date", "type": ["null", "long"], "default": null},
+                {"name": "completed", "type": "boolean", "default": false},
+                {"name": "completed_at", "type": ["null", "long"], "default": null}
               ]
             }
             """;
@@ -70,10 +72,15 @@ public class ParquetSprintDAO implements EntityDAO<Sprint> {
             List<Long> taskIds = (List<Long>) r.get("task_ids");
             Long startMs = (Long) r.get("start_date");
             Long endMs = (Long) r.get("end_date");
-            sprints.add(new Sprint(id, projectName, name,
+            Boolean completed = (Boolean) r.get("completed");
+            Long completedAtMs = (Long) r.get("completed_at");
+            Sprint sprint = new Sprint(id, projectName, name,
                     taskIds != null ? new ArrayList<>(taskIds) : new ArrayList<>(),
                     startMs != null ? new Date(startMs) : null,
-                    endMs != null ? new Date(endMs) : null));
+                    endMs != null ? new Date(endMs) : null);
+            sprint.setCompleted(completed != null && completed);
+            sprint.setCompleted_at(completedAtMs != null ? new Date(completedAtMs) : null);
+            sprints.add(sprint);
         }
         return sprints;
     }
@@ -91,6 +98,8 @@ public class ParquetSprintDAO implements EntityDAO<Sprint> {
         record.put("task_ids", s.getTask_ids() != null ? s.getTask_ids() : new ArrayList<>());
         record.put("start_date", s.getStart_date() != null ? s.getStart_date().getTime() : null);
         record.put("end_date", s.getEnd_date() != null ? s.getEnd_date().getTime() : null);
+        record.put("completed", s.isCompleted());
+        record.put("completed_at", s.getCompleted_at() != null ? s.getCompleted_at().getTime() : null);
         return record;
     }
 }

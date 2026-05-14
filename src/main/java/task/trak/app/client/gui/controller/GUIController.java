@@ -359,7 +359,7 @@ public class GUIController implements App, CommandListener {
                     for (int t = from; t < to; t++) {
                         taskIds.add(projectTasks.get(t).id());
                     }
-                    this.sprintService.update(new UpdateSprintRequest(sprintName, project, startStr, endStr, taskIds));
+                    this.sprintService.update(new UpdateSprintRequest(sprintName, project, startStr, endStr, taskIds, null));
                 }
             }
 

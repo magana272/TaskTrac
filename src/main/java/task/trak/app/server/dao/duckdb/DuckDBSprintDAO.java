@@ -29,7 +29,7 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
         ReentrantLock lock = DuckDBConnection.getLock();
         lock.lock();
         try {
-            String sql = "INSERT OR REPLACE INTO sprints (id, project_name, name, task_ids, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT OR REPLACE INTO sprints (id, project_name, name, task_ids, start_date, end_date, completed, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             Connection conn = DuckDBConnection.getConnection();
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setLong(1, entity.getId());
@@ -38,6 +38,8 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
                 ps.setString(4, GSON.toJson(entity.getTask_ids()));
                 ps.setObject(5, entity.getStart_date() != null ? entity.getStart_date().getTime() : null);
                 ps.setObject(6, entity.getEnd_date() != null ? entity.getEnd_date().getTime() : null);
+                ps.setBoolean(7, entity.isCompleted());
+                ps.setObject(8, entity.getCompleted_at() != null ? entity.getCompleted_at().getTime() : null);
                 ps.executeUpdate();
             }
         } catch (SQLException e) {
@@ -134,11 +136,16 @@ public class DuckDBSprintDAO implements EntityDAO<Sprint> {
         String taskIdsJson = rs.getString("task_ids");
         Long startDateMs = rs.getObject("start_date") != null ? rs.getLong("start_date") : null;
         Long endDateMs = rs.getObject("end_date") != null ? rs.getLong("end_date") : null;
+        boolean completed = rs.getBoolean("completed");
+        Long completedAtMs = rs.getObject("completed_at") != null ? rs.getLong("completed_at") : null;
 
         List<Long> taskIds = taskIdsJson != null ? GSON.fromJson(taskIdsJson, LONG_LIST_TYPE) : new ArrayList<>();
         Date startDate = startDateMs != null ? new Date(startDateMs) : null;
         Date endDate = endDateMs != null ? new Date(endDateMs) : null;
 
-        return new Sprint(id, projectName, name, taskIds, startDate, endDate);
+        Sprint sprint = new Sprint(id, projectName, name, taskIds, startDate, endDate);
+        sprint.setCompleted(completed);
+        sprint.setCompleted_at(completedAtMs != null ? new Date(completedAtMs) : null);
+        return sprint;
     }
 }

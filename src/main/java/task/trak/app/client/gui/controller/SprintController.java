@@ -27,7 +27,7 @@ public class SprintController {
         try {
             this.sprintService.create(new CreateSprintRequest(name, project));
             if (startDate != null || endDate != null || (taskIds != null && !taskIds.isEmpty())) {
-                this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds));
+                this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds, null));
             }
             refreshSprints();
         } catch (Exception e) {
@@ -37,7 +37,7 @@ public class SprintController {
 
     public void updateSprint(String name, String startDate, String endDate) {
         try {
-            this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null));
+            this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null, null));
             refreshSprints();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
@@ -60,7 +60,16 @@ public class SprintController {
             if (!taskIds.contains(taskId)) {
                 taskIds.add(taskId);
             }
-            this.sprintService.update(new UpdateSprintRequest(sprintName, project, null, null, taskIds));
+            this.sprintService.update(new UpdateSprintRequest(sprintName, project, null, null, taskIds, null));
+            refreshSprints();
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    public void completeSprint(String name, String project) {
+        try {
+            sprintService.update(new UpdateSprintRequest(name, project, null, null, null, true));
             refreshSprints();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
