@@ -40,3 +40,11 @@ Feature: Task Management
   Scenario: User cannot add task without project
     When the user runs the command "tasktracker task add --title No project task"
     Then the system displays an error containing "project is required"
+
+  Scenario: Task assignee can be changed to project member
+    Given a user with the username "assignowner" exists
+    And a user with the username "assignmember" exists
+    And a project named "AssignTestProj" exists
+    And a task exists in project "AssignTestProj" assigned to "assignowner"
+    When the user runs the command to update the created task with "--assigned_to assignmember"
+    Then the created task is assigned to "assignmember"

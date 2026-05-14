@@ -61,6 +61,18 @@ public class ProjectController {
 
     public List<String> getProjectMembers(String projectName) {
         ProjectDTO project = ServiceFactory.projectService().getByName(projectName);
-        return project != null ? project.memberUsernames() : new ArrayList<>();
+        if (project == null) return new ArrayList<>();
+        List<String> result = new ArrayList<>();
+        if (project.ownerUsername() != null) {
+            result.add(project.ownerUsername());
+        }
+        if (project.memberUsernames() != null) {
+            for (String m : project.memberUsernames()) {
+                if (!m.equals(project.ownerUsername())) {
+                    result.add(m);
+                }
+            }
+        }
+        return result;
     }
 }
