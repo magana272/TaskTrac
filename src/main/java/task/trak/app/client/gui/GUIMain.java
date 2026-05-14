@@ -69,7 +69,7 @@ public class GUIMain {
         UserViewModel userViewModel = new UserViewModel();
 
         // Create all 4 sub-controllers
-        AuthController authController = new AuthController(authService, userViewModel);
+        AuthController authController = new AuthController(authService, userService, userViewModel);
         TaskController taskController = new TaskController(taskService, taskViewModel, userViewModel);
         ProjectController projectController = new ProjectController(projectService, projectViewModel, userViewModel);
         SprintController sprintController = new SprintController(sprintService, sprintViewModel);
