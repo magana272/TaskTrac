@@ -44,6 +44,7 @@ public class GUIMain {
                 }
             }
             try {
+                task.trak.api.service.ServiceFactory.registerLocalServices();
                 TrakServer embeddedServer = new TrakServer(0);
                 embeddedServer.start();
                 ApiClient.setBaseUrl("http://localhost:" + embeddedServer.getPort());
