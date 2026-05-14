@@ -124,9 +124,14 @@ public class ProjectAddView extends FormDialogView {
             if (username != null && !username.trim().isEmpty()) {
                 String trimmed = username.trim();
                 if (!currentMembers.contains(trimmed)) {
-                    currentMembers.add(trimmed);
-                    projectController.addMember(project.projectName(), trimmed);
-                    refreshRef[0].run();
+                    try {
+                        projectController.addMember(project.projectName(), trimmed);
+                        currentMembers.add(trimmed);
+                        refreshRef[0].run();
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dialog,
+                                ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });
