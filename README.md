@@ -37,7 +37,7 @@ Requires Java 17+ and Gradle.
 
 ```bash
 make build       # build all 3 jars
-make test        # run 138 tests
+make test        # run ~200 tests
 make clean       # clean artifacts
 make all         # build + test
 make all-test    # build + test + show usage
@@ -109,7 +109,7 @@ java -jar trak-cli sprint update Sprint1 --project WebApp --start_date 2026-06-0
 - **Sort** by due date or estimate, **filter** by project
 - **Archive** completed tasks (toggle to show/hide)
 - **Owner-only** permissions for member/task management
-- **Login/Signup/Guest** dialogs, error panel
+- **Login/Signup/Guest** views (LoginView, SignUpView, LogOutView), error alert dialogs
 
 ## Storage
 
@@ -136,9 +136,15 @@ export MONGO_DB="trak"
 
 Client-server with clean package boundaries:
 
-- **`org.trak.api`** — shared DTOs, service interfaces, ServiceFactory
-- **`org.trak.app.server`** — REST API, services, DAO (Parquet/JSON/MongoDB)
-- **`org.trak.app.client`** — CLI, GUI, HTTP client services
+- **`task.trak.api`** — shared DTOs, service interfaces, ServiceFactory
+- **`task.trak.app.server`** — REST API, services, DAO (Parquet/JSON/MongoDB)
+- **`task.trak.app.client`** — CLI, HTTP client services (`http/` subpackage)
+- **`task.trak.app.client.gui`** — MVC desktop client
+  - `viewmodel/` — ObservableViewModel, TaskViewModel, ProjectViewModel, SprintViewModel, UserViewModel (Observer pattern)
+  - `controller/` — GUIController, AuthController, TaskController, ProjectController, SprintController
+  - `view/` — TasksView, ProjectsView, SprintView, form dialogs, ErrorAlertView
+
+GUI uses MVC with an Observer pattern: views implement ViewModelChangeListener and register on ViewModels via `addObserver()`. ViewModels notify registered views on data changes, keeping cross-domain data fresh.
 
 Client never imports from server. `ServiceFactory` swaps LOCAL (direct DB) or REMOTE (HTTP) implementations transparently.
 
@@ -147,5 +153,5 @@ See [docs/DESIGN.md](docs/DESIGN.md) for full design, [docs/DIAGRAM.md](docs/DIA
 ## Tests
 
 ```bash
-make test    # 138 tests across 20 suites
+make test    # ~200 tests across 20+ suites
 ```

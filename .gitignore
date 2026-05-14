@@ -43,8 +43,6 @@ bin/
 .env
 .store/
 .cache/
-docs/design/
-docs/change/
 /tasktracker
 /tasktracker-server
 /tasktracker-cli

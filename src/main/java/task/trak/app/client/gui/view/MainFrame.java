@@ -134,7 +134,13 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                     cardLayout.show(cardContainer, CARD_SPRINTS);
                     sprintView.render();
                 }
-                case SESSION -> updateStatus();
+                case SESSION -> {
+                    updateStatus();
+                    if (userViewModel.getSession() == null) {
+                        controller.clearViewModels();
+                        cardLayout.show(cardContainer, CARD_OUTPUT);
+                    }
+                }
                 case ERROR -> {
                     String error = userViewModel.getLastError();
                     if (error != null) {

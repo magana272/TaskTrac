@@ -59,7 +59,12 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
                 @Override
                 public boolean isCellEditable(int row, int col) {
                     String colName = getColumnName(col);
-                    return "Name".equals(colName) || "Description".equals(colName);
+                    if (!"Name".equals(colName) && !"Description".equals(colName)) return false;
+                    if (row < 0 || row >= projects.size()) return false;
+                    String owner = projects.get(row).ownerUsername();
+                    String currentUser = guiController.getSession() != null
+                            ? guiController.getSession().getLogged_in_user() : null;
+                    return owner != null && owner.equals(currentUser);
                 }
             };
 
@@ -93,12 +98,19 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
                                 new ProjectAddView(ProjectsView.this, guiController.getProjectController(), p).show();
                             }
                             case "Description" -> {
-                                showSummaryEditor(p, model, row);
+                                String currentUser = guiController.getSession() != null
+                                        ? guiController.getSession().getLogged_in_user() : null;
+                                if (p.ownerUsername() != null && p.ownerUsername().equals(currentUser)) {
+                                    showSummaryEditor(p, model, row);
+                                }
                             }
                             case "Tasks" -> {
+                                List<ProjectDTO> allProjects = guiController.getProjectController().getViewModel().get();
+                                int projectIndex = allProjects.indexOf(p);
                                 new TaskAddView(ProjectsView.this,
                                         guiController.getTaskController(),
-                                        guiController.getProjectController().getViewModel().get()).show();
+                                        allProjects,
+                                        projectIndex >= 0 ? projectIndex : 0).show();
                             }
                         }
                     }

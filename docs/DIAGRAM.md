@@ -169,7 +169,7 @@ config:
 title: Package Dependencies
 ---
 flowchart TB
-    subgraph api["org.trak.api (shared)"]
+    subgraph api["task.trak.api (shared)"]
         direction LR
         dto[dto/]
         svc_if[service/ interfaces]
@@ -177,15 +177,16 @@ flowchart TB
         util[util/]
     end
 
-    subgraph client["org.trak.app.client"]
+    subgraph client["task.trak.app.client"]
         direction LR
-        http[HTTP Services<br>TaskHttpService, ...]
+        http[http/<br>ApiClient, TaskHttpService, ...]
         cli[cli/<br>TTApp, CMD_Factory, CMDs]
-        gui[gui/<br>TTAppGUI, MainFrame, Cards]
-        observer[gui/observer/<br>CommandEventBus]
+        viewmodel[gui/viewmodel/<br>TaskViewModel, ProjectViewModel, ...]
+        controller[gui/controller/<br>GUIController, AuthController, ...]
+        views[gui/view/<br>task/, project/, sprint/,<br>auth/, error/, form/, panel/]
     end
 
-    subgraph server["org.trak.app.server"]
+    subgraph server["task.trak.app.server"]
         direction LR
         svc_impl[service/<br>TrakTaskService, ...]
         routes[server/<br>REST Routes]
@@ -227,7 +228,7 @@ flowchart LR
     style HTTP fill:#e3f2fd,stroke:#1565c0
 ```
 
-## GUI Observer Pattern
+## GUI MVC Observer Pattern
 
 ```mermaid
 ---
@@ -240,19 +241,30 @@ config:
     lineColor: '#000000'
     fontFamily: 'Georgia, Times New Roman, serif'
     fontSize: '14px'
-title: GUI Event Flow
+title: GUI MVC with Observer Pattern
 ---
-flowchart LR
-    Input[User Input<br>Button / Command] --> TTAppGUI
-    TTAppGUI -->|background thread| CMDFactory[CMD_Factory]
-    CMDFactory --> CMD[Command]
-    CMD -->|stdout captured| TeeOS[TeeOutputStream]
-    CMDFactory -->|fire| EventBus[CommandEventBus]
-    EventBus -->|notify| TTAppGUI
-    TTAppGUI -->|EDT| MainFrame
-    MainFrame --> Cards[Task Cards]
-    MainFrame --> Tables[Project/Sprint Tables]
-    MainFrame --> Error[Error Panel]
+flowchart TB
+    User[User Action] --> View[View<br>e.g. TasksView]
+    View -->|calls| Controller[Controller<br>e.g. TaskController]
+    Controller -->|invokes| Service[Service Layer]
+    Service -->|returns data| Controller
+    Controller -->|updates| ViewModel[ViewModel<br>e.g. TaskViewModel]
+    ViewModel -->|notifyObservers| View
+    View -->|render| UI[Updated UI]
+
+    subgraph Observer Registration
+        direction LR
+        TasksView_Obs[TasksView] -->|addObserver| TaskVM[TaskViewModel]
+        TasksView_Obs -->|addObserver| ProjVM1[ProjectViewModel]
+        ProjectsView_Obs[ProjectsView] -->|addObserver| ProjVM2[ProjectViewModel]
+        SprintView_Obs[SprintView] -->|addObserver| SprintVM[SprintViewModel]
+        SprintView_Obs -->|addObserver| ProjVM3[ProjectViewModel]
+        SprintView_Obs -->|addObserver| TaskVM2[TaskViewModel]
+    end
+
+    style View fill:#e3f2fd,stroke:#1565c0
+    style Controller fill:#fff3e0,stroke:#e65100
+    style ViewModel fill:#f1f8e9,stroke:#558b2f
 ```
 
 ## Command Routing
