@@ -120,31 +120,6 @@ public class TasksView extends DataView implements ViewModelChangeListener {
         toolbar.setBackground(TrakTheme.BG_SURFACE);
         toolbar.setBorder(TrakTheme.pad(TrakTheme.SP_SM, TrakTheme.SP_XL));
 
-        // Project filter
-        Set<String> projectNames = new LinkedHashSet<>();
-        projectNames.add("All");
-        if (allTasks != null) {
-            for (TaskDTO t : allTasks) {
-                if (t.projectName() != null) projectNames.add(t.projectName());
-            }
-        }
-        JLabel projectLabel = new JLabel("Project:");
-        projectLabel.setForeground(TrakTheme.TEXT_SECONDARY);
-
-        toolbar.add(projectLabel);
-        JComboBox<String> projectFilter = new JComboBox<>(projectNames.toArray(new String[0]));
-        projectFilter.setSelectedItem(guiController.getTaskController().getViewModel().getProjectFilter());
-        projectFilter.addActionListener(e -> {
-            String selected = (String) projectFilter.getSelectedItem();
-            if (selected != null) {
-                guiController.getTaskController().getViewModel().setProjectFilter(selected);
-            }
-        });
-        TrakTheme.styleComboBox(projectFilter);
-        toolbar.add(projectFilter);
-
-        toolbar.add(Box.createHorizontalStrut(8));
-
         // Sort
         JLabel sortLabel = new JLabel("Sort:");
         sortLabel.setForeground(TrakTheme.TEXT_SECONDARY);
@@ -195,7 +170,7 @@ public class TasksView extends DataView implements ViewModelChangeListener {
 
     private void layoutCards(JPanel panel, List<JComponent> cards) {
         panel.removeAll();
-        int minCardWidth = 240;
+        int minCardWidth = 320;
         int gap = TrakTheme.SP_SM;
         int containerWidth = taskCardsContainer.getWidth() - gap;
         if (containerWidth <= 0) containerWidth = 900;
