@@ -24,15 +24,10 @@ flowchart TB
         GUI[GUI Client<br>trak-gui]
     end
 
-    subgraph Shared[API Package]
-        DTOs[DTOs<br>TaskDTO, ProjectDTO, ...]
-        Interfaces[Service Interfaces<br>TaskService, ProjectService, ...]
-        SF[ServiceFactory]
-    end
-
     subgraph Server[Server - trak-server]
         direction TB
         REST[REST API<br>HttpServer :8080]
+        AUTH[AuthFilter<br>Bearer Token]
         SVC[Service Implementations<br>TrakTaskService, ...]
         DAO[DAO Layer<br>EntityDAO]
         subgraph Storage
@@ -41,16 +36,14 @@ flowchart TB
             JSONDB[(JSON<br>.store/)]
             MONGODB[(MongoDB<br>Atlas)]
         end
-        REST --> SVC --> DAO
+        REST --> AUTH --> SVC --> DAO
         DAO --> PARQUET
         DAO --> JSONDB
         DAO --> MONGODB
     end
 
-    CLI -->|HTTP or Local| SF
-    GUI -->|HTTP or Local| SF
-    SF -->|REMOTE mode| REST
-    SF -->|LOCAL mode| SVC
+    CLI -->|"HTTP REST"| REST
+    GUI -->|"HTTP REST"| REST
 ```
 
 ## Models

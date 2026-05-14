@@ -159,7 +159,7 @@ Client-server with clean package boundaries:
 
 GUI uses MVC with an Observer pattern: views implement ViewModelChangeListener and register on ViewModels via `addObserver()`. ViewModels notify registered views on data changes, keeping cross-domain data fresh.
 
-Client never imports from server. GUI communicates exclusively via HTTP services. In `--local` mode, an embedded TrakServer starts on a random port. `ServiceFactory` swaps LOCAL (direct DB) or REMOTE (HTTP) implementations for the CLI.
+All clients communicate via HTTP REST API. Client never imports from server. In `--local` mode, an embedded TrakServer starts on a random port — GUI still talks HTTP. All protected endpoints require a bearer token via `AuthFilter`.
 
 See [docs/DESIGN.md](docs/DESIGN.md) for full design, [docs/DIAGRAM.md](docs/DIAGRAM.md) for architecture diagrams, [docs/usage.md](docs/usage.md) for detailed usage guide.
 

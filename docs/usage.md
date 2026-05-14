@@ -25,14 +25,14 @@ This produces three jar files:
 make build-gui
 java -jar trak-gui --local --test
 ```
-Launches the GUI pre-loaded with 20 users, 10 projects, 1000 tasks, and 20 sprints. Logged in as `guest`.
+Launches the GUI with an embedded server and pre-loaded test data (20 users, 10 projects, 1000 tasks, 20 sprints). Logged in as `guest`.
 
 ### Option 2: GUI standalone
 ```bash
 make build-gui
 java -jar trak-gui --local
 ```
-Launches the GUI in local mode. Click "Continue as Guest" or sign up.
+Launches the GUI with an embedded server. Click "Continue as Guest" or sign up.
 
 ### Option 3: CLI
 ```bash
@@ -41,7 +41,7 @@ java -jar trak-cli
 # Interactive prompt — login as guest (password: guest) or create account
 ```
 
-### Option 4: Client-Server mode
+### Option 4: Dedicated server + clients
 ```bash
 # Terminal 1: start server
 make build-server
@@ -53,6 +53,8 @@ java -jar trak-gui
 # Terminal 3: CLI connecting to server
 java -jar trak-cli --remote tasks
 ```
+
+All clients communicate via HTTP REST API. The `--local` flag starts an embedded server on a random port — the GUI still talks HTTP.
 
 ---
 

@@ -162,10 +162,8 @@ flowchart TB
         REST --> SVC --> DAO --> STORE
     end
 
-    CLI -->|"HTTP (remote)"| REST
-    GUI -->|"HTTP (remote)"| REST
-    CLI -.->|"direct (local)"| SVC
-    GUI -.->|"direct (local)"| SVC
+    CLI -->|"HTTP REST"| REST
+    GUI -->|"HTTP REST"| REST
 ```
 
 ## Package Structure
