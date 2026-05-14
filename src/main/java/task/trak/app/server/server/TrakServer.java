@@ -27,6 +27,8 @@ public class TrakServer {
             DAOFactory.setFormat(DAOFactory.Format.JSON);
         } else if ("mongo".equalsIgnoreCase(fmt)) {
             DAOFactory.setFormat(DAOFactory.Format.MONGO);
+        } else if ("duckdb".equalsIgnoreCase(fmt)) {
+            DAOFactory.setFormat(DAOFactory.Format.DUCKDB);
         } else {
             DAOFactory.setFormat(DAOFactory.Format.PARQUET);
         }

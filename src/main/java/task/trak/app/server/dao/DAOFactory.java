@@ -1,5 +1,6 @@
 package task.trak.app.server.dao;
 
+import task.trak.app.server.dao.duckdb.*;
 import task.trak.app.server.dao.json.*;
 import task.trak.app.server.dao.mongo.*;
 import task.trak.app.server.dao.parquet.*;
@@ -11,7 +12,7 @@ import task.trak.app.server.model.user.User;
 
 public class DAOFactory {
 
-    private static Format format = Format.PARQUET;
+    private static Format format = Format.DUCKDB;
 
     public static Format getFormat() {
         return format;
@@ -26,6 +27,7 @@ public class DAOFactory {
             case PARQUET -> new ParquetUserDAO();
             case JSON -> new JsonUserDAO();
             case MONGO -> new MongoUserDAO();
+            case DUCKDB -> new DuckDBUserDAO();
         };
     }
 
@@ -34,6 +36,7 @@ public class DAOFactory {
             case PARQUET -> new ParquetProjectDAO();
             case JSON -> new JsonProjectDAO();
             case MONGO -> new MongoProjectDAO();
+            case DUCKDB -> new DuckDBProjectDAO();
         };
     }
 
@@ -42,6 +45,7 @@ public class DAOFactory {
             case PARQUET -> new ParquetTaskDAO();
             case JSON -> new JsonTaskDAO();
             case MONGO -> new MongoTaskDAO();
+            case DUCKDB -> new DuckDBTaskDAO();
         };
     }
 
@@ -50,6 +54,7 @@ public class DAOFactory {
             case PARQUET -> new ParquetSprintDAO();
             case JSON -> new JsonSprintDAO();
             case MONGO -> new MongoSprintDAO();
+            case DUCKDB -> new DuckDBSprintDAO();
         };
     }
 
@@ -58,8 +63,9 @@ public class DAOFactory {
             case PARQUET -> new ParquetBacklogDAO();
             case JSON -> new JsonBacklogDAO();
             case MONGO -> new MongoBacklogDAO();
+            case DUCKDB -> new DuckDBBacklogDAO();
         };
     }
 
-    public enum Format {JSON, PARQUET, MONGO}
+    public enum Format {JSON, PARQUET, MONGO, DUCKDB}
 }
