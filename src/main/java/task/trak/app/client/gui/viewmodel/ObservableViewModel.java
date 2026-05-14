@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public abstract class ObservableViewModel<T> implements ViewModel<T>, Serializable {
 
-    private static final String CACHE_DIR = ".cache";
+    public static String CACHE_DIR = ".cache";
 
     private transient List<ViewModelChangeListener> listeners = new CopyOnWriteArrayList<>();
     private final String cacheFile;

@@ -12,9 +12,13 @@ import task.trak.app.client.gui.viewmodel.ProjectViewModel;
 import task.trak.app.client.gui.viewmodel.SprintViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 import task.trak.app.client.gui.view.MainFrame;
+import task.trak.app.client.cli.TTApp;
 import task.trak.app.server.dao.SessionDAO;
 
 import javax.swing.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class GUIMain {
@@ -26,6 +30,13 @@ public class GUIMain {
             ApiClient.setBaseUrl(url);
             ServiceFactory.registerHttpServices();
         } else {
+            if (!Files.exists(Path.of(TTApp.storedir)) || !Files.isDirectory(Path.of(TTApp.storedir))) {
+                try {
+                    Files.createDirectories(Path.of(TTApp.storedir));
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to create store directory: " + e.getMessage(), e);
+                }
+            }
             ServiceFactory.registerLocalServices();
         }
 

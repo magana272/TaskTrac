@@ -57,3 +57,14 @@
   2. No try-catch around `addMember()`. The `IllegalArgumentException` from `TrakProjectService` bubbles up as an uncaught EDT exception — stack trace in console, no user-facing error dialog.
 - **Solution**: Swap the order — call `addMember()` first, then add to local list only on success. Wrap in try-catch with `JOptionPane.showMessageDialog` for error feedback.
 - **Impact**: Users see a clear error dialog when trying to add a non-existent member. The local member list stays consistent with the server state.
+
+## bug/stale-test-data-in-store
+
+### Design Changes
+- **Files**: `CMDTest.java`, `StepFunctions.java`, `ObserverPatternTest.java`, `ObservableViewModel.java`, `.gitignore`
+- **Problem**: Four test files write to `.store` and `.cache` at the project root without redirecting or cleaning up. After `make test`, stale `Project.parquet` and `User.parquet` persist in `.store/`, causing ghost data (`testowner`, `Project_1`) to appear in the GUI.
+- **Solution**:
+  1. Redirect `CMDTest` and `StepFunctions` to `src/test/.store` with `@Before`/`@After` save-and-restore of `TTApp.storedir`
+  2. Make `ObservableViewModel.CACHE_DIR` package-accessible and redirect `ObserverPatternTest` to `src/test/.cache`
+  3. Add `src/test/.store/` and `src/test/.cache/` to `.gitignore`
+- **Impact**: Tests no longer pollute `.store` or `.cache` at the project root. All test artifacts go to `src/test/` and are cleaned up after each run.

@@ -1,12 +1,15 @@
 package task.trak.gui;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
 import task.trak.api.dto.SprintDTO;
 import task.trak.api.model.Session;
 import task.trak.app.client.gui.viewmodel.*;
-import org.junit.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +21,26 @@ import static org.junit.Assert.*;
  * including cross-domain observation.
  */
 public class ObserverPatternTest {
+
+    private static final String TEST_CACHE = "src/test/.cache";
+    private String originalCacheDir;
+
+    @Before
+    public void setUp() {
+        originalCacheDir = ObservableViewModel.CACHE_DIR;
+        ObservableViewModel.CACHE_DIR = TEST_CACHE;
+    }
+
+    @After
+    public void tearDown() {
+        File dir = new File(TEST_CACHE);
+        if (dir.exists()) {
+            File[] files = dir.listFiles();
+            if (files != null) for (File f : files) f.delete();
+            dir.delete();
+        }
+        ObservableViewModel.CACHE_DIR = originalCacheDir;
+    }
 
     // --- addObserver / notifyObservers ---
 
@@ -254,7 +277,7 @@ public class ObserverPatternTest {
         vm.setAll(List.of(new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0)));
 
         // Delete cache file if it exists
-        java.io.File cacheFile = new java.io.File(".cache", "task_viewmodel.ser");
+        File cacheFile = new File(TEST_CACHE, "task_viewmodel.ser");
         if (cacheFile.exists()) cacheFile.delete();
 
         vm.load(); // should be a no-op since file doesn't exist

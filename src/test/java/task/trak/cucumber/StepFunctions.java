@@ -27,9 +27,11 @@ import static org.junit.Assert.*;
 
 public class StepFunctions {
 
+    private static final String TEST_STORE = "src/test/.store";
     private final InputStream originalIn = System.in;
     private final PrintStream originalOut = System.out;
     private final PrintStream originalErr = System.err;
+    private String originalStoreDir;
     private String consoleOutput;
     private String pendingCommand;
     private String projectName;
@@ -37,12 +39,16 @@ public class StepFunctions {
 
     @Before
     public void setUp() {
-        File storeDir = new File(TTApp.storedir);
+        originalStoreDir = TTApp.storedir;
+        TTApp.storedir = TEST_STORE;
+        File storeDir = new File(TEST_STORE);
         if (storeDir.exists()) {
             File[] files = storeDir.listFiles();
             if (files != null) {
                 for (File f : files) f.delete();
             }
+        } else {
+            storeDir.mkdirs();
         }
     }
 
@@ -52,6 +58,13 @@ public class StepFunctions {
         System.setOut(originalOut);
         System.setErr(originalErr);
         SessionDAO.clear();
+        File dir = new File(TEST_STORE);
+        if (dir.exists()) {
+            File[] files = dir.listFiles();
+            if (files != null) for (File f : files) f.delete();
+            dir.delete();
+        }
+        TTApp.storedir = originalStoreDir;
     }
 
     // --- Create scenario steps ---
