@@ -53,3 +53,6 @@ qodana.yaml
 trak-cli
 examples/trak-gui
 trak-server
+trak-gui
+trak-cli
+trak-server
