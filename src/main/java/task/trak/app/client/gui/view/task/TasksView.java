@@ -131,9 +131,16 @@ public class TasksView extends DataView implements ViewModelChangeListener {
     }
 
     private JPanel buildToolbar(List<TaskDTO> allTasks, long completedCount) {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, TrakTheme.SP_SM, TrakTheme.SP_SM));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, TrakTheme.SP_MD, 0));
         toolbar.setBackground(TrakTheme.BG_SURFACE);
         toolbar.setBorder(TrakTheme.pad(TrakTheme.SP_SM, TrakTheme.SP_XL));
+
+        // Add Task (first)
+        JButton addBtn = new JButton("+ Add Task");
+        TrakTheme.styleButtonPrimary(addBtn);
+        addBtn.setPreferredSize(new Dimension(130, 28));
+        addBtn.addActionListener(e -> showAddTaskDialog());
+        toolbar.add(addBtn);
 
         // Sort
         JLabel sortLabel = new JLabel("Sort:");
@@ -160,14 +167,6 @@ public class TasksView extends DataView implements ViewModelChangeListener {
         archiveToggle.setForeground(TrakTheme.TEXT_SECONDARY);
         archiveToggle.addActionListener(e -> guiController.getTaskController().getViewModel().setShowCompleted(archiveToggle.isSelected()));
         toolbar.add(archiveToggle);
-
-        toolbar.add(Box.createHorizontalStrut(8));
-
-        // Add Task
-        JButton addBtn = new JButton("+ Add Task");
-        TrakTheme.styleButtonPrimary(addBtn);
-        addBtn.addActionListener(e -> showAddTaskDialog());
-        toolbar.add(addBtn);
 
         return toolbar;
     }

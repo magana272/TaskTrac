@@ -22,12 +22,12 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                      SprintViewModel sprintViewModel,
                      UserViewModel userViewModel) {
         super("Trak");
+        setUndecorated(true);
         this.controller = controller;
         this.userViewModel = userViewModel;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1060, 700);
-        setMinimumSize(new Dimension(800, 500));
         setLayout(new BorderLayout());
         getContentPane().setBackground(TrakTheme.BG_DARK);
 
