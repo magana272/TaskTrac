@@ -162,11 +162,8 @@ public class GUIController implements App, CommandListener {
             // In REMOTE mode, no local store setup needed
             // Ensure guest exists on the server
             try {
-                if (this.userService.getByUsername("guest") == null) {
-                    this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
-                }
-            } catch (Exception e) {
-                System.err.println("Warning: Could not connect to server to check guest account.");
+                this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+            } catch (Exception ignored) {
             }
             return;
         }
@@ -176,9 +173,10 @@ public class GUIController implements App, CommandListener {
             userViewModel.setSession(session);
         }
 
-        // Ensure guest admin account exists
-        if (this.userService.getByUsername("guest") == null) {
+        // Ensure guest admin account exists (create is unprotected; ignore if already exists)
+        try {
             this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+        } catch (Exception ignored) {
         }
     }
 
