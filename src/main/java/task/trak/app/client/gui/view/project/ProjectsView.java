@@ -3,7 +3,6 @@ package task.trak.app.client.gui.view.project;
 import task.trak.api.dto.ProjectDTO;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.DataView;
-import task.trak.app.client.gui.view.task.TaskAddView;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeListener;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeType;
 
@@ -105,12 +104,8 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
                                 }
                             }
                             case "Tasks" -> {
-                                List<ProjectDTO> allProjects = guiController.getProjectController().getViewModel().get();
-                                int projectIndex = allProjects.indexOf(p);
-                                new TaskAddView(ProjectsView.this,
-                                        guiController.getTaskController(),
-                                        allProjects,
-                                        projectIndex >= 0 ? projectIndex : 0).show();
+                                guiController.getTaskController().getViewModel().setProjectFilter(p.projectName());
+                                guiController.getTaskController().refreshTasks();
                             }
                         }
                     }
