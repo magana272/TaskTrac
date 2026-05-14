@@ -15,8 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
- * Cinematic task card with custom-painted rounded corners,
- * subtle gradient background, and gold glow hover state.
+ * Individual task card with custom paint, status controls, and timer bar.
  */
 public class TaskCardPanel extends JPanel {
 

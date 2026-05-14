@@ -13,8 +13,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 /**
- * Premium editorial header bar.
- * Warm gold branding on deep dark surface. Generous breathing room.
+ * Top status bar with branding, user info, and auth buttons.
  */
 public class StatusPanel extends JPanel {
 
