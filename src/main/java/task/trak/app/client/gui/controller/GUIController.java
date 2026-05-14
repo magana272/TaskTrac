@@ -209,7 +209,7 @@ public class GUIController implements App, CommandListener {
         return sprintController;
     }
 
-    private void seedData() {
+    public void seedData() {
         try {
             // Skip if data already exists
             if (this.taskService.listAll().size() > 0) return;

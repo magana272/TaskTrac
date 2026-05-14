@@ -87,6 +87,10 @@ public class GUIMain {
         // Initialize store (handles guest account, session loading, etc.)
         gui.initStore(local);
 
+        if (seedTest) {
+            gui.seedData();
+        }
+
         // Dark theme: use cross-platform L&F for full color control, then apply dark defaults
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
