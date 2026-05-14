@@ -3,7 +3,9 @@ package task.trak.app.client.gui.view.sprint;
 import task.trak.api.dto.ProjectDTO;
 import task.trak.api.dto.TaskDTO;
 import task.trak.app.client.gui.controller.SprintController;
+import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.form.FormDialogView;
+import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,84 +37,39 @@ public class SprintAddView extends FormDialogView {
     }
 
     @Override
-    protected JPanel buildPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+    protected FormPanel buildPanel() {
+        FormPanel form = new FormPanel();
 
-        // Sprint Name
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        panel.add(new JLabel("Sprint Name:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
         nameField = new JTextField(20);
-        panel.add(nameField, gbc);
+        form.addField("Sprint Name:", nameField);
 
-        // Project Dropdown
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Project:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
         String[] projectNames = projects.stream()
                 .map(ProjectDTO::projectName)
                 .toArray(String[]::new);
         projectDropdown = new JComboBox<>(projectNames);
         projectDropdown.addActionListener(e -> updateTaskCheckboxes());
-        panel.add(projectDropdown, gbc);
+        TrakTheme.styleComboBox(projectDropdown);
+        form.addField("Project:", projectDropdown);
 
-        // Start Date
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Start Date:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
         SpinnerDateModel startModel = new SpinnerDateModel(new Date(), null, null, Calendar.DAY_OF_MONTH);
         startDateSpinner = new JSpinner(startModel);
         startDateSpinner.setEditor(new JSpinner.DateEditor(startDateSpinner, "yyyy-MM-dd"));
-        panel.add(startDateSpinner, gbc);
+        form.addField("Start Date:", startDateSpinner);
 
-        // End Date
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.weightx = 0;
-        panel.add(new JLabel("End Date:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
         SpinnerDateModel endModel = new SpinnerDateModel(new Date(), null, null, Calendar.DAY_OF_MONTH);
         endDateSpinner = new JSpinner(endModel);
         endDateSpinner.setEditor(new JSpinner.DateEditor(endDateSpinner, "yyyy-MM-dd"));
-        panel.add(endDateSpinner, gbc);
+        form.addField("End Date:", endDateSpinner);
 
-        // Tasks
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.weightx = 0;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        panel.add(new JLabel("Tasks:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
         taskCheckboxPanel = new JPanel();
         taskCheckboxPanel.setLayout(new BoxLayout(taskCheckboxPanel, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(taskCheckboxPanel);
         scrollPane.setPreferredSize(new Dimension(300, 150));
-        panel.add(scrollPane, gbc);
+        form.addExpandingField("Tasks:", scrollPane);
 
         updateTaskCheckboxes();
 
-        return panel;
+        return form;
     }
 
     private void updateTaskCheckboxes() {

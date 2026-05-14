@@ -2,6 +2,7 @@ package task.trak.app.client.gui.view.project;
 
 import task.trak.app.client.gui.controller.ProjectController;
 import task.trak.app.client.gui.view.form.FormDialogView;
+import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,15 +20,13 @@ public class ProjectCreateView extends FormDialogView {
     }
 
     @Override
-    protected JPanel buildPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 4, 4));
+    protected FormPanel buildPanel() {
+        FormPanel form = new FormPanel();
         nameField = new JTextField();
         summaryField = new JTextField();
-        panel.add(new JLabel("Project Name:"));
-        panel.add(nameField);
-        panel.add(new JLabel("Summary:"));
-        panel.add(summaryField);
-        return panel;
+        form.addField("Project Name:", nameField);
+        form.addField("Summary:", summaryField);
+        return form;
     }
 
     @Override

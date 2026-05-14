@@ -4,6 +4,7 @@ import task.trak.api.dto.SprintDTO;
 import task.trak.api.dto.TaskDTO;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.DataView;
+import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeListener;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeType;
 
@@ -24,7 +25,7 @@ public class SprintView extends DataView implements ViewModelChangeListener {
     public SprintView(GUIController guiController) {
         this.guiController = guiController;
         setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
+        setBackground(TrakTheme.BG_DARK);
 
         guiController.getSprintController().getViewModel().addObserver(this);
         guiController.getProjectController().getViewModel().addObserver(this);
@@ -52,8 +53,10 @@ public class SprintView extends DataView implements ViewModelChangeListener {
 
         if (sprints == null || sprints.isEmpty()) {
             JButton addBtn = new JButton("+ Create a Sprint");
+            TrakTheme.styleButtonPrimary(addBtn);
             addBtn.addActionListener(e -> openAddSprintDialog());
             JPanel placeholder = new JPanel(new GridBagLayout());
+            placeholder.setBackground(TrakTheme.BG_DARK);
             placeholder.add(addBtn);
             add(placeholder, BorderLayout.CENTER);
         } else {
@@ -80,8 +83,7 @@ public class SprintView extends DataView implements ViewModelChangeListener {
             }
 
             JTable table = createCopyableTable(model);
-            table.setRowHeight(28);
-            table.getTableHeader().setReorderingAllowed(false);
+            TrakTheme.styleTable(table);
 
             table.addMouseListener(new MouseAdapter() {
                 @Override
@@ -101,16 +103,23 @@ public class SprintView extends DataView implements ViewModelChangeListener {
 
             JScrollPane scrollPane = new JScrollPane(table);
             scrollPane.setBorder(BorderFactory.createEmptyBorder());
-            add(scrollPane, BorderLayout.CENTER);
+            scrollPane.getViewport().setBackground(TrakTheme.BG_DARK);
 
-            JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+            JPanel tableWrapper = new JPanel(new BorderLayout());
+            tableWrapper.setBackground(TrakTheme.BG_DARK);
+            tableWrapper.setBorder(new javax.swing.border.EmptyBorder(TrakTheme.SP_MD, 0, 0, 0));
+            tableWrapper.add(scrollPane, BorderLayout.CENTER);
+            add(tableWrapper, BorderLayout.CENTER);
+
+            JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, TrakTheme.SP_SM));
+            bottomBar.setBackground(TrakTheme.BG_SURFACE);
             JButton addSprintBtn = new JButton("+ Add Sprint");
-            addSprintBtn.setFocusPainted(false);
+            TrakTheme.styleButtonPrimary(addSprintBtn);
             addSprintBtn.addActionListener(e -> openAddSprintDialog());
             bottomBar.add(addSprintBtn);
 
             JButton saveBtn = new JButton("Save Changes");
-            saveBtn.setFocusPainted(false);
+            TrakTheme.styleButtonNav(saveBtn);
             saveBtn.addActionListener(e -> saveSprintEdits(table, model, sprints));
             bottomBar.add(saveBtn);
 
@@ -141,11 +150,11 @@ public class SprintView extends DataView implements ViewModelChangeListener {
 
         JPanel listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(Color.WHITE);
+        listPanel.setBackground(TrakTheme.BG_DARK);
 
         if (taskIds.isEmpty()) {
             JLabel emptyLabel = new JLabel("  No tasks in this sprint");
-            emptyLabel.setForeground(Color.GRAY);
+            emptyLabel.setForeground(TrakTheme.TEXT_SECONDARY);
             emptyLabel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
             listPanel.add(emptyLabel);
         } else {
@@ -155,21 +164,18 @@ public class SprintView extends DataView implements ViewModelChangeListener {
 
                 JPanel row = new JPanel(new BorderLayout(8, 0));
                 row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-                row.setBackground(Color.WHITE);
+                row.setBackground(TrakTheme.BG_DARK);
                 row.setBorder(BorderFactory.createEmptyBorder(4, 12, 4, 8));
 
                 String statusStr = t.status() != null ? t.status() : "READY";
-                Color statusColor = switch (statusStr) {
-                    case "COMPLETE" -> new Color(0x4C, 0xAF, 0x50);
-                    case "INPROGRESS" -> new Color(0xF9, 0xA8, 0x25);
-                    default -> new Color(0xD3, 0x2F, 0x2F);
-                };
+                Color statusColor = TrakTheme.statusColor(statusStr);
 
                 JLabel dot = new JLabel("\u25CF ");
                 dot.setForeground(statusColor);
                 String assignee = t.assignedTo() != null ? " \u2014 " + t.assignedTo() : "";
                 JLabel titleLabel = new JLabel(t.title() + "  [" + statusStr + "]" + assignee);
-                titleLabel.setFont(titleLabel.getFont().deriveFont(Font.PLAIN, 12f));
+                titleLabel.setFont(TrakTheme.FONT_BODY);
+                titleLabel.setForeground(TrakTheme.TEXT_PRIMARY);
 
                 JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
                 left.setOpaque(false);
@@ -178,12 +184,15 @@ public class SprintView extends DataView implements ViewModelChangeListener {
                 row.add(left, BorderLayout.CENTER);
 
                 listPanel.add(row);
-                listPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
+                JSeparator sep = new JSeparator(SwingConstants.HORIZONTAL);
+                sep.setForeground(TrakTheme.BORDER);
+                listPanel.add(sep);
             }
         }
 
         JScrollPane scroll = new JScrollPane(listPanel);
         scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setBackground(TrakTheme.BG_DARK);
         dialog.add(scroll, BorderLayout.CENTER);
         dialog.setVisible(true);
     }

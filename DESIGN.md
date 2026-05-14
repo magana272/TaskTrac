@@ -1,123 +1,83 @@
-# DESIGN: bug/stale-test-data-in-store
+# DESIGN: feature/TimeInput
 
-**Identified at**: 789e75b  
-**Branch**: `bug/stale-test-data-in-store`
+## Goal
+Create a structured duration input component for task estimates, replacing the free-text field.
 
-## Bug
+## Success Criteria
+- Numeric input fields: days [0–30], hours [0–24], minutes [0–59]
+- Total duration cannot equal 0d 0h 0m (validated on submit)
+- Invalid ranges rejected immediately via spinner bounds
+- Clean inline layout, keyboard-friendly
+- Used in both TaskAddView and TaskEditView
+- TaskEditView now supports editing estimate (currently missing)
 
-After `make clean && make build && java -jar trak-gui --local --test`, logging in as guest shows stale test data:
+## Architecture Decisions
 
+### New file: `TimeInputPanel.java`
+- Package: `task.trak.app.client.gui.view.task`
+- Extends `JPanel` — reusable inline component
+- Three `JSpinner` fields with `SpinnerNumberModel` for days/hours/minutes
+- `getDurationString()` → returns `"Xd Yh Zm"` format string
+- `setDuration(String)` → parses existing estimate string into spinner values
+- `isZero()` → validation check
+
+### Modified: `TimeUtil.java`
+- Add `parseDurationToComponents(String)` → returns `int[] {days, hours, minutes}`
+- Parses format like `"2d 5h 30m"`, `"5h"`, `"30m"`, etc.
+
+### Modified: `TaskAddView.java`
+- Replace `JTextField estimateField` with `TimeInputPanel estimatePanel`
+- Validation: reject if `estimatePanel.isZero()`
+- `onConfirm()`: pass `estimatePanel.getDurationString()` as estimate
+
+### Modified: `TaskEditView.java`
+- Add `TimeInputPanel estimatePanel` pre-populated from `task.estimate()`
+- Add estimate to change detection in `onConfirm()`
+- Pass estimate through to controller
+
+### Modified: `TaskController.java`
+- `updateTask()` gains `String estimate` parameter
+
+### Modified: `TaskService.java` (interface)
+- `updateById()` gains `String newEstimate` parameter
+
+### Modified: `TrakTaskService.java` (server impl)
+- Handle `newEstimate` in `updateById()`
+
+### Modified: `TaskHttpService.java` (HTTP impl)
+- Send `estimate` in PUT body
+
+## UI/UX Approach
 ```
-1778723094407 | Project_1 | testowner | 0 | 0 | 0
+Estimate: [ 0 ▲▼] days  [ 0 ▲▼] hours  [ 0 ▲▼] minutes
 ```
+- Horizontal FlowLayout
+- Spinners with up/down arrows
+- Labels between spinners for clarity
+- Tab key moves between spinners
 
-## Root Cause
-
-After a clean `./gradlew cleanTest test`, `.store/` contains `Project.parquet` and `User.parquet`, and `.cache/` is created at the project root. These are test artifacts that should live under `src/test/`.
-
-**Files that write to `.store` without redirecting** (use default `TTApp.storedir = ".store"`):
-
-| File | What it writes |
-|------|---------------|
-| `CMDTest.java` | `testowner` user + `Project_1` project via `Main.main()` |
-| `StepFunctions.java` | Users, projects, tasks, sprints, backlogs via `Main.main()` + `DAOFactory` |
-| `GUIMvcSteps.java` | Users, projects, tasks via `ServiceFactory` (after `registerLocalServices()`) |
-
-**Files that write to `.cache` without redirecting**:
-
-| File | What it writes |
-|------|---------------|
-| `ObserverPatternTest.java` | `task_viewmodel.ser` via `vm.save()` |
-
-**Files that correctly isolate** (for reference):
-
-| File | Test dir | Cleanup |
-|------|----------|---------|
-| `ProjectStoreJsonTest` | `.store_test` | `@After` deletes + restores |
-| `SeedDataTest` | `.store_seed_test` | `@After` deletes + restores |
-| `ServiceListTest` | `.store_list_test` | `@After` deletes + restores |
-| `SessionTest` | `.store_session_test` | `@After` deletes + restores |
-
-## Fix
-
-All test artifacts go under `src/test/` using two shared constants:
-
-```java
-// Standard test directories — all tests use these
-src/test/.store    // test store (TTApp.storedir redirected here)
-src/test/.cache    // test cache (ObservableViewModel.CACHE_DIR redirected here)
+## Data Flow
 ```
-
-### Files to modify
-
-#### 1. `CMDTest.java` — redirect to `src/test/.store`, add `@After` cleanup
-
-```java
-private static final String TEST_STORE = "src/test/.store";
-private String originalStoreDir;
-
-@Before
-public void setUp() {
-    originalStoreDir = TTApp.storedir;
-    TTApp.storedir = TEST_STORE;
-    new File(TEST_STORE).mkdirs();
-}
-
-@After
-public void tearDown() {
-    File dir = new File(TEST_STORE);
-    if (dir.exists()) {
-        File[] files = dir.listFiles();
-        if (files != null) for (File f : files) f.delete();
-        dir.delete();
-    }
-    TTApp.storedir = originalStoreDir;
-}
+TimeInputPanel.getDurationString()  →  "2d 5h 30m"
+    ↓
+TaskController.addTask/updateTask(... estimate)
+    ↓
+TaskService.create/updateById(... estimate)
+    ↓
+Task.setEstimate("2d 5h 30m")  →  persisted as String
 ```
 
-#### 2. `StepFunctions.java` — redirect to `src/test/.store`, cleanup in `@After`
+## State Management
+- No ViewModel changes — estimate is already on TaskDTO
 
-Same pattern: save `TTApp.storedir`, set to `src/test/.store`, restore + delete in `@After`.
+## Testing Strategy
+- Unit test `TimeUtil.parseDurationToComponents()` for various formats
+- Unit test `TimeInputPanel.isZero()` validation
+- Cucumber scenario: add task with estimate, verify estimate persists
 
-#### 3. `GUIMvcSteps.java` — redirect to `src/test/.store`, cleanup in `@After`
+## Tradeoffs
+- Storing as formatted String vs millis: keeping String for backward compatibility with existing data. Format is human-readable and parseable.
+- Max 30 days: reasonable upper bound for task estimates; can be adjusted later
 
-`GUIMvcSteps` calls `ServiceFactory.registerLocalServices()` which uses `TTApp.storedir`. Needs `@Before`/`@After` with the same pattern.
-
-#### 4. `ObserverPatternTest.java` — redirect cache to `src/test/.cache`
-
-`ObservableViewModel.CACHE_DIR` is `private static final String`. Options:
-- a) Make it package-private or add a setter for tests
-- b) Use reflection in the test
-- c) Set system property
-
-Simplest: change `CACHE_DIR` from `private` to package-private and set it in the test's `@Before`/`@After`.
-
-#### 5. `ObservableViewModel.java` — make `CACHE_DIR` configurable
-
-Change:
-```java
-private static final String CACHE_DIR = ".cache";
-```
-To:
-```java
-static String CACHE_DIR = ".cache";
-```
-
-#### 6. `.gitignore` — add `src/test/.store` and `src/test/.cache`
-
-Ensure test artifacts are never committed even if cleanup fails.
-
-## Tests to add
-
-### `StoreIsolationTest.java` in `task/trak/store/`
-
-1. Verify writes to test store don't appear in `.store`
-2. Verify `TTApp.storedir` is restored after teardown
-3. Verify test store dir is cleaned up
-
-## Impact
-
-- No production code behavior changes
-- All test store/cache writes go to `src/test/.store` and `src/test/.cache`
-- `@After` cleanup ensures dirs are deleted after each test class
-- `.gitignore` guards against stale artifacts on cleanup failure
+## Risks
+- Existing tasks with free-text estimates (e.g., "about 2 hours") won't parse cleanly into the spinners — `setDuration()` will default to 0/0/0 for unparseable strings

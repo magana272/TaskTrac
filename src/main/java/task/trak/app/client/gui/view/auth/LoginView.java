@@ -2,6 +2,7 @@ package task.trak.app.client.gui.view.auth;
 
 import task.trak.app.client.gui.controller.AuthController;
 import task.trak.app.client.gui.view.form.FormDialogView;
+import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,15 +18,13 @@ public class LoginView extends FormDialogView {
     }
 
     @Override
-    protected JPanel buildPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 2, 4, 4));
+    protected FormPanel buildPanel() {
+        FormPanel form = new FormPanel();
         usernameField = new JTextField();
         passwordField = new JPasswordField();
-        panel.add(new JLabel("Username:"));
-        panel.add(usernameField);
-        panel.add(new JLabel("Password:"));
-        panel.add(passwordField);
-        return panel;
+        form.addField("Username:", usernameField);
+        form.addField("Password:", passwordField);
+        return form;
     }
 
     @Override

@@ -2,11 +2,14 @@ package task.trak.app.client.gui.view.task;
 
 import task.trak.api.dto.TaskDTO;
 import task.trak.app.client.gui.controller.TaskController;
+import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.form.FormDialogView;
+import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.Objects;
 
 public class TaskEditView extends FormDialogView {
 
@@ -18,6 +21,7 @@ public class TaskEditView extends FormDialogView {
     private JComboBox<String> assignedCombo;
     private JComboBox<String> statusCombo;
     private JTextArea summaryArea;
+    private TimeInputPanel estimatePanel;
 
     public TaskEditView(Component parent, TaskController taskController, TaskDTO task, List<String> assignees) {
         super(parent, "Edit Task");
@@ -27,78 +31,41 @@ public class TaskEditView extends FormDialogView {
     }
 
     @Override
-    protected JPanel buildPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4, 4, 4, 4);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST;
+    protected FormPanel buildPanel() {
+        FormPanel form = new FormPanel();
 
-        // Task ID (read-only)
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        panel.add(new JLabel("Task ID:"), gbc);
-        JLabel idLabel = new JLabel(String.valueOf(task.id()));
-        idLabel.setEnabled(false);
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        panel.add(idLabel, gbc);
+        JLabel idLabel = new JLabel("#" + task.id() + "  (" + task.projectName() + ")");
+        idLabel.setForeground(TrakTheme.TEXT_MUTED);
+        form.addField("Task ID:", idLabel);
 
-        // Title
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Title:"), gbc);
-        titleField = new JTextField(task.title() != null ? task.title() : "", 20);
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        panel.add(titleField, gbc);
+        titleField = new JTextField(task.title() != null ? task.title() : "", 30);
+        form.addField("Title:", titleField);
 
-        // Assigned To (dropdown)
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Assigned To:"), gbc);
         assignedCombo = new JComboBox<>();
         if (assignees != null) {
-            for (String a : assignees) {
-                assignedCombo.addItem(a);
-            }
+            for (String a : assignees) assignedCombo.addItem(a);
         }
-        if (task.assignedTo() != null) {
-            assignedCombo.setSelectedItem(task.assignedTo());
-        }
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        panel.add(assignedCombo, gbc);
+        if (task.assignedTo() != null) assignedCombo.setSelectedItem(task.assignedTo());
+        TrakTheme.styleComboBox(assignedCombo);
+        form.addField("Assigned To:", assignedCombo);
 
-        // Status
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Status:"), gbc);
         statusCombo = new JComboBox<>(new String[]{"READY", "INPROGRESS", "COMPLETE"});
         statusCombo.setSelectedItem(task.status() != null ? task.status() : "READY");
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        panel.add(statusCombo, gbc);
+        TrakTheme.styleStatusComboBox(statusCombo);
+        form.addField("Status:", statusCombo);
 
-        // Summary (text area)
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.weightx = 0;
-        panel.add(new JLabel("Summary:"), gbc);
-        summaryArea = new JTextArea(task.summary() != null ? task.summary() : "", 4, 20);
+        estimatePanel = new TimeInputPanel();
+        if (task.estimate() != null) estimatePanel.setDuration(task.estimate());
+        form.addField("Estimate:", estimatePanel);
+
+        summaryArea = new JTextArea(task.summary() != null ? task.summary() : "", 8, 40);
+        summaryArea.setFont(TrakTheme.FONT_BODY);
         summaryArea.setLineWrap(true);
         summaryArea.setWrapStyleWord(true);
-        JScrollPane scrollPane = new JScrollPane(summaryArea);
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weighty = 1.0;
-        panel.add(scrollPane, gbc);
+        form.addExpandingField("Summary:", new JScrollPane(summaryArea));
 
-        return panel;
+        form.setPreferredSize(new Dimension(520, 420));
+        return form;
     }
 
     @Override
@@ -107,33 +74,21 @@ public class TaskEditView extends FormDialogView {
         String newAssigned = (String) assignedCombo.getSelectedItem();
         String newStatus = (String) statusCombo.getSelectedItem();
         String newSummary = summaryArea.getText().trim();
+        String newEstimate = estimatePanel.isZero() ? null : estimatePanel.getDurationString();
 
-        // Only send changed fields
-        boolean changed = false;
-        String titleArg = null;
-        String statusArg = null;
-        String assigneeArg = null;
-        String summaryArg = null;
+        String titleArg = diffOrNull(newTitle, task.title());
+        String assigneeArg = diffOrNull(newAssigned, task.assignedTo());
+        String statusArg = diffOrNull(newStatus, task.status());
+        String summaryArg = diffOrNull(newSummary, task.summary());
+        String estimateArg = Objects.equals(newEstimate, task.estimate()) ? null : newEstimate;
 
-        if (!newTitle.equals(task.title() != null ? task.title() : "")) {
-            titleArg = newTitle;
-            changed = true;
+        if (titleArg != null || assigneeArg != null || statusArg != null || summaryArg != null || estimateArg != null) {
+            taskController.updateTask(task.id(), titleArg, statusArg, assigneeArg, summaryArg, estimateArg);
         }
-        if (newAssigned != null && !newAssigned.equals(task.assignedTo() != null ? task.assignedTo() : "")) {
-            assigneeArg = newAssigned;
-            changed = true;
-        }
-        if (newStatus != null && !newStatus.equals(task.status())) {
-            statusArg = newStatus;
-            changed = true;
-        }
-        if (!newSummary.equals(task.summary() != null ? task.summary() : "")) {
-            summaryArg = newSummary;
-            changed = true;
-        }
+    }
 
-        if (changed) {
-            taskController.updateTask(task.id(), titleArg, statusArg, assigneeArg, summaryArg);
-        }
+    private String diffOrNull(String newVal, String oldVal) {
+        String old = oldVal != null ? oldVal : "";
+        return newVal != null && !newVal.equals(old) ? newVal : null;
     }
 }

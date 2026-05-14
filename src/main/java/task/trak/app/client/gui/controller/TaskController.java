@@ -28,8 +28,8 @@ public class TaskController {
         refreshTasks();
     }
 
-    public void updateTask(long id, String title, String status, String assignee, String summary) {
-        ServiceFactory.taskService().updateById(id, title, status, assignee, summary);
+    public void updateTask(long id, String title, String status, String assignee, String summary, String estimate) {
+        ServiceFactory.taskService().updateById(id, title, status, assignee, summary, estimate);
         refreshTasks();
     }
 
@@ -39,15 +39,21 @@ public class TaskController {
     }
 
     public void completeTask(long id) {
-        ServiceFactory.taskService().updateById(id, null, "COMPLETE", null, null);
+        ServiceFactory.taskService().updateById(id, null, "COMPLETE", null, null, null);
         refreshTasks();
     }
 
     public void refreshTasks() {
+        refreshTasks(false);
+    }
+
+    public void refreshTasks(boolean teamMode) {
         Session session = userViewModel.getSession();
         List<TaskDTO> tasks;
         if (session != null && session.getLogged_in_user() != null) {
-            tasks = ServiceFactory.taskService().listByAssignee(session.getLogged_in_user());
+            tasks = teamMode
+                    ? ServiceFactory.taskService().listAll()
+                    : ServiceFactory.taskService().listByAssignee(session.getLogged_in_user());
         } else {
             tasks = List.of();
         }

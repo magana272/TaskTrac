@@ -12,6 +12,7 @@ import task.trak.app.client.gui.viewmodel.ProjectViewModel;
 import task.trak.app.client.gui.viewmodel.SprintViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 import task.trak.app.client.gui.view.MainFrame;
+import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.server.dao.SessionDAO;
 
@@ -64,11 +65,12 @@ public class GUIMain {
         // Initialize store (handles guest account, session loading, etc.)
         gui.initStore(local);
 
-        // Create and show the MainFrame on the EDT
+        // Dark theme: use cross-platform L&F for full color control, then apply dark defaults
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (Exception ignored) {
         }
+        TrakTheme.applyDefaults();
 
         SwingUtilities.invokeLater(() -> {
             MainFrame mainFrame = new MainFrame(

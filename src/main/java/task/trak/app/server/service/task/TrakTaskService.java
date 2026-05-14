@@ -37,7 +37,7 @@ public class TrakTaskService implements TaskService {
     }
 
     @Override
-    public TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary) {
+    public TaskDTO updateById(Long id, String newTitle, String newStatus, String newAssignedTo, String newSummary, String newEstimate) {
         Task task = store.loadByKey(String.valueOf(id));
         if (task == null) {
             throw new IllegalArgumentException("Task " + id + " not found.");
@@ -58,6 +58,9 @@ public class TrakTaskService implements TaskService {
         }
         if (newSummary != null) {
             task.setSummary(newSummary);
+        }
+        if (newEstimate != null) {
+            task.setEstimate(newEstimate);
         }
 
         store.save(task);

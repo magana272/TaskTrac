@@ -2,7 +2,9 @@ package task.trak.app.client.gui.view.project;
 
 import task.trak.api.dto.ProjectDTO;
 import task.trak.app.client.gui.controller.ProjectController;
+import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.form.FormDialogView;
+import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -26,9 +28,9 @@ public class ProjectAddView extends FormDialogView {
     }
 
     @Override
-    protected JPanel buildPanel() {
+    protected FormPanel buildPanel() {
         // Not used -- show() creates a JDialog directly
-        return new JPanel();
+        return new FormPanel();
     }
 
     @Override
@@ -49,34 +51,39 @@ public class ProjectAddView extends FormDialogView {
 
         // Header with owner
         JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
-        header.add(new JLabel("Owner:"));
+        header.setBackground(TrakTheme.BG_SURFACE);
+        JLabel ownerTitle = new JLabel("Owner:");
+        ownerTitle.setForeground(TrakTheme.TEXT_SECONDARY);
+        header.add(ownerTitle);
         JLabel ownerLabel = new JLabel(project.ownerUsername() != null ? project.ownerUsername() : "-");
         ownerLabel.setFont(ownerLabel.getFont().deriveFont(Font.BOLD));
+        ownerLabel.setForeground(TrakTheme.TEXT_PRIMARY);
         header.add(ownerLabel);
         dialog.add(header, BorderLayout.NORTH);
 
         // Member list panel
         JPanel memberListPanel = new JPanel();
         memberListPanel.setLayout(new BoxLayout(memberListPanel, BoxLayout.Y_AXIS));
-        memberListPanel.setBackground(Color.WHITE);
+        memberListPanel.setBackground(TrakTheme.BG_DARK);
 
         Runnable[] refreshRef = new Runnable[1];
         refreshRef[0] = () -> {
             memberListPanel.removeAll();
             if (currentMembers.isEmpty()) {
                 JLabel emptyLabel = new JLabel("  No members yet");
-                emptyLabel.setForeground(Color.GRAY);
+                emptyLabel.setForeground(TrakTheme.TEXT_MUTED);
                 emptyLabel.setBorder(new EmptyBorder(8, 8, 8, 8));
                 memberListPanel.add(emptyLabel);
             } else {
                 for (String member : new ArrayList<>(currentMembers)) {
                     JPanel row = new JPanel(new BorderLayout(4, 0));
                     row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
-                    row.setBackground(Color.WHITE);
+                    row.setBackground(TrakTheme.BG_DARK);
                     row.setBorder(new EmptyBorder(4, 12, 4, 8));
 
                     JLabel nameLabel = new JLabel(member);
                     nameLabel.setFont(nameLabel.getFont().deriveFont(Font.PLAIN, 13f));
+                    nameLabel.setForeground(TrakTheme.TEXT_PRIMARY);
                     row.add(nameLabel, BorderLayout.CENTER);
 
                     if (!member.equals(project.ownerUsername())) {
@@ -102,7 +109,19 @@ public class ProjectAddView extends FormDialogView {
                     }
 
                     memberListPanel.add(row);
-                    memberListPanel.add(new JSeparator(SwingConstants.HORIZONTAL));
+                    JSeparator sep = new JSeparator(SwingConstants.HORIZONTAL) {
+                        @Override
+                        protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setColor(TrakTheme.ACCENT);
+                            g2.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{4, 4}, 0));
+                            g2.drawLine(0, getHeight() / 2, getWidth(), getHeight() / 2);
+                            g2.dispose();
+                        }
+                    };
+                    sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+                    sep.setPreferredSize(new Dimension(0, 2));
+                    memberListPanel.add(sep);
                 }
             }
             memberListPanel.revalidate();
@@ -112,10 +131,12 @@ public class ProjectAddView extends FormDialogView {
 
         JScrollPane scroll = new JScrollPane(memberListPanel);
         scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setBackground(TrakTheme.BG_DARK);
         dialog.add(scroll, BorderLayout.CENTER);
 
         // Bottom: add member button
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        bottomPanel.setBackground(TrakTheme.BG_SURFACE);
         JButton addBtn = new JButton("+ Add Member");
         addBtn.setFocusPainted(false);
         addBtn.addActionListener(e -> {

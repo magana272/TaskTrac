@@ -2,6 +2,7 @@ package task.trak.app.client.gui.view.auth;
 
 import task.trak.app.client.gui.controller.AuthController;
 import task.trak.app.client.gui.view.form.FormDialogView;
+import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,10 +16,10 @@ public class LogOutView extends FormDialogView {
     }
 
     @Override
-    protected JPanel buildPanel() {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Are you sure you want to log out?"));
-        return panel;
+    protected FormPanel buildPanel() {
+        FormPanel form = new FormPanel();
+        form.addField("", new JLabel("Are you sure you want to log out?"));
+        return form;
     }
 
     @Override

@@ -1,18 +1,20 @@
 package task.trak.app.client.gui.view.panel;
 
+import task.trak.app.client.gui.view.TrakTheme;
+
 import javax.swing.*;
-import java.awt.*;
 
 /**
- * Monospace text area for displaying raw command output.
- * Used as the fallback view inside ContentPanel.
+ * Dark terminal-style text area for displaying raw command output.
  */
 public class OutputPanel extends JTextArea {
 
     public OutputPanel() {
         setEditable(false);
-        setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
-        setBackground(new Color(0xFA, 0xFA, 0xFA));
+        setFont(TrakTheme.FONT_MONO);
+        setBackground(TrakTheme.BG_DARK);
+        setForeground(TrakTheme.TEXT_SECONDARY);
+        setCaretColor(TrakTheme.ACCENT);
     }
 
     public void appendCommand(String cmd) {

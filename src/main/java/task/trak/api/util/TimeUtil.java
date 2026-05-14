@@ -20,6 +20,30 @@ public class TimeUtil {
         }
     }
 
+    public static long parseDurationToMs(String duration) {
+        int[] parts = parseDurationToComponents(duration);
+        return ((long) parts[0] * 86400 + (long) parts[1] * 3600 + (long) parts[2] * 60) * 1000;
+    }
+
+    public static int[] parseDurationToComponents(String duration) {
+        int days = 0, hours = 0, minutes = 0;
+        if (duration == null || duration.isBlank()) {
+            return new int[]{days, hours, minutes};
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(\\d+)\\s*([dhm])", java.util.regex.Pattern.CASE_INSENSITIVE)
+                .matcher(duration);
+        while (m.find()) {
+            int val = Integer.parseInt(m.group(1));
+            switch (m.group(2).toLowerCase()) {
+                case "d" -> days = val;
+                case "h" -> hours = val;
+                case "m" -> minutes = val;
+            }
+        }
+        return new int[]{days, hours, minutes};
+    }
+
     public static String formatDeadlineRemaining(Date deadline) {
         if (deadline == null) return "no deadline";
         long remaining = deadline.getTime() - System.currentTimeMillis();

@@ -39,7 +39,7 @@ public class CompleteCMD extends WorkspaceCMD {
         }
 
         // Complete the task via service
-        taskService.updateById(this.taskId, null, "COMPLETE", null, null);
+        taskService.updateById(this.taskId, null, "COMPLETE", null, null, null);
 
         String timeStr = task.timeSpentMs() > 0
                 ? " - Total time: " + TimeUtil.formatDuration(task.timeSpentMs())

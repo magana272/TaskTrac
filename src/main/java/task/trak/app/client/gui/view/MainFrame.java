@@ -26,15 +26,17 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
     private final StatusPanel statusPanel;
     private final CardLayout cardLayout;
     private final JPanel cardContainer;
-
-    private JButton tasksBtn;
-    private JButton projectsBtn;
-    private JButton sprintsBtn;
-
     private final TasksView tasksView;
     private final ProjectsView projectsView;
     private final SprintView sprintView;
     private final OutputPanel outputPanel;
+    private JButton tasksBtn;
+    private JButton projectsBtn;
+    private JButton sprintsBtn;
+    private JButton activeNavBtn;
+    private JButton myWorkspaceBtn;
+    private JButton teamWorkspaceBtn;
+    private boolean teamMode = false;
 
     public MainFrame(GUIController controller,
                      TaskViewModel taskViewModel,
@@ -46,27 +48,39 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         this.userViewModel = userViewModel;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(960, 640);
+        setSize(1060, 700);
+        setMinimumSize(new Dimension(800, 500));
         setLayout(new BorderLayout());
+        getContentPane().setBackground(TrakTheme.BG_DARK);
 
         taskViewModel.addObserver(this);
         projectViewModel.addObserver(this);
         sprintViewModel.addObserver(this);
         userViewModel.addObserver(this);
 
+        // ── Top section: status bar + nav ──
         JPanel topSection = new JPanel();
         topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
+        topSection.setBackground(TrakTheme.BG_SURFACE);
 
         this.statusPanel = new StatusPanel(controller);
         topSection.add(statusPanel);
+
+        // Subtle divider line
+        JSeparator sep = new JSeparator();
+        sep.setForeground(TrakTheme.BORDER);
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        topSection.add(sep);
+
         topSection.add(createNavBar());
         setNavButtonsEnabled(false);
 
         add(topSection, BorderLayout.NORTH);
 
-        // --- Center: CardLayout with views ---
+        // ── Center: CardLayout with views ──
         this.cardLayout = new CardLayout();
         this.cardContainer = new JPanel(cardLayout);
+        this.cardContainer.setBackground(TrakTheme.BG_DARK);
 
         this.tasksView = new TasksView(controller);
         this.projectsView = new ProjectsView(controller);
@@ -75,6 +89,7 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         this.outputPanel = new OutputPanel();
         JScrollPane outputScroll = new JScrollPane(outputPanel);
         outputScroll.setBorder(BorderFactory.createEmptyBorder());
+        outputScroll.getViewport().setBackground(TrakTheme.BG_DARK);
 
         cardContainer.add(tasksView, CARD_TASKS);
         cardContainer.add(projectsView, CARD_PROJECTS);
@@ -84,49 +99,127 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         cardLayout.show(cardContainer, CARD_OUTPUT);
         add(cardContainer, BorderLayout.CENTER);
 
-        // --- Bottom: command input ---
+        // ── Bottom: command input ──
         CommandInputPanel inputPanel = new CommandInputPanel(this::onCommandSubmitted);
         add(inputPanel, BorderLayout.SOUTH);
 
         updateStatus();
+        setLocationRelativeTo(null);
     }
 
     private JPanel createNavBar() {
-        JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
-        navBar.setBorder(new EmptyBorder(2, 6, 2, 6));
+        JPanel navBar = new JPanel(new BorderLayout());
+        navBar.setBackground(TrakTheme.BG_SURFACE);
+        navBar.setBorder(new EmptyBorder(TrakTheme.SP_XS, TrakTheme.SP_XL, TrakTheme.SP_XS, TrakTheme.SP_XL));
 
-        tasksBtn = new JButton("Tasks");
-        tasksBtn.setFocusPainted(false);
-        tasksBtn.addActionListener(e -> {
-            controller.getTaskController().refreshTasks();
-            cardLayout.show(cardContainer, CARD_TASKS);
-        });
+        // Left: view navigation
+        JPanel navGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        navGroup.setOpaque(false);
 
-        projectsBtn = new JButton("Projects");
-        projectsBtn.setFocusPainted(false);
-        projectsBtn.addActionListener(e -> {
-            controller.getProjectController().refreshProjects();
-            cardLayout.show(cardContainer, CARD_PROJECTS);
-        });
+        tasksBtn = createNavButton("Tasks", CARD_TASKS);
+        projectsBtn = createNavButton("Projects", CARD_PROJECTS);
+        sprintsBtn = createNavButton("Sprints", CARD_SPRINTS);
 
-        sprintsBtn = new JButton("Sprints");
-        sprintsBtn.setFocusPainted(false);
-        sprintsBtn.addActionListener(e -> {
-            controller.getSprintController().refreshSprints();
-            cardLayout.show(cardContainer, CARD_SPRINTS);
-        });
+        navGroup.add(projectsBtn);
+        navGroup.add(tasksBtn);
+        navGroup.add(sprintsBtn);
 
-        navBar.add(tasksBtn);
-        navBar.add(projectsBtn);
-        navBar.add(sprintsBtn);
+        // Right: workspace toggle
+        JPanel workspaceGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        workspaceGroup.setOpaque(false);
 
+        myWorkspaceBtn = new JButton("\u2302 Mine");
+        teamWorkspaceBtn = new JButton("\u2731 Team");
+        styleWorkspaceBtn(myWorkspaceBtn, true);
+        styleWorkspaceBtn(teamWorkspaceBtn, false);
+
+        myWorkspaceBtn.addActionListener(e -> setTeamMode(false));
+        teamWorkspaceBtn.addActionListener(e -> setTeamMode(true));
+
+        workspaceGroup.add(myWorkspaceBtn);
+        workspaceGroup.add(teamWorkspaceBtn);
+
+        navBar.add(navGroup, BorderLayout.WEST);
+        navBar.add(workspaceGroup, BorderLayout.EAST);
         return navBar;
+    }
+
+    private void styleWorkspaceBtn(JButton btn, boolean active) {
+        btn.setFont(TrakTheme.FONT_SMALL.deriveFont(Font.BOLD));
+        btn.setOpaque(true);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setBorder(new EmptyBorder(TrakTheme.SP_XS + 2, TrakTheme.SP_MD, TrakTheme.SP_XS + 2, TrakTheme.SP_MD));
+        if (active) {
+            btn.setBackground(TrakTheme.ACCENT);
+            btn.setForeground(TrakTheme.BG_DARK);
+        } else {
+            btn.setBackground(TrakTheme.BG_ELEVATED);
+            btn.setForeground(TrakTheme.TEXT_MUTED);
+        }
+    }
+
+    private void setTeamMode(boolean team) {
+        this.teamMode = team;
+        styleWorkspaceBtn(myWorkspaceBtn, !team);
+        styleWorkspaceBtn(teamWorkspaceBtn, team);
+
+        // Re-fetch data with new workspace scope
+        controller.getTaskController().refreshTasks(team);
+        controller.getProjectController().refreshProjects(team);
+        controller.getSprintController().refreshSprints();
+    }
+
+    private JButton createNavButton(String label, String card) {
+        JButton btn = new JButton(label);
+        btn.setFont(TrakTheme.FONT_BODY);
+        btn.setForeground(TrakTheme.TEXT_MUTED);
+        btn.setBackground(TrakTheme.BG_SURFACE);
+        btn.setOpaque(true);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setBorder(new EmptyBorder(TrakTheme.SP_XS + 2, TrakTheme.SP_MD, TrakTheme.SP_XS + 2, TrakTheme.SP_MD));
+
+        btn.addActionListener(e -> {
+            switch (card) {
+                case CARD_TASKS -> controller.getTaskController().refreshTasks(teamMode);
+                case CARD_PROJECTS -> controller.getProjectController().refreshProjects(teamMode);
+                case CARD_SPRINTS -> controller.getSprintController().refreshSprints();
+            }
+            cardLayout.show(cardContainer, card);
+            setActiveNav(btn);
+        });
+
+        return btn;
+    }
+
+    private void setActiveNav(JButton btn) {
+        // Reset previous
+        if (activeNavBtn != null) {
+            activeNavBtn.setForeground(TrakTheme.TEXT_MUTED);
+            activeNavBtn.setBackground(TrakTheme.BG_SURFACE);
+        }
+        activeNavBtn = btn;
+        if (btn != null) {
+            btn.setForeground(TrakTheme.ACCENT);
+            btn.setBackground(TrakTheme.BG_ELEVATED);
+        }
     }
 
     private void setNavButtonsEnabled(boolean enabled) {
         tasksBtn.setEnabled(enabled);
         projectsBtn.setEnabled(enabled);
         sprintsBtn.setEnabled(enabled);
+        myWorkspaceBtn.setVisible(enabled);
+        teamWorkspaceBtn.setVisible(enabled);
+        if (!enabled) {
+            setActiveNav(null);
+            teamMode = false;
+            styleWorkspaceBtn(myWorkspaceBtn, true);
+            styleWorkspaceBtn(teamWorkspaceBtn, false);
+        }
     }
 
     @Override
@@ -136,16 +229,19 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                 case TASKS -> {
                     if (userViewModel.getSession() == null) return;
                     cardLayout.show(cardContainer, CARD_TASKS);
+                    setActiveNav(tasksBtn);
                     tasksView.render();
                 }
                 case PROJECTS -> {
                     if (userViewModel.getSession() == null) return;
                     cardLayout.show(cardContainer, CARD_PROJECTS);
+                    setActiveNav(projectsBtn);
                     projectsView.render();
                 }
                 case SPRINTS -> {
                     if (userViewModel.getSession() == null) return;
                     cardLayout.show(cardContainer, CARD_SPRINTS);
+                    setActiveNav(sprintsBtn);
                     sprintView.render();
                 }
                 case SESSION -> {
