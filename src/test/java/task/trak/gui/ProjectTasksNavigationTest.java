@@ -1,6 +1,6 @@
 package task.trak.gui;
 
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.TaskDTO;
 import task.trak.app.client.gui.viewmodel.TaskViewModel;
 import org.junit.Test;
 

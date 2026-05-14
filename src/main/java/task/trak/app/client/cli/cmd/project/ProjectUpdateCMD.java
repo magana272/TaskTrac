@@ -1,7 +1,7 @@
 package task.trak.app.client.cli.cmd.project;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.request.UpdateProjectRequest;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.UpdateProjectRequest;
 import task.trak.api.service.ProjectService;
 import task.trak.api.service.ServiceFactory;
 

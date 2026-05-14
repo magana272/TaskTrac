@@ -2,9 +2,9 @@ package task.trak.app.client.http;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.request.CreateProjectRequest;
-import task.trak.api.dto.request.UpdateProjectRequest;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.UpdateProjectRequest;
 import task.trak.api.service.ProjectService;
 
 import java.lang.reflect.Type;

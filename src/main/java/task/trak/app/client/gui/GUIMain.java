@@ -1,7 +1,12 @@
 package task.trak.app.client.gui;
 
-import task.trak.api.service.ServiceFactory;
 import task.trak.app.client.http.ApiClient;
+import task.trak.app.client.http.TaskHttpService;
+import task.trak.app.client.http.ProjectHttpService;
+import task.trak.app.client.http.SprintHttpService;
+import task.trak.app.client.http.UserHttpService;
+import task.trak.app.client.http.BacklogHttpService;
+import task.trak.app.client.http.AuthHttpService;
 import task.trak.app.client.gui.controller.AuthController;
 import task.trak.app.client.gui.controller.TaskController;
 import task.trak.app.client.gui.controller.ProjectController;
@@ -15,6 +20,7 @@ import task.trak.app.client.gui.view.MainFrame;
 import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.server.dao.SessionDAO;
+import task.trak.app.server.server.TrakServer;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -29,7 +35,6 @@ public class GUIMain {
         if (!local) {
             String url = parseServerUrl(args);
             ApiClient.setBaseUrl(url);
-            ServiceFactory.registerHttpServices();
         } else {
             if (!Files.exists(Path.of(TTApp.storedir)) || !Files.isDirectory(Path.of(TTApp.storedir))) {
                 try {
@@ -38,8 +43,23 @@ public class GUIMain {
                     throw new RuntimeException("Failed to create store directory: " + e.getMessage(), e);
                 }
             }
-            ServiceFactory.registerLocalServices();
+            try {
+                TrakServer embeddedServer = new TrakServer(0);
+                embeddedServer.start();
+                ApiClient.setBaseUrl("http://localhost:" + embeddedServer.getPort());
+                Runtime.getRuntime().addShutdownHook(new Thread(embeddedServer::stop));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to start embedded server: " + e.getMessage(), e);
+            }
         }
+
+        // Create HTTP services
+        TaskHttpService taskService = new TaskHttpService();
+        ProjectHttpService projectService = new ProjectHttpService();
+        SprintHttpService sprintService = new SprintHttpService();
+        UserHttpService userService = new UserHttpService();
+        BacklogHttpService backlogService = new BacklogHttpService();
+        AuthHttpService authService = new AuthHttpService();
 
         // Create all 4 ViewModels
         TaskViewModel taskViewModel = new TaskViewModel();
@@ -48,13 +68,14 @@ public class GUIMain {
         UserViewModel userViewModel = new UserViewModel();
 
         // Create all 4 sub-controllers
-        AuthController authController = new AuthController(userViewModel);
-        TaskController taskController = new TaskController(taskViewModel, userViewModel);
-        ProjectController projectController = new ProjectController(projectViewModel, userViewModel);
-        SprintController sprintController = new SprintController(sprintViewModel);
+        AuthController authController = new AuthController(authService, userViewModel);
+        TaskController taskController = new TaskController(taskService, taskViewModel, userViewModel);
+        ProjectController projectController = new ProjectController(projectService, projectViewModel, userViewModel);
+        SprintController sprintController = new SprintController(sprintService, sprintViewModel);
 
-        // Create the GUIController wiring sub-controllers + UserViewModel
+        // Create the GUIController wiring HTTP services + sub-controllers + UserViewModel
         GUIController gui = new GUIController(
+                taskService, projectService, sprintService, userService, backlogService, authService,
                 authController, taskController, projectController, sprintController, userViewModel);
 
         // Set session persistence for local mode

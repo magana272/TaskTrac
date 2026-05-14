@@ -1,6 +1,6 @@
 package task.trak.gui;
 
-import task.trak.api.dto.ProjectDTO;
+import task.trak.model.dto.ProjectDTO;
 import org.junit.Test;
 
 import java.util.ArrayList;

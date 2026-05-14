@@ -1,8 +1,8 @@
 package task.trak.app.server.service.auth;
 
-import task.trak.api.dto.UserDTO;
-import task.trak.api.dto.request.CreateUserRequest;
-import task.trak.api.model.Session;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
+import task.trak.model.Session;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.UserService;
 import task.trak.app.server.dao.SessionDAO;

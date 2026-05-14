@@ -1,8 +1,8 @@
-package task.trak.api.dto.request;
+package task.trak.model.dto.request;
 
-import task.trak.api.exception.ValidationException;
+import task.trak.model.exception.ValidationException;
 
-public record UpdateUserRequest(
+public record CreateUserRequest(
         String username,
         String firstName,
         String lastName,

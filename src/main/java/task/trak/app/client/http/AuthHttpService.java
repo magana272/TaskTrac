@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.api.service.AuthService;
 
 public class AuthHttpService implements AuthService {

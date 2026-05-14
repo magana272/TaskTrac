@@ -1,6 +1,6 @@
 package task.trak.app.client.cli.cmd.workspace;
 
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.app.App;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.client.cli.cmd.cmdtype.CMD;

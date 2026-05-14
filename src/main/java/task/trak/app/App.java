@@ -1,6 +1,6 @@
 package task.trak.app;
 
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 
 public interface App {
     void save();

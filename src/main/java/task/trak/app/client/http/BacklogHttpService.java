@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import task.trak.api.dto.BacklogDTO;
-import task.trak.api.dto.request.CreateBacklogRequest;
+import task.trak.model.dto.BacklogDTO;
+import task.trak.model.dto.request.CreateBacklogRequest;
 import task.trak.api.service.BacklogService;
 
 public class BacklogHttpService implements BacklogService {

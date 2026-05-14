@@ -1,6 +1,6 @@
-package task.trak.api.dto.request;
+package task.trak.model.dto.request;
 
-import task.trak.api.exception.ValidationException;
+import task.trak.model.exception.ValidationException;
 
 import java.util.Date;
 

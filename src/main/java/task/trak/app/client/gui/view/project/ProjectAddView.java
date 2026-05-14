@@ -1,6 +1,6 @@
 package task.trak.app.client.gui.view.project;
 
-import task.trak.api.dto.ProjectDTO;
+import task.trak.model.dto.ProjectDTO;
 import task.trak.app.client.gui.controller.ProjectController;
 import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.form.FormDialogView;

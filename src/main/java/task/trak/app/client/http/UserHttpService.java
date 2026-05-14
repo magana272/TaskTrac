@@ -4,9 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import task.trak.api.dto.UserDTO;
-import task.trak.api.dto.request.CreateUserRequest;
-import task.trak.api.dto.request.UpdateUserRequest;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
+import task.trak.model.dto.request.UpdateUserRequest;
 import task.trak.api.service.UserService;
 
 public class UserHttpService implements UserService {

@@ -1,7 +1,7 @@
 package task.trak.app.client.gui.view.sprint;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.TaskDTO;
 import task.trak.app.client.gui.controller.SprintController;
 import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.form.FormDialogView;

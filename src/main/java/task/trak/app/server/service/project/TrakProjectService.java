@@ -1,9 +1,9 @@
 package task.trak.app.server.service.project;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.request.CreateProjectRequest;
-import task.trak.api.dto.request.UpdateProjectRequest;
-import task.trak.api.exception.EntityNotFoundException;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.UpdateProjectRequest;
+import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.ProjectService;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;

@@ -1,4 +1,4 @@
-package task.trak.api.model;
+package task.trak.model;
 
 public class Session {
     private String logged_in_user;

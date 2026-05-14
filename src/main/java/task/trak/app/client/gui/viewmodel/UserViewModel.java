@@ -1,6 +1,6 @@
 package task.trak.app.client.gui.viewmodel;
 
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 
 import java.util.ArrayList;
 import java.util.List;

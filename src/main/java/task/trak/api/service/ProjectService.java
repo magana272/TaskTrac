@@ -1,8 +1,8 @@
 package task.trak.api.service;
 
-import task.trak.api.dto.ProjectDTO;
-import task.trak.api.dto.request.CreateProjectRequest;
-import task.trak.api.dto.request.UpdateProjectRequest;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.model.dto.request.CreateProjectRequest;
+import task.trak.model.dto.request.UpdateProjectRequest;
 
 import java.util.List;
 

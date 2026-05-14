@@ -1,11 +1,11 @@
 package task.trak.app.client.cli.cmd.workspace;
 
-import task.trak.api.dto.SprintDTO;
-import task.trak.api.dto.TaskDTO;
+import task.trak.model.dto.SprintDTO;
+import task.trak.model.dto.TaskDTO;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.SprintService;
 import task.trak.api.service.TaskService;
-import task.trak.api.util.TimeUtil;
+import task.trak.model.util.TimeUtil;
 
 import java.util.HashMap;
 import java.util.List;

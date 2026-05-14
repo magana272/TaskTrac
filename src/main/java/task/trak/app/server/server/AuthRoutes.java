@@ -2,7 +2,7 @@ package task.trak.app.server.server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import task.trak.api.model.Session;
+import task.trak.model.Session;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.UserService;

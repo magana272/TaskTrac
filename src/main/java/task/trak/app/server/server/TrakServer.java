@@ -80,9 +80,13 @@ public class TrakServer {
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 
+    public int getPort() {
+        return server.getAddress().getPort();
+    }
+
     public void start() {
         server.start();
-        System.out.println("Trak server started on port " + port);
+        System.out.println("Trak server started on port " + getPort());
     }
 
     public void stop() {

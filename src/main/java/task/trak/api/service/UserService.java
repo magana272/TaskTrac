@@ -1,8 +1,8 @@
 package task.trak.api.service;
 
-import task.trak.api.dto.UserDTO;
-import task.trak.api.dto.request.CreateUserRequest;
-import task.trak.api.dto.request.UpdateUserRequest;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
+import task.trak.model.dto.request.UpdateUserRequest;
 
 public interface UserService {
     UserDTO create(CreateUserRequest request);

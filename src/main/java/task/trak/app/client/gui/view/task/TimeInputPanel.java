@@ -1,6 +1,6 @@
 package task.trak.app.client.gui.view.task;
 
-import task.trak.api.util.TimeUtil;
+import task.trak.model.util.TimeUtil;
 import task.trak.app.client.gui.view.TrakTheme;
 
 import javax.swing.*;
