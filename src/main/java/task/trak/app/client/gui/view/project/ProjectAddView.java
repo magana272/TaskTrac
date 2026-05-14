@@ -99,10 +99,15 @@ public class ProjectAddView extends FormDialogView {
                                     "Remove \"" + member + "\" from the project?",
                                     "Confirm", JOptionPane.YES_NO_OPTION);
                             if (confirm == JOptionPane.YES_OPTION) {
-                                currentMembers.remove(member);
-                                projectController.removeMember(project.projectName(),
-                                        new ArrayList<>(currentMembers));
-                                refreshRef[0].run();
+                                try {
+                                    currentMembers.remove(member);
+                                    projectController.removeMember(project.projectName(),
+                                            new ArrayList<>(currentMembers));
+                                    refreshRef[0].run();
+                                } catch (Exception ex) {
+                                    JOptionPane.showMessageDialog(dialog,
+                                            ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                                }
                             }
                         });
                         row.add(removeBtn, BorderLayout.EAST);

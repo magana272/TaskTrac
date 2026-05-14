@@ -77,13 +77,22 @@ public class TaskEditView extends FormDialogView {
         String newEstimate = estimatePanel.isZero() ? null : estimatePanel.getDurationString();
 
         String titleArg = diffOrNull(newTitle, task.title());
+        if (titleArg != null && titleArg.isBlank()) {
+            JOptionPane.showMessageDialog(parent, "Title cannot be blank.", "Validation Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         String assigneeArg = diffOrNull(newAssigned, task.assignedTo());
         String statusArg = diffOrNull(newStatus, task.status());
         String summaryArg = diffOrNull(newSummary, task.summary());
         String estimateArg = Objects.equals(newEstimate, task.estimate()) ? null : newEstimate;
 
         if (titleArg != null || assigneeArg != null || statusArg != null || summaryArg != null || estimateArg != null) {
-            taskController.updateTask(task.id(), titleArg, statusArg, assigneeArg, summaryArg, estimateArg);
+            try {
+                taskController.updateTask(task.id(), titleArg, statusArg, assigneeArg, summaryArg, estimateArg);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 

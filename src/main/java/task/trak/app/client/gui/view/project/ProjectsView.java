@@ -168,7 +168,11 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
                         "Confirm Delete",
                         JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    guiController.getProjectController().deleteProject(name);
+                    try {
+                        guiController.getProjectController().deleteProject(name);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             });
 
@@ -201,7 +205,11 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
             String original = project.summary() != null ? project.summary() : "";
             if (!newSummary.equals(original)) {
                 model.setValueAt(newSummary, row, 2);
-                guiController.getProjectController().updateProject(project.projectName(), null, newSummary);
+                try {
+                    guiController.getProjectController().updateProject(project.projectName(), null, newSummary);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
     }
@@ -219,12 +227,16 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
             boolean summaryChanged = !newSummary.equals(original.summary() != null ? original.summary() : "");
 
             if (nameChanged || summaryChanged) {
-                guiController.getProjectController().updateProject(
-                        original.projectName(),
-                        nameChanged ? newName : null,
-                        summaryChanged ? newSummary : null
-                );
-                saved++;
+                try {
+                    guiController.getProjectController().updateProject(
+                            original.projectName(),
+                            nameChanged ? newName : null,
+                            summaryChanged ? newSummary : null
+                    );
+                    saved++;
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
         if (saved == 0) {

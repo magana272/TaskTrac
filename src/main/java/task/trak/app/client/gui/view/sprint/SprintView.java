@@ -138,7 +138,11 @@ public class SprintView extends DataView implements ViewModelChangeListener {
                         "Confirm Delete",
                         JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    guiController.getSprintController().deleteSprint(name);
+                    try {
+                        guiController.getSprintController().deleteSprint(name);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             });
             bottomBar.add(deleteBtn);
@@ -234,12 +238,16 @@ public class SprintView extends DataView implements ViewModelChangeListener {
             boolean endChanged = !newEnd.equals(origEnd);
 
             if (startChanged || endChanged) {
-                guiController.getSprintController().updateSprint(
-                        String.valueOf(original.id()),
-                        startChanged && !newStart.isEmpty() ? newStart : null,
-                        endChanged && !newEnd.isEmpty() ? newEnd : null
-                );
-                saved++;
+                try {
+                    guiController.getSprintController().updateSprint(
+                            String.valueOf(original.id()),
+                            startChanged && !newStart.isEmpty() ? newStart : null,
+                            endChanged && !newEnd.isEmpty() ? newEnd : null
+                    );
+                    saved++;
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
         if (saved == 0) {
