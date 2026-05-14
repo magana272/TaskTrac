@@ -46,12 +46,6 @@ public class UserRoutes {
     public static class UserDetailHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            String token = SessionManager.extractToken(exchange);
-            if (token == null || SessionManager.getUsername(token) == null) {
-                JsonHelper.sendError(exchange, 401, "Not authenticated");
-                return;
-            }
-
             String username = JsonHelper.extractPathParam(exchange.getRequestURI().getPath(), "/api/users/");
             if (username.isEmpty()) {
                 JsonHelper.sendError(exchange, 400, "Username is required in path");
