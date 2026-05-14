@@ -1,5 +1,7 @@
 # Trak
 
+**Version 0.0.9**
+
 A lightweight task and sprint tracking system with CLI, GUI, and REST API. Supports Parquet, JSON, and MongoDB persistence.
 
 ## Quick Start
@@ -107,8 +109,9 @@ java -jar trak-cli sprint update Sprint1 --project WebApp --start_date 2026-06-0
 ## GUI Features
 
 - **Dark cinematic theme** — deep charcoal background, warm gold accent, 8px spacing grid
-- **Workspace toggle** — "⌂ Mine" (your tasks/projects) vs "✳ Team" (all) in nav bar
 - **Task cards** with gradient backgrounds, gold glow hover, status dropdown (red/amber/green)
+- **Delete tasks/projects/sprints** with confirmation dialogs
+- **Comprehensive error handling** and input validation on all forms
 - **Time input spinners** for estimates (days/hours/minutes) in Add and Edit task dialogs
 - **Green CTA button** for Add Task (primary action)
 - **Click card** to edit (title, assignee dropdown, status, summary, estimate)
@@ -145,19 +148,27 @@ export MONGO_DB="trak"
 
 Client-server with clean package boundaries:
 
-- **`task.trak.api`** — shared DTOs, service interfaces, ServiceFactory
+- **`task.trak.model`** — shared types: DTOs (`dto/`), request records (`dto/request/`), Session, exceptions (`exception/`), TimeUtil (`util/`)
+- **`task.trak.api.service`** — ServiceFactory + service interfaces (only package remaining in `api`)
 - **`task.trak.app.server`** — REST API, services, DAO (Parquet/JSON/MongoDB)
 - **`task.trak.app.client`** — CLI, HTTP client services (`http/` subpackage)
-- **`task.trak.app.client.gui`** — MVC desktop client
+- **`task.trak.app.client.gui`** — MVC desktop client (communicates via HTTP only, never imports `task.trak.api`)
   - `viewmodel/` — ObservableViewModel, TaskViewModel, ProjectViewModel, SprintViewModel, UserViewModel (Observer pattern)
-  - `controller/` — GUIController, AuthController, TaskController, ProjectController, SprintController
+  - `controller/` — GUIController, AuthController, TaskController, ProjectController, SprintController (receive HTTP services via constructor injection)
   - `view/` — TrakTheme, GlassPanel, TasksView, TaskCardPanel, ProjectsView, SprintView, FormPanel, FormDialogView, TimeInputPanel, ErrorAlertView
 
 GUI uses MVC with an Observer pattern: views implement ViewModelChangeListener and register on ViewModels via `addObserver()`. ViewModels notify registered views on data changes, keeping cross-domain data fresh.
 
-Client never imports from server. `ServiceFactory` swaps LOCAL (direct DB) or REMOTE (HTTP) implementations transparently.
+All clients communicate via HTTP REST API. Client never imports from server. In `--local` mode, an embedded TrakServer starts on a random port — GUI still talks HTTP. All protected endpoints require a bearer token via `AuthFilter`.
 
 See [docs/DESIGN.md](docs/DESIGN.md) for full design, [docs/DIAGRAM.md](docs/DIAGRAM.md) for architecture diagrams, [docs/usage.md](docs/usage.md) for detailed usage guide.
+
+## Examples
+
+Example scripts demonstrating the REST API and CLI workflows:
+
+- [`examples/api-demo.sh`](examples/api-demo.sh) — REST API curl demo (authentication, CRUD operations)
+- [`examples/cli-demo.sh`](examples/cli-demo.sh) — CLI workflow demo (login, project/task/sprint management)
 
 ## Tests
 

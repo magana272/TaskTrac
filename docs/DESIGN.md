@@ -95,10 +95,14 @@ A task tracking system with three executables:
 - The system shall support filtering tasks by project in GUI
 - The system shall allow seeding test data via `--test` flag (20 users, 10 projects, 1000 tasks, 20 sprints)
 - The system shall provide a centralized dark theme (TrakTheme) applied via UIManager defaults
-- The system shall allow toggling between personal workspace (Mine) and team workspace (Team) in the GUI
 - The system shall provide structured duration input (days/hours/minutes spinners) for task estimates
 - The system shall support editing task estimates in the GUI edit dialog
 - The system shall use FormPanel for consistent two-column layout in all form dialogs
+- The system shall enforce bearer token authentication on all protected REST endpoints (only login, signup, and user creation are public)
+- The system shall use request/response DTO records with `validate()` methods for all service operations
+- The system shall provide comprehensive error handling: all service calls in controllers wrapped in try-catch, all view-level controller calls wrapped, input validation on all forms
+- The system shall support deleting tasks, projects, and sprints from the GUI with confirmation dialogs
+- The GUI shall communicate exclusively via HTTP services (no direct import of `task.trak.api`)
 
 ---
 
@@ -120,6 +124,7 @@ A task tracking system with three executables:
 ## Security
 - Passwords stored as SHA-256 hashes (never plaintext)
 - Server uses token-based authentication (UUID bearer tokens)
+- AuthFilter enforces bearer token on all protected REST endpoints (only login, signup, and user creation are public)
 - Session state stored locally in `.store/session.json`
 
 ---
@@ -157,23 +162,26 @@ flowchart TB
         REST --> SVC --> DAO --> STORE
     end
 
-    CLI -->|"HTTP (remote)"| REST
-    GUI -->|"HTTP (remote)"| REST
-    CLI -.->|"direct (local)"| SVC
-    GUI -.->|"direct (local)"| SVC
+    CLI -->|"HTTP REST"| REST
+    GUI -->|"HTTP REST"| REST
 ```
 
 ## Package Structure
 
 ```
-task.trak.api/              ← Shared (DTOs, service interfaces, Session)
+task.trak.model/            ← Shared types (moved from task.trak.api)
+  Session                         Session state
   dto/                            TaskDTO, UserDTO, ProjectDTO, SprintDTO, BacklogDTO
-  service/                        TaskService, UserService, ..., ServiceFactory
-  model/                          Session
+  dto/request/                    CreateTaskRequest, UpdateTaskRequest, etc. (with validate() methods)
+  exception/                      TrakException, ValidationException, EntityNotFoundException,
+                                  DuplicateEntityException, AuthenticationException (all unchecked)
   util/                           TimeUtil, TeeOutputStream
 
+task.trak.api.service/      ← Service interfaces (only package remaining in api)
+  ServiceFactory, TaskService, UserService, ProjectService, SprintService, BacklogService
+
 task.trak.app.server/       ← Server (never imported by client)
-  server/                         TrakServer, REST route handlers
+  server/                         TrakServer, REST route handlers, AuthFilter
   service/                        TrakTaskService, TrakProjectService, ...
   dao/                            EntityDAO, DAOFactory, SessionDAO
   dao/json/                       JsonTaskDAO, JsonProjectDAO, ...
@@ -190,6 +198,7 @@ task.trak.app.client/       ← Client (never imports from server)
                                   ProjectViewModel, SprintViewModel, UserViewModel
   gui/controller/                 GUIController, AuthController, TaskController,
                                   ProjectController, SprintController
+                                  (controllers receive HTTP services via constructor injection)
   gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel
   gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView, TimeInputPanel
   gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView
@@ -204,7 +213,7 @@ task.trak.app.client/       ← Client (never imports from server)
   config/                         WorkspaceConfig
 ```
 
-**Key boundary:** Client code (`app.client`) never imports from server code (`app.server`). Shared types live in `api`.
+**Key boundary:** Client code (`app.client`) never imports from server code (`app.server`). Shared types live in `task.trak.model`. GUI communicates exclusively via HTTP services and does not import `task.trak.api`.
 
 ## ServiceFactory (Dependency Injection)
 
@@ -212,6 +221,7 @@ task.trak.app.client/       ← Client (never imports from server)
 - `ServiceFactory.registerLocalServices()` — registers direct service implementations (server/local mode)
 - `ServiceFactory.registerHttpServices()` — registers HTTP client implementations (remote mode)
 - CMD classes call `ServiceFactory.taskService()` etc. — transparent swap, zero code changes
+- GUI does not use `ServiceFactory` — controllers receive HTTP services via constructor injection. In `--local` mode, the GUI starts an embedded TrakServer on a random port and connects via HTTP.
 
 ## REST API Server
 
@@ -223,18 +233,19 @@ The GUI follows a Model-View-Controller architecture with an Observer pattern fo
 
 - **ViewModels** (`gui/viewmodel/`): `ObservableViewModel` base class implements `addObserver()`, `removeObserver()`, and `notifyObservers()`. Concrete ViewModels (`TaskViewModel`, `ProjectViewModel`, `SprintViewModel`, `UserViewModel`) implement `Serializable` and persist state to `.cache/`.
 - **Controllers** (`gui/controller/`): `GUIController` coordinates domain controllers (`AuthController`, `TaskController`, `ProjectController`, `SprintController`). Controllers invoke the service layer and update ViewModels.
-- **Views** (`gui/view/`): `DataView` is an abstract `JPanel` with a `render()` method. Views take `GUIController` as their only constructor parameter. Views call `addObserver()` on the ViewModels they depend on and implement `onViewModelChanged()` to re-render. `MainFrame` implements `ViewModelChangeListener`.
+- **Views** (`gui/view/`): `DataView` is an abstract `JPanel` with a `render()` method. Views call `addObserver()` on the ViewModels they depend on and implement `onViewModelChanged()` to re-render. `MainFrame` implements `ViewModelChangeListener`. Views always show user-scoped data.
 - **Cross-domain observation**: Views can observe multiple ViewModels. `TasksView` observes both `TaskViewModel` and `ProjectViewModel`. `SprintView` observes `SprintViewModel`, `ProjectViewModel`, and `TaskViewModel`.
 - **Flow**: User action --> View --> Controller --> Service --> Controller updates ViewModel --> `notifyObservers()` --> Views call `render()`
 
 Features:
 - Task cards with status dropdowns (READY=red, INPROGRESS=yellow, COMPLETE=green)
+- Delete tasks (X button on cards), projects, and sprints (Delete button in toolbar) with confirmation dialogs
+- Comprehensive error handling: all 40+ service calls in controllers wrapped in try-catch, input validation on all forms
 - Editable project/sprint tables with Save button
 - Double-click cells for member management, task management, summary editing
 - Sort by due date/estimate, filter by project, archive completed tasks
 - Login/Signup/Guest dialogs, error alerts
 - Dark cinematic theme via TrakTheme (deep charcoal + warm gold accent, 8px spacing grid)
-- Workspace toggle (Mine/Team) with filtered data fetching
 - Structured duration spinners (TimeInputPanel) for task estimate input
 - Green CTA button for primary actions (Add Task)
 - GlassPanel rounded containers with gradient background and optional drop shadow
