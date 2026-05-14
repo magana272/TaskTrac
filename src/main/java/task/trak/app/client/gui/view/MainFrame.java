@@ -34,9 +34,6 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
     private JButton projectsBtn;
     private JButton sprintsBtn;
     private JButton activeNavBtn;
-    private JButton myWorkspaceBtn;
-    private JButton teamWorkspaceBtn;
-    private boolean teamMode = false;
 
     public MainFrame(GUIController controller,
                      TaskViewModel taskViewModel,
@@ -124,51 +121,8 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         navGroup.add(tasksBtn);
         navGroup.add(sprintsBtn);
 
-        // Right: workspace toggle
-        JPanel workspaceGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        workspaceGroup.setOpaque(false);
-
-        myWorkspaceBtn = new JButton("\u2302 Mine");
-        teamWorkspaceBtn = new JButton("\u2731 Team");
-        styleWorkspaceBtn(myWorkspaceBtn, true);
-        styleWorkspaceBtn(teamWorkspaceBtn, false);
-
-        myWorkspaceBtn.addActionListener(e -> setTeamMode(false));
-        teamWorkspaceBtn.addActionListener(e -> setTeamMode(true));
-
-        workspaceGroup.add(myWorkspaceBtn);
-        workspaceGroup.add(teamWorkspaceBtn);
-
         navBar.add(navGroup, BorderLayout.WEST);
-        navBar.add(workspaceGroup, BorderLayout.EAST);
         return navBar;
-    }
-
-    private void styleWorkspaceBtn(JButton btn, boolean active) {
-        btn.setFont(TrakTheme.FONT_SMALL.deriveFont(Font.BOLD));
-        btn.setOpaque(true);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setBorder(new EmptyBorder(TrakTheme.SP_XS + 2, TrakTheme.SP_MD, TrakTheme.SP_XS + 2, TrakTheme.SP_MD));
-        if (active) {
-            btn.setBackground(TrakTheme.ACCENT);
-            btn.setForeground(TrakTheme.BG_DARK);
-        } else {
-            btn.setBackground(TrakTheme.BG_ELEVATED);
-            btn.setForeground(TrakTheme.TEXT_MUTED);
-        }
-    }
-
-    private void setTeamMode(boolean team) {
-        this.teamMode = team;
-        styleWorkspaceBtn(myWorkspaceBtn, !team);
-        styleWorkspaceBtn(teamWorkspaceBtn, team);
-
-        // Re-fetch data with new workspace scope
-        controller.getTaskController().refreshTasks(team);
-        controller.getProjectController().refreshProjects(team);
-        controller.getSprintController().refreshSprints();
     }
 
     private JButton createNavButton(String label, String card) {
@@ -184,8 +138,8 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
 
         btn.addActionListener(e -> {
             switch (card) {
-                case CARD_TASKS -> controller.getTaskController().refreshTasks(teamMode);
-                case CARD_PROJECTS -> controller.getProjectController().refreshProjects(teamMode);
+                case CARD_TASKS -> controller.getTaskController().refreshTasks();
+                case CARD_PROJECTS -> controller.getProjectController().refreshProjects();
                 case CARD_SPRINTS -> controller.getSprintController().refreshSprints();
             }
             cardLayout.show(cardContainer, card);
@@ -212,13 +166,8 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         tasksBtn.setEnabled(enabled);
         projectsBtn.setEnabled(enabled);
         sprintsBtn.setEnabled(enabled);
-        myWorkspaceBtn.setVisible(enabled);
-        teamWorkspaceBtn.setVisible(enabled);
         if (!enabled) {
             setActiveNav(null);
-            teamMode = false;
-            styleWorkspaceBtn(myWorkspaceBtn, true);
-            styleWorkspaceBtn(teamWorkspaceBtn, false);
         }
     }
 

@@ -153,8 +153,28 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
             TrakTheme.styleButtonNav(saveBtn);
             saveBtn.addActionListener(e -> saveProjectEdits(table, model, projects));
 
+            JButton deleteBtn = new JButton("Delete Project");
+            TrakTheme.styleButtonNav(deleteBtn);
+            deleteBtn.addActionListener(e -> {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow < 0) {
+                    JOptionPane.showMessageDialog(this, "Select a project to delete",
+                            "No Selection", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                String name = model.getValueAt(selectedRow, 1).toString();
+                int confirm = JOptionPane.showConfirmDialog(this,
+                        "Delete project: \"" + name + "\"?",
+                        "Confirm Delete",
+                        JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    guiController.getProjectController().deleteProject(name);
+                }
+            });
+
             bottomBar.add(addBtn);
             bottomBar.add(saveBtn);
+            bottomBar.add(deleteBtn);
             add(bottomBar, BorderLayout.SOUTH);
         }
 

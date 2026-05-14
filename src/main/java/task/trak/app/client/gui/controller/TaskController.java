@@ -48,16 +48,10 @@ public class TaskController {
     }
 
     public void refreshTasks() {
-        refreshTasks(false);
-    }
-
-    public void refreshTasks(boolean teamMode) {
         Session session = userViewModel.getSession();
         List<TaskDTO> tasks;
         if (session != null && session.getLogged_in_user() != null) {
-            tasks = teamMode
-                    ? this.taskService.listAll()
-                    : this.taskService.listByAssignee(session.getLogged_in_user());
+            tasks = this.taskService.listByAssignee(session.getLogged_in_user());
         } else {
             tasks = List.of();
         }
