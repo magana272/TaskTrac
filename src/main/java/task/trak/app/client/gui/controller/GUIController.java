@@ -84,7 +84,6 @@ public class GUIController implements App, CommandListener {
                 break;
             case LOGOUT:
                 userViewModel.setSession(null);
-                clearViewModels();
                 break;
             case ERROR:
                 userViewModel.setError(event.errorMessage());
@@ -164,6 +163,9 @@ public class GUIController implements App, CommandListener {
         taskController.getViewModel().setAll(List.of());
         projectController.getViewModel().setAll(List.of());
         sprintController.getViewModel().setAll(List.of());
+        taskController.getViewModel().clearCache();
+        projectController.getViewModel().clearCache();
+        sprintController.getViewModel().clearCache();
     }
 
     public AuthController getAuthController() {

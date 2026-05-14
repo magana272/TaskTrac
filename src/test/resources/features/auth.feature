@@ -44,3 +44,10 @@ Feature: Authentication
     When the user signs up with username "newsignup" password "secret" first_name "New" last_name "User" email "new@example.com"
     Then the user "newsignup" is logged in
     And the user "newsignup" is saved successfully
+
+  Scenario: Logout clears all view data
+    Given a user "viewclearuser" exists with password "pass"
+    And the user "viewclearuser" is currently logged in
+    When the user runs the command "tasktracker logout"
+    Then no user is logged in
+    And the output contains "Logged out"

@@ -27,6 +27,10 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
     private final CardLayout cardLayout;
     private final JPanel cardContainer;
 
+    private JButton tasksBtn;
+    private JButton projectsBtn;
+    private JButton sprintsBtn;
+
     private final TasksView tasksView;
     private final ProjectsView projectsView;
     private final SprintView sprintView;
@@ -56,6 +60,7 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         this.statusPanel = new StatusPanel(controller);
         topSection.add(statusPanel);
         topSection.add(createNavBar());
+        setNavButtonsEnabled(false);
 
         add(topSection, BorderLayout.NORTH);
 
@@ -90,21 +95,21 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 2));
         navBar.setBorder(new EmptyBorder(2, 6, 2, 6));
 
-        JButton tasksBtn = new JButton("Tasks");
+        tasksBtn = new JButton("Tasks");
         tasksBtn.setFocusPainted(false);
         tasksBtn.addActionListener(e -> {
             controller.getTaskController().refreshTasks();
             cardLayout.show(cardContainer, CARD_TASKS);
         });
 
-        JButton projectsBtn = new JButton("Projects");
+        projectsBtn = new JButton("Projects");
         projectsBtn.setFocusPainted(false);
         projectsBtn.addActionListener(e -> {
             controller.getProjectController().refreshProjects();
             cardLayout.show(cardContainer, CARD_PROJECTS);
         });
 
-        JButton sprintsBtn = new JButton("Sprints");
+        sprintsBtn = new JButton("Sprints");
         sprintsBtn.setFocusPainted(false);
         sprintsBtn.addActionListener(e -> {
             controller.getSprintController().refreshSprints();
@@ -118,19 +123,28 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         return navBar;
     }
 
+    private void setNavButtonsEnabled(boolean enabled) {
+        tasksBtn.setEnabled(enabled);
+        projectsBtn.setEnabled(enabled);
+        sprintsBtn.setEnabled(enabled);
+    }
+
     @Override
     public void onViewModelChanged(ViewModelChangeType type) {
         SwingUtilities.invokeLater(() -> {
             switch (type) {
                 case TASKS -> {
+                    if (userViewModel.getSession() == null) return;
                     cardLayout.show(cardContainer, CARD_TASKS);
                     tasksView.render();
                 }
                 case PROJECTS -> {
+                    if (userViewModel.getSession() == null) return;
                     cardLayout.show(cardContainer, CARD_PROJECTS);
                     projectsView.render();
                 }
                 case SPRINTS -> {
+                    if (userViewModel.getSession() == null) return;
                     cardLayout.show(cardContainer, CARD_SPRINTS);
                     sprintView.render();
                 }
@@ -138,7 +152,10 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                     updateStatus();
                     if (userViewModel.getSession() == null) {
                         controller.clearViewModels();
+                        setNavButtonsEnabled(false);
                         cardLayout.show(cardContainer, CARD_OUTPUT);
+                    } else {
+                        setNavButtonsEnabled(true);
                     }
                 }
                 case ERROR -> {
