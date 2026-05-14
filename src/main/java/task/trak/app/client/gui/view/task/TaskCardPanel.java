@@ -19,8 +19,8 @@ import java.util.List;
  */
 public class TaskCardPanel extends JPanel {
 
-    private static final int CARD_WIDTH = 270;
-    private static final int CARD_HEIGHT = 190;
+    private static final int CARD_WIDTH = 350;
+    private static final int CARD_HEIGHT = 230;
     private static final int CORNER = TrakTheme.RADIUS_MD;
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("MMM dd");
 
@@ -35,7 +35,7 @@ public class TaskCardPanel extends JPanel {
         this.assignees = assignees;
 
         setLayout(new BorderLayout(4, 4));
-        setMinimumSize(new Dimension(210, CARD_HEIGHT));
+        setMinimumSize(new Dimension(280, CARD_HEIGHT));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, CARD_HEIGHT));
         setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));

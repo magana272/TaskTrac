@@ -8,6 +8,7 @@ import java.util.List;
 public class ProjectViewModel extends ObservableViewModel<ProjectDTO> {
 
     private List<ProjectDTO> projects = new ArrayList<>();
+    private String selectedProject = "All";
 
     public ProjectViewModel() {
         super("project_viewmodel.ser");
@@ -38,6 +39,15 @@ public class ProjectViewModel extends ObservableViewModel<ProjectDTO> {
 
     public void setAll(List<ProjectDTO> projects) {
         this.projects = projects != null ? new ArrayList<>(projects) : new ArrayList<>();
+        notifyObservers(ViewModelChangeType.PROJECTS);
+    }
+
+    public String getSelectedProject() {
+        return selectedProject;
+    }
+
+    public void setSelectedProject(String selectedProject) {
+        this.selectedProject = selectedProject;
         notifyObservers(ViewModelChangeType.PROJECTS);
     }
 
