@@ -37,7 +37,7 @@ Trak provides a minimal but structured system for:
 - User management with password authentication
 - Session-based login/logout
 - Workspace commands (my projects, my tasks, start/end task, time tracking)
-- Triple persistence: Parquet (default), JSON, and MongoDB (configurable)
+- Five persistence formats: DuckDB (default), Redis, Parquet, JSON, and MongoDB (configurable)
 - Seed data generation for testing (`--test` flag)
 
 ### Use Case Support
@@ -62,7 +62,7 @@ Client-Server Application with CLI, GUI, and REST API
 
 ## Core Concept
 A task tracking system with three executables:
-- **Server** (`trak-server`) — REST API with token-based auth, persists data as Parquet, JSON, or MongoDB
+- **Server** (`trak-server`) — REST API with token-based auth, persists data as DuckDB (default), Redis, Parquet, JSON, or MongoDB
 - **CLI Client** (`trak-cli`) — terminal-based client, works locally or against the server
 - **GUI Client** (`trak-gui`) — Swing desktop app, works locally or against the server
 
@@ -103,6 +103,14 @@ A task tracking system with three executables:
 - The system shall provide comprehensive error handling: all service calls in controllers wrapped in try-catch, all view-level controller calls wrapped, input validation on all forms
 - The system shall support deleting tasks, projects, and sprints from the GUI with confirmation dialogs
 - The GUI shall communicate exclusively via HTTP services (no direct import of `task.trak.api`)
+- The system shall use DuckDB as the default persistence store (embedded SQL, `.store/trak.duckdb`)
+- The system shall support Redis as an alternative persistence store (requires running server, `REDIS_URL` env var)
+- The GUI shall display a focus timer bar on INPROGRESS task cards (green to amber to red based on estimate)
+- The system shall prompt for a completion note when marking a task as COMPLETE
+- The system shall support sprint completion (completed flag + completed_at timestamp) and archival
+- The system shall support permanent sprint deletion
+- The GUI shall provide a Settings panel for changing password and deleting account
+- The GUI shall use an undecorated frame with a custom title bar, drag-to-move, and edge resize
 
 ---
 
@@ -158,7 +166,7 @@ flowchart TB
         REST["REST API\nHttpServer :8080"]
         SVC["Service Layer\nBusiness Logic"]
         DAO["DAO Layer\nPersistence"]
-        STORE[("Parquet / JSON / MongoDB")]
+        STORE[("DuckDB / Redis / Parquet / JSON / MongoDB")]
         REST --> SVC --> DAO --> STORE
     end
 
@@ -187,6 +195,8 @@ task.trak.app.server/       ← Server (never imported by client)
   dao/json/                       JsonTaskDAO, JsonProjectDAO, ...
   dao/parquet/                    ParquetTaskDAO, ParquetProjectDAO, ...
   dao/mongo/                      MongoTaskDAO, MongoProjectDAO, ..., MongoConnection
+  dao/duckdb/                     DuckDBConnection, DuckDBTaskDAO, DuckDBProjectDAO, ...
+  dao/redis/                      RedisConnection, RedisTaskDAO, RedisProjectDAO, ...
   model/                          Task, User, Project, Sprint, BackLog
   util/                           PasswordUtil
 
@@ -210,6 +220,7 @@ task.trak.app.client/       ← Client (never imports from server)
                                   TaskBeforeProjectErrorView
   gui/view/form/                  FormDialogView, FormPanel
   gui/view/panel/                 OutputPanel, StatusPanel
+  gui/view/settings/              ChangePasswordView, DeleteAccountView
   config/                         WorkspaceConfig
 ```
 
@@ -247,7 +258,13 @@ Features:
 - Login/Signup/Guest dialogs, error alerts
 - Dark cinematic theme via TrakTheme (deep charcoal + warm gold accent, 8px spacing grid)
 - Structured duration spinners (TimeInputPanel) for task estimate input
-- Green CTA button for primary actions (Add Task)
+- Blue primary buttons (#5B9BD5) for primary actions (Add Task)
+- Focus timer bar on INPROGRESS task cards (green to amber to red based on estimate)
+- Completion note prompt when marking a task as COMPLETE
+- Responsive task cards (fill width, min 200x160)
+- Settings panel (change password, delete account)
+- Undecorated frame with custom title bar, drag-to-move, edge resize
+- Hidden scrollbar on task panel (mousewheel scrolls)
 - GlassPanel rounded containers with gradient background and optional drop shadow
 - FormPanel two-column layout for all form dialogs
 - Task cards with custom-painted rounded corners, gradient background, gold glow hover
@@ -294,6 +311,9 @@ Features:
 - `estimate` : String (e.g. "2h", "1d")
 - `time_started` : Long (epoch ms)
 - `time_spent_ms` : Long (accumulated)
+- `time_in_ready_ms` : Long (accumulated time in READY state)
+- `time_in_progress_ms` : Long (accumulated time in INPROGRESS state)
+- `completion_note` : String (note entered on task completion)
 
 ## Sprint
 - `id` : Long (auto-generated, primary key)
@@ -302,6 +322,8 @@ Features:
 - `task_ids` : List\<Long\>
 - `start_date` : Date (must be >= today)
 - `end_date` : Date (must be <= start + 1 year)
+- `completed` : boolean (whether sprint is completed)
+- `completed_at` : Date (timestamp of sprint completion)
 
 ## BackLog
 - `id` : Long (auto-generated)
@@ -383,9 +405,31 @@ GET|POST|PUT|DELETE  /api/backlogs/{name}
 
 # 10. Storage
 
-Three persistence formats (configurable via `.store/workspace.json`):
+Five persistence formats (configurable via `.store/workspace.json`):
 
-### Parquet (default)
+### DuckDB (default)
+| Entity  | Table              |
+|---------|---------------------|
+| User    | `users`            |
+| Project | `projects`         |
+| Task    | `tasks`            |
+| Sprint  | `sprints`          |
+| Backlog | `backlogs`         |
+
+Single file: `.store/trak.duckdb`. No configuration needed — works out of the box.
+
+### Redis
+| Entity  | Key pattern            |
+|---------|------------------------|
+| User    | `trak:users:{username}`|
+| Project | `trak:projects:{name}` |
+| Task    | `trak:tasks:{id}`      |
+| Sprint  | `trak:sprints:{id}`    |
+| Backlog | `trak:backlogs:{name}` |
+
+Requires: `REDIS_URL` env var (default: `redis://localhost:6379`).
+
+### Parquet
 | Entity  | File                 |
 |---------|----------------------|
 | User    | `User.parquet`       |
@@ -418,7 +462,7 @@ Requires environment variables: `MONGO_URI` (connection string), `MONGO_DB` (dat
 | File | Purpose |
 |------|---------|
 | `session.json` | Current login session |
-| `workspace.json` | Store format config (`"parquet"`, `"json"`, or `"mongo"`) |
+| `workspace.json` | Store format config (`"duckdb"`, `"redis"`, `"parquet"`, `"json"`, or `"mongo"`) |
 
 ---
 

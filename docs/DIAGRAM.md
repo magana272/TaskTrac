@@ -35,11 +35,15 @@ flowchart TB
             PARQUET[(Parquet<br>.store/)]
             JSONDB[(JSON<br>.store/)]
             MONGODB[(MongoDB<br>Atlas)]
+            DUCKDB[(DuckDB<br>.store/)]
+            REDIS[(Redis<br>:6379)]
         end
         REST --> AUTH --> SVC --> DAO
         DAO --> PARQUET
         DAO --> JSONDB
         DAO --> MONGODB
+        DAO --> DUCKDB
+        DAO --> REDIS
     end
 
     CLI -->|"HTTP REST"| REST
@@ -114,6 +118,9 @@ classDiagram
         -String estimate
         -Long time_started
         -Long time_spent_ms
+        -Long time_in_ready_ms
+        -Long time_in_progress_ms
+        -String completion_note
     }
 
     class Sprint {
@@ -123,6 +130,8 @@ classDiagram
         -List~Long~ task_ids
         -Date start_date
         -Date end_date
+        -boolean completed
+        -Date completed_at
     }
 
     class BackLog {
@@ -434,6 +443,8 @@ flowchart LR
     DAO[DAOFactory] -->|PARQUET| PQ[ParquetXxxDAO<br>Avro + Snappy<br>.store/*.parquet]
     DAO -->|JSON| JS[JsonXxxDAO<br>Gson<br>.store/*.json]
     DAO -->|MONGO| MG[MongoXxxDAO<br>MongoDB Driver<br>Atlas / local]
+    DAO -->|DUCKDB| DK[DuckDB*DAO<br>JDBC embedded<br>.store/trak.duckdb]
+    DAO -->|REDIS| RD[RedisDAO<br>Jedis<br>localhost:6379]
 
     Config[workspace.json<br>store_format] -.-> DAO
     ENV[MONGO_URI<br>MONGO_DB] -.-> MG
@@ -441,6 +452,8 @@ flowchart LR
     style PQ fill:#e8eaf6,stroke:#283593
     style JS fill:#f1f8e9,stroke:#558b2f
     style MG fill:#fce4ec,stroke:#c62828
+    style DK fill:#fff8e1,stroke:#f57f17
+    style RD fill:#e0f2f1,stroke:#00695c
 ```
 
 ## Sprint Identity

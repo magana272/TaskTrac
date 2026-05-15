@@ -214,7 +214,9 @@ The nav bar includes "⌂ Mine" and "✳ Team" toggle buttons. **Mine** (default
 - **Sort** by Due Date or Estimate
 - **Filter** by Project
 - **Archive toggle** hides completed tasks (shows count)
-- **Green "+" button** (primary CTA) to add new task (project dropdown, assignee from members, date picker, time spinners)
+- **Blue "+" button** (primary CTA) to add new task (project dropdown, assignee from members, date picker, time spinners)
+- **Focus timer bar** on INPROGRESS cards shows elapsed time relative to estimate (green to amber to red)
+- **Responsive cards** fill available width (min 200x160), reflow on resize
 
 ### ProjectsView
 - **Editable table** — click Name or Description to edit inline, Save Changes button
@@ -235,6 +237,20 @@ The nav bar includes "⌂ Mine" and "✳ Team" toggle buttons. **Mine** (default
 - **LogOutView** — logout confirmation
 - **Continue as Guest** button (logs in as `guest` account)
 - Status bar shows logged-in user
+
+### Focus Timer
+INPROGRESS task cards display a focus timer bar that tracks elapsed time against the task estimate. The bar transitions from green (under 50%) to amber (50-80%) to red (over 80%) as the estimate is consumed. The timer updates in real time while the task is active.
+
+### Completion Notes
+When a task is marked as COMPLETE, the GUI prompts for a completion note via a dedicated input field. The note is stored in the `completion_note` field on the task and displayed in task detail views.
+
+### Settings
+The Settings panel (accessible from the nav bar) provides:
+- **Change Password** — update your account password
+- **Delete Account** — permanently delete your account (with confirmation)
+
+### Window Frame
+The GUI uses an undecorated frame with a custom title bar. The title bar supports drag-to-move. Window edges support resize by dragging. The task panel uses a hidden scrollbar (mousewheel scrolls).
 
 ### Error Handling
 - **ErrorAlertView** — modal error alert dialogs for validation and server errors
@@ -287,15 +303,28 @@ All endpoints return JSON. Auth required via `Authorization: Bearer <token>` hea
 
 ## Data Storage
 
-Three persistence formats (configurable via `.store/workspace.json`):
+Five persistence formats (configurable via `.store/workspace.json`):
 
 | Format | Config Value | Storage |
 |---|---|---|
-| **Parquet** (default) | `"parquet"` | `.store/User.parquet`, `.store/Task.parquet`, etc. |
+| **DuckDB** (default) | `"duckdb"` | `.store/trak.duckdb` |
+| **Redis** | `"redis"` | Keys: `trak:tasks:{id}`, `trak:projects:{name}`, etc. |
+| **Parquet** | `"parquet"` | `.store/User.parquet`, `.store/Task.parquet`, etc. |
 | **JSON** | `"json"` | `.store/user_{name}.json`, `.store/task_{id}.json`, etc. |
 | **MongoDB** | `"mongo"` | Collections: `users`, `tasks`, `projects`, `sprints`, `backlogs` |
 
 Always JSON regardless of format: `session.json` (login state), `workspace.json` (config).
+
+### DuckDB (default)
+Single embedded database file at `.store/trak.duckdb`.
+No configuration needed — works out of the box.
+
+### Redis
+Set in workspace.json: `{"store_format": "redis"}`
+Requires a running Redis server.
+```bash
+export REDIS_URL="redis://localhost:6379"
+```
 
 ### Switch to JSON
 ```json
