@@ -19,6 +19,7 @@ public class SprintProgressPanel extends JPanel {
     private final JPanel progressBar;
     private final JButton addSprintBtn;
     private final JButton completeSprintBtn;
+    private final JButton deleteSprintBtn;
     private double progress = 0;
     private SprintDTO activeSprint = null;
 
@@ -58,8 +59,22 @@ public class SprintProgressPanel extends JPanel {
             }
         });
 
+        deleteSprintBtn = new JButton("Delete");
+        TrakTheme.styleButtonNav(deleteSprintBtn);
+        deleteSprintBtn.setVisible(false);
+        deleteSprintBtn.addActionListener(e -> {
+            if (activeSprint == null) return;
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Permanently delete sprint \"" + activeSprint.name() + "\" and remove all task associations?",
+                    "Delete Sprint", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (confirm == JOptionPane.YES_OPTION) {
+                controller.getSprintController().deleteSprint(activeSprint.name());
+            }
+        });
+
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
         btnPanel.setOpaque(false);
+        btnPanel.add(deleteSprintBtn);
         btnPanel.add(completeSprintBtn);
         btnPanel.add(addSprintBtn);
 
@@ -119,6 +134,7 @@ public class SprintProgressPanel extends JPanel {
 
         this.activeSprint = active;
         completeSprintBtn.setVisible(active != null);
+        deleteSprintBtn.setVisible(active != null);
 
         if (active == null) {
             sprintLabel.setText("No active sprint");

@@ -35,7 +35,8 @@ public class TaskCardPanel extends JPanel {
         this.assignees = assignees;
 
         setLayout(new BorderLayout(4, 4));
-        setMinimumSize(new Dimension(250, 180));
+        setMinimumSize(new Dimension(200, 160));
+        setPreferredSize(new Dimension(300, 200));
         setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_MD, TrakTheme.SP_LG));
