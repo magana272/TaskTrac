@@ -15,4 +15,5 @@ RUN ./gradlew --no-daemon testClasses
 COPY docs/store_analysis/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+ENV JAVA_OPTS="-Xmx512m"
 ENTRYPOINT ["/app/entrypoint.sh"]

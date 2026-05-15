@@ -17,6 +17,7 @@ mkdir -p "$OUTPUT"
 
 ./gradlew --no-daemon test \
     --tests "task.trak.benchmark.StoreBenchmark" \
+    -Dorg.gradle.jvmargs="-Xmx512m" \
     2>&1 | tail -40
 
 echo "=== $STORE benchmark complete ==="

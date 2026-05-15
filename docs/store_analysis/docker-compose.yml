@@ -7,15 +7,23 @@ services:
       timeout: 3s
       retries: 5
 
-  # Each store runs in its own container in parallel
+  mongodb:
+    image: mongo:7
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping').ok"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+
   bench-json:
     build:
       context: ../..
       dockerfile: docs/store_analysis/Dockerfile
     environment:
       - BENCH_STORE=JSON
-      - BENCH_SCALES=10,100,1000,2000,4000,10000,100000
+      - BENCH_SCALES=10,100,1000,2000,4000,10000,50000
       - BENCH_OUTPUT=/output
+    mem_limit: 1g
     volumes:
       - bench-data:/output
 
@@ -25,8 +33,9 @@ services:
       dockerfile: docs/store_analysis/Dockerfile
     environment:
       - BENCH_STORE=DUCKDB
-      - BENCH_SCALES=10,100,1000,2000,4000,10000,100000
+      - BENCH_SCALES=10,100,1000,2000,4000,10000,50000
       - BENCH_OUTPUT=/output
+    mem_limit: 1g
     volumes:
       - bench-data:/output
 
@@ -36,9 +45,9 @@ services:
       dockerfile: docs/store_analysis/Dockerfile
     environment:
       - BENCH_STORE=PARQUET
-      # Parquet rewrites the entire file on every mutation — 100K is infeasible
       - BENCH_SCALES=10,100,1000,2000,4000,10000
       - BENCH_OUTPUT=/output
+    mem_limit: 1g
     volumes:
       - bench-data:/output
 
@@ -51,13 +60,30 @@ services:
         condition: service_healthy
     environment:
       - BENCH_STORE=REDIS
-      - BENCH_SCALES=10,100,1000,2000,4000,10000,100000
+      - BENCH_SCALES=10,100,1000,2000,4000,10000,50000
       - BENCH_OUTPUT=/output
       - REDIS_URL=redis://redis:6379
+    mem_limit: 1g
     volumes:
       - bench-data:/output
 
-  # R analysis — waits for all benchmarks to finish, merges CSVs, generates figures
+  bench-mongo:
+    build:
+      context: ../..
+      dockerfile: docs/store_analysis/Dockerfile
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - BENCH_STORE=MONGO
+      - BENCH_SCALES=10,100,1000,2000,4000,10000,50000
+      - BENCH_OUTPUT=/output
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB=trak_bench
+    mem_limit: 1g
+    volumes:
+      - bench-data:/output
+
   analysis:
     image: r-base:4.4.1
     depends_on:
@@ -68,6 +94,8 @@ services:
       bench-parquet:
         condition: service_completed_successfully
       bench-redis:
+        condition: service_completed_successfully
+      bench-mongo:
         condition: service_completed_successfully
     volumes:
       - bench-data:/data
