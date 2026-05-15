@@ -1,25 +1,105 @@
 # Store Benchmark Results
 
-Benchmarked 1000 task CRUD operations across all available stores.
+Scale points: [10, 100, 1000, 2000, 4000, 10000]
 MongoDB excluded (requires external server). Redis included if available.
 
-| Store | Operation | Count | Total (ms) | Avg (ms) | P50 (ms) | P95 (ms) | P99 (ms) |
-|-------|-----------|-------|------------|----------|----------|----------|----------|
-| JSON | create | 1000 | 2 | 0.00 | 0 | 0 | 0 |
-| JSON | loadAll | 10 | 313 | 31.30 | 26 | 66 | 66 |
+| Store | Operation | N | Total (ms) | Avg (ms) | P50 (ms) | P95 (ms) | P99 (ms) |
+|-------|-----------|---|------------|----------|----------|----------|----------|
+| JSON | create | 10 | 6 | 0.60 | 0 | 6 | 6 |
+| JSON | loadAll | 10 | 4 | 0.40 | 0 | 3 | 3 |
+| JSON | loadByKey | 10 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | delete | 10 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | create | 100 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | loadAll | 100 | 24 | 2.40 | 2 | 5 | 5 |
 | JSON | loadByKey | 100 | 0 | 0.00 | 0 | 0 | 0 |
 | JSON | delete | 100 | 0 | 0.00 | 0 | 0 | 0 |
-| PARQUET | create | 1000 | 10069 | 10.07 | 9 | 12 | 15 |
+| JSON | create | 1000 | 1 | 0.00 | 0 | 0 | 0 |
+| JSON | loadAll | 1000 | 150 | 15.00 | 15 | 18 | 18 |
+| JSON | loadByKey | 1000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | delete | 1000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | create | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | loadAll | 2000 | 252 | 25.20 | 25 | 27 | 27 |
+| JSON | loadByKey | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | delete | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | create | 4000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | loadAll | 4000 | 498 | 49.80 | 49 | 54 | 54 |
+| JSON | loadByKey | 4000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | delete | 4000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | create | 10000 | 16 | 0.00 | 0 | 0 | 0 |
+| JSON | loadAll | 10000 | 1424 | 142.40 | 136 | 190 | 190 |
+| JSON | loadByKey | 10000 | 0 | 0.00 | 0 | 0 | 0 |
+| JSON | delete | 10000 | 0 | 0.00 | 0 | 0 | 0 |
+| PARQUET | create | 10 | 469 | 46.90 | 12 | 335 | 335 |
 | PARQUET | loadAll | 10 | 40 | 4.00 | 4 | 4 | 4 |
-| PARQUET | loadByKey | 100 | 406 | 4.06 | 4 | 5 | 5 |
-| PARQUET | delete | 100 | 988 | 9.88 | 10 | 11 | 11 |
-| DUCKDB | create | 1000 | 1147 | 1.15 | 1 | 2 | 3 |
-| DUCKDB | loadAll | 10 | 40 | 4.00 | 4 | 4 | 4 |
+| PARQUET | loadByKey | 10 | 35 | 3.50 | 3 | 4 | 4 |
+| PARQUET | delete | 10 | 80 | 8.00 | 8 | 10 | 10 |
+| PARQUET | create | 100 | 668 | 6.68 | 7 | 8 | 8 |
+| PARQUET | loadAll | 100 | 27 | 2.70 | 3 | 3 | 3 |
+| PARQUET | loadByKey | 100 | 26 | 2.60 | 3 | 3 | 3 |
+| PARQUET | delete | 100 | 63 | 6.30 | 6 | 8 | 8 |
+| PARQUET | create | 1000 | 6078 | 6.08 | 6 | 7 | 8 |
+| PARQUET | loadAll | 1000 | 29 | 2.90 | 3 | 3 | 3 |
+| PARQUET | loadByKey | 1000 | 255 | 2.55 | 3 | 3 | 3 |
+| PARQUET | delete | 1000 | 643 | 6.43 | 6 | 7 | 8 |
+| PARQUET | create | 2000 | 12506 | 6.25 | 6 | 7 | 8 |
+| PARQUET | loadAll | 2000 | 30 | 3.00 | 3 | 3 | 3 |
+| PARQUET | loadByKey | 2000 | 604 | 3.02 | 3 | 3 | 4 |
+| PARQUET | delete | 2000 | 1431 | 7.16 | 7 | 8 | 8 |
+| PARQUET | create | 4000 | 29672 | 7.42 | 8 | 10 | 10 |
+| PARQUET | loadAll | 4000 | 32 | 3.20 | 3 | 4 | 4 |
+| PARQUET | loadByKey | 4000 | 1290 | 3.23 | 3 | 4 | 5 |
+| PARQUET | delete | 4000 | 3849 | 9.62 | 10 | 11 | 11 |
+| PARQUET | create | 10000 | 113068 | 11.31 | 11 | 18 | 19 |
+| PARQUET | loadAll | 10000 | 61 | 6.10 | 6 | 7 | 7 |
+| PARQUET | loadByKey | 10000 | 6123 | 6.12 | 6 | 7 | 7 |
+| PARQUET | delete | 10000 | 17464 | 17.46 | 17 | 19 | 20 |
+| DUCKDB | create | 10 | 962 | 96.20 | 1 | 953 | 953 |
+| DUCKDB | loadAll | 10 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | loadByKey | 10 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | delete | 10 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | create | 100 | 100 | 1.00 | 1 | 1 | 1 |
+| DUCKDB | loadAll | 100 | 0 | 0.00 | 0 | 0 | 0 |
 | DUCKDB | loadByKey | 100 | 0 | 0.00 | 0 | 0 | 0 |
 | DUCKDB | delete | 100 | 0 | 0.00 | 0 | 0 | 0 |
-| REDIS | create | 1000 | 1 | 0.00 | 0 | 0 | 0 |
-| REDIS | loadAll | 10 | 1586 | 158.60 | 158 | 170 | 170 |
+| DUCKDB | create | 1000 | 1050 | 1.05 | 1 | 1 | 2 |
+| DUCKDB | loadAll | 1000 | 22 | 2.20 | 2 | 3 | 3 |
+| DUCKDB | loadByKey | 1000 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | delete | 1000 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | create | 2000 | 2054 | 1.03 | 1 | 1 | 1 |
+| DUCKDB | loadAll | 2000 | 70 | 7.00 | 7 | 7 | 7 |
+| DUCKDB | loadByKey | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | delete | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | create | 4000 | 4237 | 1.06 | 1 | 1 | 2 |
+| DUCKDB | loadAll | 4000 | 151 | 15.10 | 15 | 16 | 16 |
+| DUCKDB | loadByKey | 4000 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | delete | 4000 | 10 | 0.03 | 0 | 0 | 0 |
+| DUCKDB | create | 10000 | 10471 | 1.05 | 1 | 1 | 2 |
+| DUCKDB | loadAll | 10000 | 373 | 37.30 | 37 | 38 | 38 |
+| DUCKDB | loadByKey | 10000 | 0 | 0.00 | 0 | 0 | 0 |
+| DUCKDB | delete | 10000 | 1 | 0.00 | 0 | 0 | 0 |
+| REDIS | create | 10 | 1 | 0.10 | 0 | 1 | 1 |
+| REDIS | loadAll | 10 | 20 | 2.00 | 2 | 3 | 3 |
+| REDIS | loadByKey | 10 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | delete | 10 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | create | 100 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | loadAll | 100 | 123 | 12.30 | 12 | 14 | 14 |
 | REDIS | loadByKey | 100 | 0 | 0.00 | 0 | 0 | 0 |
 | REDIS | delete | 100 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | create | 1000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | loadAll | 1000 | 1153 | 115.30 | 115 | 120 | 120 |
+| REDIS | loadByKey | 1000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | delete | 1000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | create | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | loadAll | 2000 | 2257 | 225.70 | 228 | 231 | 231 |
+| REDIS | loadByKey | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | delete | 2000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | create | 4000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | loadAll | 4000 | 4529 | 452.90 | 459 | 467 | 467 |
+| REDIS | loadByKey | 4000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | delete | 4000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | create | 10000 | 2 | 0.00 | 0 | 0 | 0 |
+| REDIS | loadAll | 10000 | 11199 | 1119.90 | 1137 | 1146 | 1146 |
+| REDIS | loadByKey | 10000 | 0 | 0.00 | 0 | 0 | 0 |
+| REDIS | delete | 10000 | 0 | 0.00 | 0 | 0 | 0 |
 
 *Generated by `StoreBenchmark.java`*

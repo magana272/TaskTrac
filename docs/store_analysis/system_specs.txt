@@ -1,0 +1,10 @@
+=== System Specifications ===
+Date: Fri May 15 05:14:11 PDT 2026
+
+OS: Mac OS X 15.1 (aarch64)
+Java: 23.0.1 (Oracle Corporation)
+JVM: OpenJDK 64-Bit Server VM
+Available processors: 12
+Max heap: 512 MB
+Total memory: 244 MB
+Container: bare-metal

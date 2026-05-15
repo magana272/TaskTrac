@@ -1,15 +1,48 @@
 services:
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s
       timeout: 3s
       retries: 5
 
-  benchmark:
+  # Each store runs in its own container in parallel
+  bench-json:
+    build:
+      context: ../..
+      dockerfile: docs/store_analysis/Dockerfile
+    environment:
+      - BENCH_STORE=JSON
+      - BENCH_SCALES=10,100,1000,2000,4000,10000,100000
+      - BENCH_OUTPUT=/output
+    volumes:
+      - bench-data:/output
+
+  bench-duckdb:
+    build:
+      context: ../..
+      dockerfile: docs/store_analysis/Dockerfile
+    environment:
+      - BENCH_STORE=DUCKDB
+      - BENCH_SCALES=10,100,1000,2000,4000,10000,100000
+      - BENCH_OUTPUT=/output
+    volumes:
+      - bench-data:/output
+
+  bench-parquet:
+    build:
+      context: ../..
+      dockerfile: docs/store_analysis/Dockerfile
+    environment:
+      - BENCH_STORE=PARQUET
+      # Parquet rewrites the entire file on every mutation — 100K is infeasible
+      - BENCH_SCALES=10,100,1000,2000,4000,10000
+      - BENCH_OUTPUT=/output
+    volumes:
+      - bench-data:/output
+
+  bench-redis:
     build:
       context: ../..
       dockerfile: docs/store_analysis/Dockerfile
@@ -17,6 +50,42 @@ services:
       redis:
         condition: service_healthy
     environment:
+      - BENCH_STORE=REDIS
+      - BENCH_SCALES=10,100,1000,2000,4000,10000,100000
+      - BENCH_OUTPUT=/output
       - REDIS_URL=redis://redis:6379
     volumes:
+      - bench-data:/output
+
+  # R analysis — waits for all benchmarks to finish, merges CSVs, generates figures
+  analysis:
+    image: r-base:4.4.1
+    depends_on:
+      bench-json:
+        condition: service_completed_successfully
+      bench-duckdb:
+        condition: service_completed_successfully
+      bench-parquet:
+        condition: service_completed_successfully
+      bench-redis:
+        condition: service_completed_successfully
+    volumes:
+      - bench-data:/data
       - ./:/output
+    command: >
+      bash -c "
+        apt-get update -qq && apt-get install -y -qq libcairo2-dev libxt-dev pkg-config > /dev/null 2>&1 &&
+        Rscript -e 'install.packages(c(\"ggplot2\",\"dplyr\",\"scales\"), repos=\"https://cloud.r-project.org\", quiet=TRUE)' &&
+        cd /data &&
+        head -1 trial_data_json.csv > trial_data.csv &&
+        for f in trial_data_*.csv; do tail -n +2 \"\$$f\" >> trial_data.csv; done &&
+        head -1 results_json.csv > results.csv &&
+        for f in results_*.csv; do tail -n +2 \"\$$f\" >> results.csv; done &&
+        cp /output/analyze.R . &&
+        Rscript analyze.R &&
+        cp *.png *.csv system_specs.txt /output/ 2>/dev/null;
+        echo 'Analysis complete'
+      "
+
+volumes:
+  bench-data:
