@@ -117,7 +117,8 @@ public class TasksView extends DataView implements ViewModelChangeListener {
                 public void componentResized(ComponentEvent e) {
                     layoutCards(gridPanel, cards);
                     gridPanel.revalidate();
-                    gridPanel.repaint();
+                    taskCardsContainer.revalidate();
+                    taskCardsContainer.repaint();
                 }
             });
         }

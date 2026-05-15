@@ -63,13 +63,14 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         final Point[] resizeStart = {null};
         final Dimension[] startSize = {null};
         final Point[] startLoc = {null};
-        final int[] resizeDir = {0}; // bitmask: 1=N, 2=S, 4=W, 8=E
+        final int[] resizeDir = {0};
 
         JPanel glassPane = new JPanel(null);
         glassPane.setOpaque(false);
         setGlassPane(glassPane);
-        glassPane.setVisible(true);
+        glassPane.setVisible(false); // hidden by default — buttons work normally
 
+        // Glass pane only handles resize drag
         glassPane.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 int dir = getResizeDir(e.getPoint(), getSize(), EDGE);
@@ -78,32 +79,16 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                     resizeStart[0] = e.getLocationOnScreen();
                     startSize[0] = getSize();
                     startLoc[0] = getLocation();
-                } else {
-                    // Pass through to components below
-                    glassPane.setVisible(false);
-                    Component target = SwingUtilities.getDeepestComponentAt(
-                            getContentPane(), e.getX(), e.getY());
-                    if (target != null) {
-                        target.dispatchEvent(SwingUtilities.convertMouseEvent(glassPane, e, target));
-                    }
-                    glassPane.setVisible(true);
                 }
             }
             public void mouseReleased(MouseEvent e) {
                 resizeDir[0] = 0;
                 resizeStart[0] = null;
+                glassPane.setVisible(false); // hide after resize done
             }
         });
 
         glassPane.addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseMoved(MouseEvent e) {
-                int dir = getResizeDir(e.getPoint(), getSize(), EDGE);
-                if (dir == 0) glassPane.setCursor(Cursor.getDefaultCursor());
-                else if (dir == (1|4) || dir == (2|8)) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
-                else if (dir == (1|8) || dir == (2|4)) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
-                else if ((dir & 1) != 0 || (dir & 2) != 0) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
-                else glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
-            }
             public void mouseDragged(MouseEvent e) {
                 if (resizeStart[0] == null) return;
                 Point now = e.getLocationOnScreen();
@@ -119,6 +104,25 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                 setBounds(r);
             }
         });
+
+        // Track mouse on the content pane — show glass pane only near edges
+        Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
+            if (!(event instanceof MouseEvent me)) return;
+            if (me.getID() != MouseEvent.MOUSE_MOVED) return;
+            if (!isActive()) return;
+            Point screenPt = me.getLocationOnScreen();
+            Point framePt = new Point(screenPt.x - getX(), screenPt.y - getY());
+            int dir = getResizeDir(framePt, getSize(), EDGE);
+            if (dir != 0 && !glassPane.isVisible()) {
+                glassPane.setVisible(true);
+                if (dir == (1|4) || dir == (2|8)) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
+                else if (dir == (1|8) || dir == (2|4)) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
+                else if ((dir & 1) != 0 || (dir & 2) != 0) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
+                else glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
+            } else if (dir == 0 && glassPane.isVisible() && resizeStart[0] == null) {
+                glassPane.setVisible(false);
+            }
+        }, AWTEvent.MOUSE_MOTION_EVENT_MASK);
     }
 
     private static int getResizeDir(Point p, Dimension size, int edge) {
