@@ -202,9 +202,6 @@ The GUI uses an MVC architecture with an Observer pattern. Views implement ViewM
 ### Dark Cinematic Theme
 The GUI uses a centralized dark theme (`TrakTheme`) with a deep charcoal background (#121216), warm gold accent (#FFD54F), and an 8px spacing grid. Typography follows a scale from DISPLAY (22pt bold) down to CAPTION (10pt). All views, dialogs, tables, and input fields inherit the theme automatically via `UIManager` defaults. Custom components include `GlassPanel` (rounded gradient panels with optional drop shadow) and `FormPanel` (two-column form layout used by all dialogs).
 
-### Workspace Toggle (Mine / Team)
-The nav bar includes "⌂ Mine" and "✳ Team" toggle buttons. **Mine** (default) shows only tasks assigned to you and projects you own or belong to. **Team** shows all tasks and projects across the workspace. The toggle re-fetches data from the service layer, so it reflects the latest state. Resets to Mine on logout.
-
 ### TasksView
 - **Task cards** with gradient backgrounds, gold glow hover, status dropdown, project name, summary, deadline
 - **Status colors**: READY (red), INPROGRESS (amber), COMPLETE (green)
@@ -297,6 +294,7 @@ All endpoints return JSON. Auth required via `Authorization: Bearer <token>` hea
 | GET/POST/PUT/DELETE | `/api/tasks/{id}` | Task CRUD |
 | GET/POST | `/api/sprints` | List/create sprints |
 | GET/PUT/DELETE | `/api/sprints/{id}` | Sprint CRUD |
+| GET | `/api/sprints/name/{name}?project={}` | Get sprint by name |
 | GET/POST/PUT/DELETE | `/api/backlogs/{name}` | Backlog CRUD |
 
 ---

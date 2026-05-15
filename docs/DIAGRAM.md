@@ -191,6 +191,7 @@ flowchart TB
         http[http/<br>ApiClient, TaskHttpService, ...]
         cli[cli/<br>TTApp, CMD_Factory, CMDs]
         viewmodel[gui/viewmodel/<br>TaskViewModel, ProjectViewModel, ...]
+        eventbus[gui/viewmodel/event/<br>CommandEventBus]
         controller[gui/controller/<br>GUIController, AuthController, ...]
         views[gui/view/<br>TrakTheme, GlassPanel,<br>task/ +TimeInputPanel, form/ +FormPanel,<br>project/, sprint/, auth/, error/, panel/]
     end
@@ -414,14 +415,41 @@ title: REST API Endpoints
 ---
 flowchart TB
     Server[HttpServer :8080]
-    Server --> Auth[/api/auth/<br>POST login, signup, logout/]
-    Server --> Users[/api/users/<br>GET POST PUT DELETE/]
-    Server --> Projects[/api/projects/<br>GET POST PUT DELETE<br>?user= filter/]
-    Server --> Tasks[/api/tasks/<br>GET POST PUT DELETE<br>?assignee= filter/]
-    Server --> Sprints[/api/sprints/<br>GET POST PUT DELETE/]
-    Server --> Backlogs[/api/backlogs/<br>GET POST PUT DELETE/]
 
+    subgraph Public["Public (no auth)"]
+        Auth["/api/auth/login\n/api/auth/signup\n/api/auth/logout\nPOST"]
+        UserCreate["/api/users\nPOST"]
+    end
+
+    subgraph Protected["Protected (Bearer token)"]
+        Users["/api/users/{username}\nGET PUT DELETE"]
+
+        subgraph ProjectRoutes[Projects]
+            ProjList["/api/projects\nGET POST\n?user="]
+            ProjById["/api/projects/id/{id}\nGET"]
+            ProjByName["/api/projects/name/{name}\nGET"]
+            ProjDetail["/api/projects/{name}\nPUT DELETE"]
+            ProjMembers["/api/projects/{name}/members\nPOST"]
+        end
+
+        Tasks["/api/tasks\nGET POST ?assignee=\n/api/tasks/{id}\nGET PUT DELETE"]
+
+        subgraph SprintRoutes[Sprints]
+            SprintList["/api/sprints\nGET POST"]
+            SprintDetail["/api/sprints/{id}\nGET PUT DELETE"]
+            SprintByName["/api/sprints/name/{name}\nGET ?project="]
+        end
+
+        Backlogs["/api/backlogs/{name}\nGET POST PUT DELETE"]
+    end
+
+    Server --> Public
+    Server --> Protected
     Auth -.->|token| SessionMgr[SessionManager<br>UUID → username]
+    SessionMgr -.->|validates| Protected
+
+    style Public fill:#f1f8e9,stroke:#558b2f
+    style Protected fill:#fff3e0,stroke:#e65100
 ```
 
 ## Storage Backends
@@ -443,11 +471,12 @@ flowchart LR
     DAO[DAOFactory] -->|PARQUET| PQ[ParquetXxxDAO<br>Avro + Snappy<br>.store/*.parquet]
     DAO -->|JSON| JS[JsonXxxDAO<br>Gson<br>.store/*.json]
     DAO -->|MONGO| MG[MongoXxxDAO<br>MongoDB Driver<br>Atlas / local]
-    DAO -->|DUCKDB| DK[DuckDB*DAO<br>JDBC embedded<br>.store/trak.duckdb]
+    DAO -->|"DUCKDB (default)"| DK[DuckDB*DAO<br>JDBC embedded<br>.store/trak.duckdb]
     DAO -->|REDIS| RD[RedisDAO<br>Jedis<br>localhost:6379]
 
     Config[workspace.json<br>store_format] -.-> DAO
     ENV[MONGO_URI<br>MONGO_DB] -.-> MG
+    RENV[REDIS_URL] -.-> RD
 
     style PQ fill:#e8eaf6,stroke:#283593
     style JS fill:#f1f8e9,stroke:#558b2f
@@ -482,4 +511,147 @@ flowchart TB
 
 Sprints are keyed by auto-generated ID, not by name.
 Two projects can each have a sprint named "Sprint1".
-Stored as `sprint_{id}.json`.
+Storage format depends on the configured backend (see Storage Backends diagram).
+
+## Local vs Remote Mode
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: '#ffffff'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#000000'
+    lineColor: '#000000'
+    fontFamily: 'Georgia, Times New Roman, serif'
+    fontSize: '14px'
+title: Operational Modes
+---
+flowchart TB
+    subgraph RemoteMode["Remote Mode (default for GUI)"]
+        direction TB
+        GUI_R[trak-gui] -->|HTTP| ExtServer[trak-server :8080]
+        CLI_R[trak-cli --remote] -->|HTTP| ExtServer
+        ExtServer --> SVC_R[Services] --> DAO_R[DAO] --> Store_R[(Storage)]
+    end
+
+    subgraph LocalGUI["Local Mode (--local flag)"]
+        direction TB
+        GUI_L[trak-gui --local] -->|"starts embedded"| EmbServer["TrakServer\nport 0 (auto)"]
+        GUI_L -->|"HTTP to localhost:{port}"| EmbServer
+        EmbServer --> SVC_L[Services] --> DAO_L[DAO] --> Store_L[(Storage)]
+    end
+
+    subgraph LocalCLI["Local Mode (default for CLI)"]
+        direction TB
+        CLI_L[trak-cli] --> SF[ServiceFactory\nregisterLocalServices]
+        SF --> SVC_D[TrakTaskService, ...] --> DAO_D[DAO] --> Store_D[(Storage)]
+    end
+
+    style RemoteMode fill:#e3f2fd,stroke:#1565c0
+    style LocalGUI fill:#fff3e0,stroke:#e65100
+    style LocalCLI fill:#f1f8e9,stroke:#558b2f
+```
+
+The GUI always communicates via HTTP — even in `--local` mode, it starts an embedded server on a random port and connects to it. The CLI in local mode bypasses HTTP entirely and calls services directly via `ServiceFactory`.
+
+## DTO & Request/Response Flow
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: '#ffffff'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#000000'
+    lineColor: '#000000'
+    fontFamily: 'Georgia, Times New Roman, serif'
+    fontSize: '14px'
+title: DTO & Request/Response Flow
+---
+flowchart LR
+    subgraph Client
+        ReqDTO["CreateTaskRequest\nUpdateTaskRequest\n+ validate()"]
+    end
+
+    subgraph Server
+        Route[Route Handler] --> Validate["validate()"]
+        Validate --> Service[Service Layer]
+        Service --> Model["Server Model\nTask, User, Project,\nSprint, BackLog"]
+        Model --> Convert["→ toDTO()"]
+    end
+
+    subgraph Response
+        RespDTO["TaskDTO\nUserDTO\nProjectDTO\nSprintDTO\nBacklogDTO"]
+    end
+
+    ReqDTO -->|"JSON POST/PUT"| Route
+    Convert --> RespDTO
+    RespDTO -->|"JSON response"| Client
+
+    style Client fill:#e3f2fd,stroke:#1565c0
+    style Server fill:#fff3e0,stroke:#e65100
+    style Response fill:#f1f8e9,stroke:#558b2f
+```
+
+Request DTOs are Java records with a `validate()` method that throws `ValidationException` on invalid input. Server models are internal — only DTOs cross the HTTP boundary.
+
+## Exception Hierarchy
+
+```mermaid
+---
+config:
+  theme: base
+  themeVariables:
+    primaryColor: '#ffffff'
+    primaryTextColor: '#000000'
+    primaryBorderColor: '#000000'
+    lineColor: '#000000'
+    fontFamily: 'Georgia, Times New Roman, serif'
+    fontSize: '14px'
+title: Exception Hierarchy
+---
+classDiagram
+    direction TB
+
+    class RuntimeException {
+        <<Java stdlib>>
+    }
+
+    class TrakException {
+        +String message
+        +Throwable cause
+    }
+
+    class ValidationException {
+        bad input or constraint
+    }
+
+    class EntityNotFoundException {
+        missing user, task, project, sprint
+    }
+
+    class AuthenticationException {
+        bad credentials or expired token
+    }
+
+    class DuplicateEntityException {
+        username or email already exists
+    }
+
+    RuntimeException <|-- TrakException
+    TrakException <|-- ValidationException
+    TrakException <|-- EntityNotFoundException
+    TrakException <|-- AuthenticationException
+    TrakException <|-- DuplicateEntityException
+
+    style TrakException fill:#fff3e0,stroke:#e65100
+    style ValidationException fill:#e3f2fd,stroke:#1565c0
+    style EntityNotFoundException fill:#e3f2fd,stroke:#1565c0
+    style AuthenticationException fill:#fce4ec,stroke:#c62828
+    style DuplicateEntityException fill:#e3f2fd,stroke:#1565c0
+```
+
+All exceptions are unchecked (`RuntimeException`). Route handlers catch `TrakException` subclasses and map them to HTTP status codes (400, 401, 404, 409).

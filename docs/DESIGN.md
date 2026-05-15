@@ -84,7 +84,7 @@ A task tracking system with three executables:
 - The system shall allow marking tasks as COMPLETE via `complete` command
 - The system shall display tasks as cards (GUI) or formatted tables (CLI)
 - The system shall display sprint details with completed/total task counts
-- The system shall maintain state persistently via Parquet, JSON, or MongoDB
+- The system shall maintain state persistently via DuckDB (default), Redis, Parquet, JSON, or MongoDB
 - The system shall validate all user inputs
 - The system shall display clear success and error messages
 - The system shall prompt for confirmation before delete operations
@@ -206,13 +206,15 @@ task.trak.app.client/       ← Client (never imports from server)
   http/                           ApiClient, TaskHttpService, ProjectHttpService, ...
   gui/viewmodel/                  ViewModel, ObservableViewModel, TaskViewModel,
                                   ProjectViewModel, SprintViewModel, UserViewModel
+  gui/viewmodel/event/            CommandEvent, CommandEventBus, CommandEventType, CommandListener
   gui/controller/                 GUIController, AuthController, TaskController,
                                   ProjectController, SprintController
                                   (controllers receive HTTP services via constructor injection)
-  gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel
+  gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel,
+                                  DashboardView, CommandInputPanel
   gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView, TimeInputPanel
-  gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView
-  gui/view/sprint/                SprintView, SprintAddView
+  gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView, ProjectSelectorPanel
+  gui/view/sprint/                SprintView, SprintAddView, SprintProgressPanel
   gui/view/auth/                  LoginView, SignUpView, LogOutView
   gui/view/error/                 ErrorView, ErrorAlertView,
                                   UserNameAlreadyExistErrorView,
@@ -393,12 +395,20 @@ trak-cli backlog add|get|update|delete
 
 ## REST API Endpoints
 ```
-POST   /api/auth/login|signup|logout
-GET|POST|PUT|DELETE  /api/users/{username}
-GET|POST|PUT|DELETE  /api/projects/{name}    ?user=
-GET|POST|PUT|DELETE  /api/tasks/{id}         ?assignee=
-GET|POST|PUT|DELETE  /api/sprints/{id}
-GET|POST|PUT|DELETE  /api/backlogs/{name}
+POST                /api/auth/login|signup|logout
+GET|POST            /api/users
+GET|PUT|DELETE      /api/users/{username}
+GET|POST            /api/projects              ?user=
+GET                 /api/projects/id/{id}
+GET                 /api/projects/name/{name}
+PUT|DELETE          /api/projects/{name}
+POST                /api/projects/{name}/members
+GET|POST            /api/tasks                 ?assignee=
+GET|PUT|DELETE      /api/tasks/{id}
+GET|POST            /api/sprints
+GET|PUT|DELETE      /api/sprints/{id}
+GET                 /api/sprints/name/{name}   ?project=
+GET|POST|PUT|DELETE /api/backlogs/{name}
 ```
 
 ---
