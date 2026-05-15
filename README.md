@@ -2,7 +2,7 @@
 
 **Version 0.0.9**
 
-A lightweight task and sprint tracking system with CLI, GUI, and REST API. Supports Parquet, JSON, and MongoDB persistence.
+A lightweight task and sprint tracking system with CLI, GUI, and REST API. Supports JSON, Parquet, DuckDB, Redis, and MongoDB persistence.
 
 ## Quick Start
 
@@ -125,12 +125,14 @@ java -jar trak-cli sprint update Sprint1 --project WebApp --start_date 2026-06-0
 
 ## Storage
 
-Data persisted in `.store/`. Three formats:
+Data persisted in `.store/`. Five formats:
 
 | Format | Config | Files |
 |---|---|---|
 | **Parquet** (default) | `"parquet"` | `User.parquet`, `Task.parquet`, etc. |
 | **JSON** | `"json"` | `user_{name}.json`, `task_{id}.json`, etc. |
+| **DuckDB** | `"duckdb"` | `trak.duckdb` |
+| **Redis** | `"redis"` | Keys: `trak:users:*`, `trak:tasks:*`, etc. |
 | **MongoDB** | `"mongo"` | Collections: `users`, `tasks`, `projects`, `sprints`, `backlogs` |
 
 Configure via `.store/workspace.json`:
@@ -172,19 +174,11 @@ Example scripts demonstrating the REST API and CLI workflows:
 
 ## Store Benchmark
 
-Performance comparison of JSON, Parquet, DuckDB, and Redis storage backends ([raw data](docs/store_analysis/results.csv)).
+Performance comparison of JSON, Parquet, DuckDB, Redis, and MongoDB storage backends at N = 10 to 50K tasks ([raw data](docs/store_analysis/results.csv), [full analysis](docs/store_analysis/ANALYSIS.md)).
 
-### Average Latency by Operation
+### CRUD Scaling
 
-![Average Latency](docs/store_analysis/avg_latency.png)
-
-### Tail Latency (P95 & P99)
-
-![Tail Latency](docs/store_analysis/tail_latency.png)
-
-### Total Elapsed Time by Store
-
-![Total Time](docs/store_analysis/total_time.png)
+![Combined scaling](docs/store_analysis/combined_scaling.png)
 
 ## Tests
 

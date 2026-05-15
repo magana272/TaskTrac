@@ -111,6 +111,11 @@ public class StoreBenchmark {
                 flushRedis();
                 benchmarkAtScale(storeName, n, results, trialData);
                 flushRedis();
+            } else if (storeName.equals("MONGO")) {
+                DAOFactory.setFormat(fmt);
+                flushMongo();
+                benchmarkAtScale(storeName, n, results, trialData);
+                flushMongo();
             } else {
                 cleanStore();
                 DAOFactory.setFormat(fmt);
@@ -273,6 +278,13 @@ public class StoreBenchmark {
         try {
             var client = task.trak.app.server.dao.redis.RedisConnection.getClient();
             for (String key : client.keys("trak:tasks:*")) client.del(key);
+        } catch (Exception ignored) {}
+    }
+
+    private void flushMongo() {
+        try {
+            var db = task.trak.app.server.dao.mongo.MongoConnection.getDatabase();
+            db.getCollection("tasks").drop();
         } catch (Exception ignored) {}
     }
 
