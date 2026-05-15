@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Benchmarks CRUD operations across all embedded storage backends.
@@ -53,11 +54,15 @@ public class StoreBenchmark {
         List<String[]> results = new ArrayList<>();
         results.add(new String[]{"Store", "Operation", "Count", "Total_ms", "Avg_ms", "P50_ms", "P95_ms", "P99_ms"});
 
+        // Per-request trial data: Store, Operation, RequestNum, Latency_us (microseconds)
+        List<String[]> trialData = new ArrayList<>();
+        trialData.add(new String[]{"Store", "Operation", "Request", "Latency_us"});
+
         for (DAOFactory.Format fmt : embeddedFormats) {
             System.out.println("\n=== Benchmarking: " + fmt + " ===");
             cleanStore();
             DAOFactory.setFormat(fmt);
-            results.addAll(benchmarkFormat(fmt.name()));
+            results.addAll(benchmarkFormat(fmt.name(), trialData));
         }
 
         // Redis — skip if server not available
@@ -69,7 +74,7 @@ public class StoreBenchmark {
                 var client = task.trak.app.server.dao.redis.RedisConnection.getClient();
                 for (String key : client.keys("trak:tasks:*")) client.del(key);
             } catch (Exception ignored) {}
-            results.addAll(benchmarkFormat("REDIS"));
+            results.addAll(benchmarkFormat("REDIS", trialData));
             // Cleanup
             try {
                 var client = task.trak.app.server.dao.redis.RedisConnection.getClient();
@@ -80,17 +85,19 @@ public class StoreBenchmark {
         }
 
         writeCSV(results);
+        writeTrialData(trialData);
         writeSummary(results);
+        writeSystemSpecs();
         System.out.println("\nResults written to docs/store_analysis/");
     }
 
-    private List<String[]> benchmarkFormat(String storeName) {
+    private List<String[]> benchmarkFormat(String storeName, List<String[]> trialData) {
         List<String[]> rows = new ArrayList<>();
         EntityDAO<Task> dao = DAOFactory.taskDAO();
         Random rand = new Random(42);
 
         // --- CREATE ---
-        long[] createTimes = new long[CREATE_COUNT];
+        long[] createNanos = new long[CREATE_COUNT];
         List<Long> ids = new ArrayList<>();
         for (int i = 0; i < CREATE_COUNT; i++) {
             long id = System.currentTimeMillis() + i;
@@ -100,44 +107,65 @@ public class StoreBenchmark {
             task.setEstimate("2h");
             long start = System.nanoTime();
             dao.save(task);
-            createTimes[i] = (System.nanoTime() - start) / 1_000_000;
+            createNanos[i] = System.nanoTime() - start;
         }
-        rows.add(formatRow(storeName, "create", CREATE_COUNT, createTimes));
-        System.out.printf("  create %d: avg=%.2fms%n", CREATE_COUNT, avg(createTimes));
+        long[] createMs = toMillis(createNanos);
+        rows.add(formatRow(storeName, "create", CREATE_COUNT, createMs));
+        appendTrialData(trialData, storeName, "create", createNanos);
+        System.out.printf("  create %d: avg=%.2fms%n", CREATE_COUNT, avg(createMs));
 
         // --- LOAD ALL ---
-        long[] loadAllTimes = new long[10];
+        long[] loadAllNanos = new long[10];
         for (int i = 0; i < 10; i++) {
             long start = System.nanoTime();
             dao.loadAll();
-            loadAllTimes[i] = (System.nanoTime() - start) / 1_000_000;
+            loadAllNanos[i] = System.nanoTime() - start;
         }
-        rows.add(formatRow(storeName, "loadAll", 10, loadAllTimes));
-        System.out.printf("  loadAll (10x): avg=%.2fms%n", avg(loadAllTimes));
+        long[] loadAllMs = toMillis(loadAllNanos);
+        rows.add(formatRow(storeName, "loadAll", 10, loadAllMs));
+        appendTrialData(trialData, storeName, "loadAll", loadAllNanos);
+        System.out.printf("  loadAll (10x): avg=%.2fms%n", avg(loadAllMs));
 
         // --- LOAD BY KEY ---
-        long[] lookupTimes = new long[LOOKUP_COUNT];
+        long[] lookupNanos = new long[LOOKUP_COUNT];
         for (int i = 0; i < LOOKUP_COUNT; i++) {
             long id = ids.get(rand.nextInt(ids.size()));
             long start = System.nanoTime();
             dao.loadByKey(String.valueOf(id));
-            lookupTimes[i] = (System.nanoTime() - start) / 1_000_000;
+            lookupNanos[i] = System.nanoTime() - start;
         }
-        rows.add(formatRow(storeName, "loadByKey", LOOKUP_COUNT, lookupTimes));
-        System.out.printf("  loadByKey (100x): avg=%.2fms%n", avg(lookupTimes));
+        long[] lookupMs = toMillis(lookupNanos);
+        rows.add(formatRow(storeName, "loadByKey", LOOKUP_COUNT, lookupMs));
+        appendTrialData(trialData, storeName, "loadByKey", lookupNanos);
+        System.out.printf("  loadByKey (100x): avg=%.2fms%n", avg(lookupMs));
 
         // --- DELETE ---
-        long[] deleteTimes = new long[LOOKUP_COUNT];
+        long[] deleteNanos = new long[LOOKUP_COUNT];
         for (int i = 0; i < LOOKUP_COUNT; i++) {
             long id = ids.get(i);
             long start = System.nanoTime();
             dao.deleteByKey(String.valueOf(id));
-            deleteTimes[i] = (System.nanoTime() - start) / 1_000_000;
+            deleteNanos[i] = System.nanoTime() - start;
         }
-        rows.add(formatRow(storeName, "delete", LOOKUP_COUNT, deleteTimes));
-        System.out.printf("  delete (100x): avg=%.2fms%n", avg(deleteTimes));
+        long[] deleteMs = toMillis(deleteNanos);
+        rows.add(formatRow(storeName, "delete", LOOKUP_COUNT, deleteMs));
+        appendTrialData(trialData, storeName, "delete", deleteNanos);
+        System.out.printf("  delete (100x): avg=%.2fms%n", avg(deleteMs));
 
         return rows;
+    }
+
+    private long[] toMillis(long[] nanos) {
+        long[] ms = new long[nanos.length];
+        for (int i = 0; i < nanos.length; i++) ms[i] = nanos[i] / 1_000_000;
+        return ms;
+    }
+
+    private void appendTrialData(List<String[]> trialData, String store, String op, long[] nanos) {
+        for (int i = 0; i < nanos.length; i++) {
+            long us = nanos[i] / 1_000; // nanoseconds -> microseconds
+            trialData.add(new String[]{store, op, String.valueOf(i + 1), String.valueOf(us)});
+        }
     }
 
     private String[] formatRow(String store, String op, int count, long[] times) {
@@ -159,6 +187,43 @@ public class StoreBenchmark {
             for (String[] row : rows) {
                 pw.println(String.join(",", row));
             }
+        }
+    }
+
+    private void writeTrialData(List<String[]> trialData) throws Exception {
+        File dir = new File("docs/store_analysis");
+        dir.mkdirs();
+        try (PrintWriter pw = new PrintWriter(new FileWriter("docs/store_analysis/trial_data.csv"))) {
+            for (String[] row : trialData) {
+                pw.println(String.join(",", row));
+            }
+        }
+        System.out.printf("  trial_data.csv: %d data points written%n", trialData.size() - 1);
+    }
+
+    private void writeSystemSpecs() throws Exception {
+        File dir = new File("docs/store_analysis");
+        dir.mkdirs();
+        try (PrintWriter pw = new PrintWriter(new FileWriter("docs/store_analysis/system_specs.txt"))) {
+            pw.println("=== System Specifications ===");
+            pw.println("Date: " + new Date());
+            pw.println();
+            pw.printf("OS: %s %s (%s)%n",
+                    System.getProperty("os.name"),
+                    System.getProperty("os.version"),
+                    System.getProperty("os.arch"));
+            pw.printf("Java: %s (%s)%n",
+                    System.getProperty("java.version"),
+                    System.getProperty("java.vendor"));
+            pw.printf("JVM: %s%n", System.getProperty("java.vm.name"));
+            pw.printf("Available processors: %d%n", Runtime.getRuntime().availableProcessors());
+            pw.printf("Max heap: %d MB%n", Runtime.getRuntime().maxMemory() / (1024 * 1024));
+            pw.printf("Total memory: %d MB%n", Runtime.getRuntime().totalMemory() / (1024 * 1024));
+
+            // Container detection
+            boolean inContainer = new File("/.dockerenv").exists()
+                    || System.getenv("DOCKER_CONTAINER") != null;
+            pw.printf("Container: %s%n", inContainer ? "Docker" : "bare-metal");
         }
     }
 

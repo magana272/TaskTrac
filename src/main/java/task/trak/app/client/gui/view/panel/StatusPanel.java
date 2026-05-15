@@ -101,7 +101,7 @@ public class StatusPanel extends JPanel {
 
         JButton minimizeBtn = new JButton("\u2013");
         minimizeBtn.setFont(TrakTheme.FONT_BODY);
-        minimizeBtn.setForeground(TrakTheme.TEXT_MUTED);
+        minimizeBtn.setForeground(TrakTheme.STATUS_INPROGRESS);
         minimizeBtn.setBackground(TrakTheme.BG_SURFACE);
         minimizeBtn.setOpaque(true);
         minimizeBtn.setBorderPainted(false);
@@ -115,7 +115,7 @@ public class StatusPanel extends JPanel {
 
         JButton closeBtn = new JButton("\u2715");
         closeBtn.setFont(TrakTheme.FONT_BODY);
-        closeBtn.setForeground(TrakTheme.TEXT_MUTED);
+        closeBtn.setForeground(TrakTheme.STATUS_READY);
         closeBtn.setBackground(TrakTheme.BG_SURFACE);
         closeBtn.setOpaque(true);
         closeBtn.setBorderPainted(false);
@@ -123,10 +123,6 @@ public class StatusPanel extends JPanel {
         closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         closeBtn.setBorder(new EmptyBorder(2, 8, 2, 8));
         closeBtn.addActionListener(e -> System.exit(0));
-        closeBtn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { closeBtn.setBackground(TrakTheme.STATUS_READY); closeBtn.setForeground(Color.WHITE); }
-            public void mouseExited(MouseEvent e) { closeBtn.setBackground(TrakTheme.BG_SURFACE); closeBtn.setForeground(TrakTheme.TEXT_MUTED); }
-        });
 
         windowControls.add(minimizeBtn);
         windowControls.add(closeBtn);

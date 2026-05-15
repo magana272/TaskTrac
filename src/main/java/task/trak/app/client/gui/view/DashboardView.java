@@ -35,8 +35,19 @@ public class DashboardView extends JPanel implements ViewModelChangeListener {
         tasksView = new TasksView(controller);
         sprintProgress = new SprintProgressPanel(controller);
 
+        JScrollPane taskScroll = new JScrollPane(tasksView);
+        taskScroll.setBorder(BorderFactory.createEmptyBorder());
+        taskScroll.getViewport().setBackground(TrakTheme.BG_DARK);
+        taskScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        taskScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        taskScroll.getVerticalScrollBar().setUnitIncrement(16);
+        taskScroll.addMouseWheelListener(e -> {
+            JScrollBar vb = taskScroll.getVerticalScrollBar();
+            vb.setValue(vb.getValue() + e.getWheelRotation() * vb.getUnitIncrement());
+        });
+
         add(projectSelector, BorderLayout.NORTH);
-        add(tasksView, BorderLayout.CENTER);
+        add(taskScroll, BorderLayout.CENTER);
         add(sprintProgress, BorderLayout.SOUTH);
 
         taskViewModel.addObserver(this);
