@@ -8,6 +8,7 @@ import task.trak.api.service.STATE;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
  *   BENCH_SCALES  — comma-separated scale points (default: 10,100,1000,2000,4000,10000,100000).
  *   BENCH_OUTPUT  — output directory (default: docs/store_analysis).
  */
+@Ignore("Long-running benchmark — run manually with BENCH_STORE env var")
 public class StoreBenchmark {
 
     private static final int[] DEFAULT_SCALES = {10, 100, 1000, 2000, 4000, 10000, 100000};
