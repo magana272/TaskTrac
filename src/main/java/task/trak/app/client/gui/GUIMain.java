@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 
 public class GUIMain {
     public static void main(String[] args) {
@@ -36,6 +37,10 @@ public class GUIMain {
             String url = parseServerUrl(args);
             ApiClient.setBaseUrl(url);
         } else {
+            if (seedTest) {
+                deleteDirectory(Path.of(TTApp.storedir));
+                deleteDirectory(Path.of(".cache"));
+            }
             if (!Files.exists(Path.of(TTApp.storedir)) || !Files.isDirectory(Path.of(TTApp.storedir))) {
                 try {
                     Files.createDirectories(Path.of(TTApp.storedir));
@@ -108,6 +113,13 @@ public class GUIMain {
                 gui.refreshAll();
             }, "seed-data").start();
         }
+    }
+
+    private static void deleteDirectory(Path dir) {
+        if (!Files.exists(dir)) return;
+        try (var walk = Files.walk(dir)) {
+            walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(java.io.File::delete);
+        } catch (IOException ignored) {}
     }
 
     private static String parseServerUrl(String[] args) {

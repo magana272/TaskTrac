@@ -9,7 +9,10 @@ A sprint planning and task tracking tool. Create projects, break work into tasks
 ## Quick Start
 
 ```bash
-make build                                           # build all executables
+make build  # build all executables
+```
+
+```bash
 make build-gui && java -jar trak-gui --local --test  # launch GUI with test data
 ```
 
