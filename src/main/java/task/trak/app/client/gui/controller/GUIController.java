@@ -1,7 +1,6 @@
 package task.trak.app.client.gui.controller;
 
 import task.trak.model.dto.ProjectDTO;
-import task.trak.model.dto.SprintDTO;
 import task.trak.model.dto.TaskDTO;
 import task.trak.model.dto.request.*;
 import task.trak.model.Session;
@@ -25,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class GUIController implements App, CommandListener {
 
@@ -246,128 +244,67 @@ public class GUIController implements App, CommandListener {
 
     public void seedData() {
         try {
+            // guest account already created by initStore — login to get bearer token
+            Session session = this.authService.login("guest", "guest");
+            userViewModel.setSession(session);
+            save();
+
             // Skip if data already exists
             if (this.taskService.listAll().size() > 0) return;
 
-            Random rand = new Random(42);
-
-            String[] firstNames = {"Alice", "Bob", "Carlos", "Diana", "Eve", "Frank", "Grace", "Hank",
-                    "Ivy", "Jack", "Karen", "Leo", "Mia", "Noah", "Olivia", "Paul", "Quinn", "Rosa", "Sam", "Tina"};
-            String[] lastNames = {"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-                    "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson",
-                    "Thomas", "Taylor", "Moore", "Jackson", "Martin"};
-            String[] projectNames = {"MobileApp", "WebPortal", "DataPipeline", "AuthService", "Analytics",
-                    "ChatBot", "PaymentGateway", "CMS", "Monitoring", "DevTools"};
-            String[] prefixes = {"Implement", "Fix", "Refactor", "Test", "Design", "Review", "Update",
-                    "Deploy", "Document", "Optimize", "Debug", "Configure", "Migrate", "Build"};
-            String[] subjects = {"login flow", "dashboard", "API endpoint", "database schema", "auth module",
-                    "unit tests", "CI pipeline", "error handling", "caching layer", "UI component",
-                    "search feature", "notification service", "user profile", "settings page",
-                    "export function", "import tool", "logging", "rate limiter", "webhook handler", "background job"};
-            String[] statuses = {"READY", "INPROGRESS", "COMPLETE"};
-            String[] estimates = {"1h", "2h", "4h", "8h", "1d", "2d", "3d", "5d"};
-
             System.out.println("Seeding test data...");
 
-            // 20 users (guest already exists)
-            List<String> usernames = new ArrayList<>();
-            usernames.add("guest");
-            for (int i = 0; i < 19; i++) {
-                String username = firstNames[i].toLowerCase() + (i + 1);
-                if (this.userService.getByUsername(username) == null) {
-                    this.userService.create(new CreateUserRequest(username, firstNames[i], lastNames[i],
-                            firstNames[i].toLowerCase() + "@company.com", "password"));
-                }
-                usernames.add(username);
+            // 1 project
+            ProjectDTO project = this.projectService.create(
+                    new CreateProjectRequest("FocusApp", "Solo dev focus app", "guest", List.of()));
+
+            // 20 tasks — exact titles/estimates from test-gui.sh
+            String[][] tasks = {
+                    {"Fix typo in README",    "Quick fix",              "1m"},
+                    {"Update .gitignore",     "Add build artifacts",    "1m"},
+                    {"Rename variable",       "Refactor naming",        "2m"},
+                    {"Add license file",      "MIT license",            "1m"},
+                    {"Write login endpoint",  "POST /auth/login",       "3m"},
+                    {"Add input validation",  "Validate email format",  "2m"},
+                    {"Create user model",     "User schema",            "3m"},
+                    {"Setup database",        "Init DuckDB tables",     "2m"},
+                    {"Write unit test",       "Test auth flow",         "3m"},
+                    {"Fix null pointer",      "Handle null session",    "1m"},
+                    {"Add error dialog",      "Show user-facing errors","2m"},
+                    {"Style buttons",         "Uniform button sizes",   "1m"},
+                    {"Add delete confirm",    "Confirm before delete",  "2m"},
+                    {"Refactor controller",   "Extract methods",        "3m"},
+                    {"Add loading spinner",   "Show during fetch",      "2m"},
+                    {"Fix date formatting",   "Use ISO-8601",           "1m"},
+                    {"Write API docs",        "Document endpoints",     "3m"},
+                    {"Add sort dropdown",     "Sort by date/estimate",  "2m"},
+                    {"Fix card hover",        "Gold glow on hover",     "1m"},
+                    {"Deploy to prod",        "Final deploy",           "3m"},
+            };
+
+            List<Long> taskIds = new ArrayList<>();
+            for (String[] t : tasks) {
+                TaskDTO created = this.taskService.create(
+                        new CreateTaskRequest(t[0], "FocusApp", "guest", t[1], null, t[2]));
+                taskIds.add(created.id());
             }
 
-            // 10 projects -- guest owns 0-3, member of 4-6
-            for (int i = 0; i < 10; i++) {
-                if (this.projectService.getByName(projectNames[i]) != null) continue;
+            // Sprint with first 10 tasks
+            this.sprintService.create(new CreateSprintRequest("Sprint1", "FocusApp"));
+            this.sprintService.update(new UpdateSprintRequest(
+                    "Sprint1", "FocusApp", "2026-05-14", "2026-05-21",
+                    taskIds.subList(0, 10), null));
 
-                String owner;
-                List<String> members = new ArrayList<>();
+            // 3 tasks in progress
+            this.taskService.updateById(new UpdateTaskRequest(taskIds.get(0), null, "INPROGRESS", null, null, null, null));
+            this.taskService.updateById(new UpdateTaskRequest(taskIds.get(4), null, "INPROGRESS", null, null, null, null));
+            this.taskService.updateById(new UpdateTaskRequest(taskIds.get(8), null, "INPROGRESS", null, null, null, null));
 
-                if (i < 4) {
-                    owner = "guest";
-                    Set<String> picked = new HashSet<>();
-                    while (picked.size() < 2 + rand.nextInt(3)) {
-                        picked.add(usernames.get(1 + rand.nextInt(19)));
-                    }
-                    members.addAll(picked);
-                } else {
-                    owner = usernames.get(1 + (i - 4) % 19);
-                    Set<String> picked = new HashSet<>();
-                    if (i <= 6) picked.add("guest");
-                    while (picked.size() < 2 + rand.nextInt(4)) {
-                        String m = usernames.get(rand.nextInt(20));
-                        if (!m.equals(owner)) picked.add(m);
-                    }
-                    members.addAll(picked);
-                }
+            // 2 tasks complete
+            this.taskService.updateById(new UpdateTaskRequest(taskIds.get(1), null, "COMPLETE", null, null, null, null));
+            this.taskService.updateById(new UpdateTaskRequest(taskIds.get(3), null, "COMPLETE", null, null, null, null));
 
-                this.projectService.create(new CreateProjectRequest(projectNames[i], "Project for " + projectNames[i] + " development", owner, members));
-            }
-
-            // 1000 tasks
-            for (int i = 0; i < 1000; i++) {
-                String project = projectNames[i % 10];
-                String assignee = usernames.get(i % 20);
-                String title = prefixes[rand.nextInt(prefixes.length)] + " " + subjects[rand.nextInt(subjects.length)] + " #" + (i + 1);
-                String summary = "Task " + (i + 1) + " for " + project;
-                String estimate = estimates[rand.nextInt(estimates.length)];
-
-                Calendar cal = Calendar.getInstance();
-                cal.add(Calendar.DAY_OF_MONTH, 1 + rand.nextInt(30));
-
-                TaskDTO task = this.taskService.create(new CreateTaskRequest(title, project, assignee, summary, cal.getTime(), estimate));
-
-                String status = statuses[rand.nextInt(statuses.length)];
-                if (!"READY".equals(status)) {
-                    this.taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null, null));
-                }
-            }
-
-            // 2 sprints per project (20 total), each with ~50 tasks
-            List<TaskDTO> allTasks = this.taskService.listAll();
-            String[] sprintNames = {"Sprint 1", "Sprint 2"};
-
-            for (int i = 0; i < 10; i++) {
-                String project = projectNames[i];
-                // Get tasks for this project
-                List<TaskDTO> projectTasks = allTasks.stream()
-                        .filter(t -> project.equals(t.projectName()))
-                        .collect(Collectors.toList());
-
-                for (int s = 0; s < 2; s++) {
-                    String sprintName = sprintNames[s];
-                    this.sprintService.create(new CreateSprintRequest(sprintName, project));
-
-                    // Set dates: sprint 1 starts now, sprint 2 starts in 2 weeks
-                    Calendar start = Calendar.getInstance();
-                    start.add(Calendar.DAY_OF_MONTH, s * 14);
-                    Calendar end = (Calendar) start.clone();
-                    end.add(Calendar.DAY_OF_MONTH, 13);
-
-                    String startStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(start.getTime());
-                    String endStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(end.getTime());
-
-                    // Assign half the project's tasks to each sprint
-                    int from = s * (projectTasks.size() / 2);
-                    int to = (s == 0) ? projectTasks.size() / 2 : projectTasks.size();
-                    List<Long> taskIds = new ArrayList<>();
-                    for (int t = from; t < to; t++) {
-                        taskIds.add(projectTasks.get(t).id());
-                    }
-                    this.sprintService.update(new UpdateSprintRequest(sprintName, project, startStr, endStr, taskIds, null));
-                }
-            }
-
-            System.out.println("Seeded: 20 users, 10 projects, 1000 tasks, 20 sprints.");
-
-            // Auto-login as guest
-            userViewModel.setSession(new Session("guest"));
-            save();
+            System.out.println("Seeded: 1 project, 20 tasks, 1 sprint (login: guest / guest)");
         } catch (Exception e) {
             userViewModel.setError(e.getMessage());
         }
