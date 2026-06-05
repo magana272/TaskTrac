@@ -90,15 +90,14 @@ public class TaskCardPanel extends JPanel {
 
         // Card background with subtle gradient
         Color bgTop = hovered ? TrakTheme.CARD_HOVER_BG : TrakTheme.CARD_BG;
-        Color bgBot = hovered
-                ? new Color(0x20, 0x20, 0x2A)
-                : new Color(0x19, 0x19, 0x21);
+        Color bgBot = hovered ? TrakTheme.CARD_HOVER_GRADIENT_BOT : TrakTheme.CARD_GRADIENT_BOT;
         GradientPaint gp = new GradientPaint(0, 0, bgTop, 0, h, bgBot);
         g2.setPaint(gp);
         g2.fill(new RoundRectangle2D.Float(0, 0, w, h, CORNER, CORNER));
 
         // Top edge highlight
-        g2.setColor(new Color(255, 255, 255, hovered ? 10 : 5));
+        Color hl = TrakTheme.CARD_HIGHLIGHT;
+        g2.setColor(new Color(hl.getRed(), hl.getGreen(), hl.getBlue(), hovered ? 10 : 5));
         g2.fill(new RoundRectangle2D.Float(0, 0, w, 30, CORNER, CORNER));
 
         // Border

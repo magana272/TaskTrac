@@ -7,14 +7,21 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Dark theme constants and styling methods for the Trak GUI.
+ * Theme constants and styling methods for the Trak GUI.
+ * Supports dark and light modes with runtime switching.
  */
 public final class TrakTheme {
 
-    // ── Spacing scale (8px grid) ──
+    public enum Theme { DARK, LIGHT }
+    private static Theme currentTheme = Theme.DARK;
+
+    // ── Spacing scale (8px grid) — theme-independent ──
     public static final int SP_XS = 4;
     public static final int SP_SM = 8;
     public static final int SP_MD = 12;
@@ -22,55 +29,53 @@ public final class TrakTheme {
     public static final int SP_XL = 24;
     public static final int SP_2XL = 32;
     public static final int SP_3XL = 48;
+
     // ── Backgrounds ──
-    public static final Color BG_DARK = new Color(0x12, 0x12, 0x16);
-    public static final Color BG_SURFACE = new Color(0x1C, 0x1C, 0x22);
-    public static final Color BG_ELEVATED = new Color(0x26, 0x26, 0x2E);
-    public static final Color BG_INPUT = new Color(0x18, 0x18, 0x1E);
-    public static final Color BG_GLASS_TOP = new Color(0x22, 0x22, 0x2A);
-    public static final Color BG_GLASS_BOT = new Color(0x18, 0x18, 0x20);
+    public static Color BG_DARK = new Color(0x12, 0x12, 0x16);
+    public static Color BG_SURFACE = new Color(0x1C, 0x1C, 0x22);
+    public static Color BG_ELEVATED = new Color(0x26, 0x26, 0x2E);
+    public static Color BG_INPUT = new Color(0x18, 0x18, 0x1E);
+    public static Color BG_GLASS_TOP = new Color(0x22, 0x22, 0x2A);
+    public static Color BG_GLASS_BOT = new Color(0x18, 0x18, 0x20);
     // ── Borders ──
-    public static final Color BORDER = new Color(0x2E, 0x2E, 0x36);
-    public static final Color BORDER_SUBTLE = new Color(255, 255, 255, 6);
-    public static final Color BORDER_HOVER = new Color(0xFF, 0xD5, 0x4F);
+    public static Color BORDER = new Color(0x2E, 0x2E, 0x36);
+    public static Color BORDER_SUBTLE = new Color(255, 255, 255, 6);
+    public static Color BORDER_HOVER = new Color(0xFF, 0xD5, 0x4F);
     // ── Text ──
-    public static final Color TEXT_PRIMARY = new Color(0xF2, 0xF2, 0xF2);
-    public static final Color TEXT_SECONDARY = new Color(0x8A, 0x8A, 0x94);
-    public static final Color TEXT_MUTED = new Color(0x52, 0x52, 0x5C);
+    public static Color TEXT_PRIMARY = new Color(0xF2, 0xF2, 0xF2);
+    public static Color TEXT_SECONDARY = new Color(0x8A, 0x8A, 0x94);
+    public static Color TEXT_MUTED = new Color(0x52, 0x52, 0x5C);
     // ── Accent ──
-    public static final Color ACCENT = new Color(0xFF, 0xD5, 0x4F);
-    public static final Color ACCENT_DIM = new Color(0xFF, 0xD5, 0x4F, 30); // glow
-    public static final Color ACCENT_GREEN = new Color(0x34, 0xC7, 0x59);
-    public static final Color ACCENT_BLUE = new Color(0x64, 0xB5, 0xF6);
-    public static final Color PRIMARY_BLUE = new Color(0x5B, 0x9B, 0xD5);
+    public static Color ACCENT = new Color(0xFF, 0xD5, 0x4F);
+    public static Color ACCENT_DIM = new Color(0xFF, 0xD5, 0x4F, 30);
+    public static Color ACCENT_GREEN = new Color(0x34, 0xC7, 0x59);
+    public static Color ACCENT_BLUE = new Color(0x64, 0xB5, 0xF6);
+    public static Color PRIMARY_BLUE = new Color(0x5B, 0x9B, 0xD5);
     // ── Status ──
-    public static final Color STATUS_READY = new Color(0xEF, 0x53, 0x50);
-    public static final Color STATUS_INPROGRESS = new Color(0xFF, 0xB7, 0x4D);
-    public static final Color STATUS_COMPLETE = new Color(0x66, 0xBB, 0x6A);
+    public static Color STATUS_READY = new Color(0xEF, 0x53, 0x50);
+    public static Color STATUS_INPROGRESS = new Color(0xFF, 0xB7, 0x4D);
+    public static Color STATUS_COMPLETE = new Color(0x66, 0xBB, 0x6A);
     // ── Table ──
-    public static final Color TABLE_ROW_ALT = new Color(0x19, 0x19, 0x20);
-    public static final Color TABLE_HEADER_BG = new Color(0x20, 0x20, 0x28);
-    public static final Color TABLE_SELECTION = new Color(0x2E, 0x2E, 0x48);
+    public static Color TABLE_ROW_ALT = new Color(0x19, 0x19, 0x20);
+    public static Color TABLE_HEADER_BG = new Color(0x20, 0x20, 0x28);
+    public static Color TABLE_SELECTION = new Color(0x2E, 0x2E, 0x48);
     // ── Card ──
-    public static final Color CARD_BG = new Color(0x1C, 0x1C, 0x24);
-    public static final Color CARD_HOVER_BG = new Color(0x24, 0x24, 0x2E);
-    public static final Color CARD_GLOW = new Color(0xFF, 0xD5, 0x4F, 18);
-    // ── Typography ──
-    // Display: large branding / hero
+    public static Color CARD_BG = new Color(0x1C, 0x1C, 0x24);
+    public static Color CARD_HOVER_BG = new Color(0x24, 0x24, 0x2E);
+    public static Color CARD_GLOW = new Color(0xFF, 0xD5, 0x4F, 18);
+    public static Color CARD_GRADIENT_BOT = new Color(0x19, 0x19, 0x21);
+    public static Color CARD_HOVER_GRADIENT_BOT = new Color(0x20, 0x20, 0x2A);
+    public static Color CARD_HIGHLIGHT = new Color(255, 255, 255, 8);
+
+    // ── Typography — theme-independent ──
     public static final Font FONT_DISPLAY = new Font("SansSerif", Font.BOLD, 22);
-    // Title: section headings
     public static final Font FONT_TITLE = new Font("SansSerif", Font.BOLD, 15);
-    // Heading: card titles, table headers
     public static final Font FONT_HEADING = new Font("SansSerif", Font.BOLD, 13);
-    // Body: default content
     public static final Font FONT_BODY = new Font("SansSerif", Font.PLAIN, 12);
-    // Small: metadata, labels
     public static final Font FONT_SMALL = new Font("SansSerif", Font.PLAIN, 11);
-    // Caption: muted metadata
     public static final Font FONT_CAPTION = new Font("SansSerif", Font.PLAIN, 10);
-    // Mono: terminal / command input
     public static final Font FONT_MONO = new Font(Font.MONOSPACED, Font.PLAIN, 13);
-    // ── Corner radii ──
+    // ── Corner radii — theme-independent ──
     public static final int RADIUS_SM = 6;
     public static final int RADIUS_MD = 10;
     public static final int RADIUS_LG = 16;
@@ -78,8 +83,180 @@ public final class TrakTheme {
     private TrakTheme() {
     }
 
+    public static Theme getTheme() { return currentTheme; }
+    public static boolean isDark() { return currentTheme == Theme.DARK; }
+
     /**
-     * Apply global dark UIManager defaults. Call before creating any Swing components.
+     * Switch theme. Builds a color transition map, reassigns all fields, and updates UIManager.
+     * Call {@link #recolorTree(Component)} on the root window after this to update existing components.
+     */
+    public static Map<Color, Color> setTheme(Theme theme) {
+        if (theme == currentTheme) return Map.of();
+        Map<Color, Color> map = buildTransitionMap(theme);
+        currentTheme = theme;
+        assignColors(theme);
+        applyDefaults();
+        return map;
+    }
+
+    private static Map<Color, Color> buildTransitionMap(Theme target) {
+        Map<Color, Color> map = new HashMap<>();
+        Color[] darkColors = darkPalette();
+        Color[] lightColors = lightPalette();
+        Color[] from = (target == Theme.LIGHT) ? darkColors : lightColors;
+        Color[] to = (target == Theme.LIGHT) ? lightColors : darkColors;
+        for (int i = 0; i < from.length; i++) {
+            map.put(from[i], to[i]);
+        }
+        return map;
+    }
+
+    private static Color[] darkPalette() {
+        return new Color[]{
+            new Color(0x12, 0x12, 0x16),       // BG_DARK
+            new Color(0x1C, 0x1C, 0x22),       // BG_SURFACE
+            new Color(0x26, 0x26, 0x2E),       // BG_ELEVATED
+            new Color(0x18, 0x18, 0x1E),       // BG_INPUT
+            new Color(0x22, 0x22, 0x2A),       // BG_GLASS_TOP
+            new Color(0x18, 0x18, 0x20),       // BG_GLASS_BOT
+            new Color(0x2E, 0x2E, 0x36),       // BORDER
+            new Color(255, 255, 255, 6),        // BORDER_SUBTLE
+            new Color(0xFF, 0xD5, 0x4F),        // BORDER_HOVER
+            new Color(0xF2, 0xF2, 0xF2),        // TEXT_PRIMARY
+            new Color(0x8A, 0x8A, 0x94),        // TEXT_SECONDARY
+            new Color(0x52, 0x52, 0x5C),        // TEXT_MUTED
+            new Color(0xFF, 0xD5, 0x4F),        // ACCENT
+            new Color(0xFF, 0xD5, 0x4F, 30),    // ACCENT_DIM
+            new Color(0x34, 0xC7, 0x59),        // ACCENT_GREEN
+            new Color(0x64, 0xB5, 0xF6),        // ACCENT_BLUE
+            new Color(0x5B, 0x9B, 0xD5),        // PRIMARY_BLUE
+            new Color(0xEF, 0x53, 0x50),        // STATUS_READY
+            new Color(0xFF, 0xB7, 0x4D),        // STATUS_INPROGRESS
+            new Color(0x66, 0xBB, 0x6A),        // STATUS_COMPLETE
+            new Color(0x19, 0x19, 0x20),        // TABLE_ROW_ALT
+            new Color(0x20, 0x20, 0x28),        // TABLE_HEADER_BG
+            new Color(0x2E, 0x2E, 0x48),        // TABLE_SELECTION
+            new Color(0x1C, 0x1C, 0x24),        // CARD_BG
+            new Color(0x24, 0x24, 0x2E),        // CARD_HOVER_BG
+            new Color(0xFF, 0xD5, 0x4F, 18),    // CARD_GLOW
+            new Color(0x19, 0x19, 0x21),        // CARD_GRADIENT_BOT
+            new Color(0x20, 0x20, 0x2A),        // CARD_HOVER_GRADIENT_BOT
+            new Color(255, 255, 255, 8),         // CARD_HIGHLIGHT
+        };
+    }
+
+    private static Color[] lightPalette() {
+        return new Color[]{
+            new Color(0xF5, 0xF5, 0xF7),        // BG_DARK
+            new Color(0xFF, 0xFF, 0xFF),         // BG_SURFACE
+            new Color(0xE8, 0xE8, 0xEC),         // BG_ELEVATED
+            new Color(0xFF, 0xFF, 0xFF),         // BG_INPUT
+            new Color(0xFF, 0xFF, 0xFF),         // BG_GLASS_TOP
+            new Color(0xF0, 0xF0, 0xF4),         // BG_GLASS_BOT
+            new Color(0xD1, 0xD1, 0xD6),         // BORDER
+            new Color(0, 0, 0, 8),                // BORDER_SUBTLE
+            new Color(0xD4, 0xA0, 0x17),          // BORDER_HOVER
+            new Color(0x1C, 0x1C, 0x1E),          // TEXT_PRIMARY
+            new Color(0x6B, 0x6B, 0x73),          // TEXT_SECONDARY
+            new Color(0xA0, 0xA0, 0xA8),          // TEXT_MUTED
+            new Color(0xD4, 0xA0, 0x17),          // ACCENT
+            new Color(0xD4, 0xA0, 0x17, 25),      // ACCENT_DIM
+            new Color(0x28, 0xA7, 0x45),           // ACCENT_GREEN
+            new Color(0x29, 0x79, 0xFF),           // ACCENT_BLUE
+            new Color(0x1A, 0x73, 0xE8),           // PRIMARY_BLUE
+            new Color(0xD3, 0x2F, 0x2F),           // STATUS_READY
+            new Color(0xE6, 0x8A, 0x00),           // STATUS_INPROGRESS
+            new Color(0x2E, 0x7D, 0x32),           // STATUS_COMPLETE
+            new Color(0xF0, 0xF0, 0xF4),           // TABLE_ROW_ALT
+            new Color(0xE0, 0xE0, 0xE6),           // TABLE_HEADER_BG
+            new Color(0xBB, 0xDE, 0xFB),           // TABLE_SELECTION
+            new Color(0xFF, 0xFF, 0xFF),            // CARD_BG
+            new Color(0xF0, 0xF0, 0xF4),            // CARD_HOVER_BG
+            new Color(0xD4, 0xA0, 0x17, 20),        // CARD_GLOW
+            new Color(0xE8, 0xE8, 0xEC),             // CARD_GRADIENT_BOT
+            new Color(0xF0, 0xF0, 0xF4),             // CARD_HOVER_GRADIENT_BOT
+            new Color(0, 0, 0, 8),                    // CARD_HIGHLIGHT
+        };
+    }
+
+    private static void assignColors(Theme theme) {
+        Color[] palette = (theme == Theme.DARK) ? darkPalette() : lightPalette();
+        int i = 0;
+        BG_DARK = palette[i++];
+        BG_SURFACE = palette[i++];
+        BG_ELEVATED = palette[i++];
+        BG_INPUT = palette[i++];
+        BG_GLASS_TOP = palette[i++];
+        BG_GLASS_BOT = palette[i++];
+        BORDER = palette[i++];
+        BORDER_SUBTLE = palette[i++];
+        BORDER_HOVER = palette[i++];
+        TEXT_PRIMARY = palette[i++];
+        TEXT_SECONDARY = palette[i++];
+        TEXT_MUTED = palette[i++];
+        ACCENT = palette[i++];
+        ACCENT_DIM = palette[i++];
+        ACCENT_GREEN = palette[i++];
+        ACCENT_BLUE = palette[i++];
+        PRIMARY_BLUE = palette[i++];
+        STATUS_READY = palette[i++];
+        STATUS_INPROGRESS = palette[i++];
+        STATUS_COMPLETE = palette[i++];
+        TABLE_ROW_ALT = palette[i++];
+        TABLE_HEADER_BG = palette[i++];
+        TABLE_SELECTION = palette[i++];
+        CARD_BG = palette[i++];
+        CARD_HOVER_BG = palette[i++];
+        CARD_GLOW = palette[i++];
+        CARD_GRADIENT_BOT = palette[i++];
+        CARD_HOVER_GRADIENT_BOT = palette[i++];
+        CARD_HIGHLIGHT = palette[i++];
+    }
+
+    /**
+     * Recursively recolor an entire component tree using the given color transition map.
+     */
+    public static void recolorTree(Component root, Map<Color, Color> colorMap) {
+        recolorComponent(root, colorMap);
+        if (root instanceof Container c) {
+            for (Component child : c.getComponents()) {
+                recolorTree(child, colorMap);
+            }
+        }
+        if (root instanceof JComponent jc) {
+            jc.revalidate();
+            jc.repaint();
+        }
+    }
+
+    private static void recolorComponent(Component c, Map<Color, Color> map) {
+        Color bg = c.getBackground();
+        Color fg = c.getForeground();
+        if (bg != null && map.containsKey(bg)) c.setBackground(map.get(bg));
+        if (fg != null && map.containsKey(fg)) c.setForeground(map.get(fg));
+        if (c instanceof JComponent jc) {
+            Border border = jc.getBorder();
+            if (border instanceof CompoundBorder cb) {
+                Border outer = cb.getOutsideBorder();
+                if (outer instanceof LineBorder lb && map.containsKey(lb.getLineColor())) {
+                    jc.setBorder(new CompoundBorder(
+                            new LineBorder(map.get(lb.getLineColor()), lb.getThickness(), lb.getRoundedCorners()),
+                            cb.getInsideBorder()));
+                }
+            } else if (border instanceof LineBorder lb && map.containsKey(lb.getLineColor())) {
+                jc.setBorder(new LineBorder(map.get(lb.getLineColor()), lb.getThickness(), lb.getRoundedCorners()));
+            }
+        }
+        if (c instanceof JTextComponent tc) {
+            Color caret = tc.getCaretColor();
+            if (caret != null && map.containsKey(caret)) tc.setCaretColor(map.get(caret));
+            Color sel = tc.getSelectionColor();
+            if (sel != null && map.containsKey(sel)) tc.setSelectionColor(map.get(sel));
+        }
+    }
+
+    /**
+     * Apply global UIManager defaults for the current theme. Call before creating any Swing components.
      */
     public static void applyDefaults() {
         UIManager.put("Panel.background", BG_DARK);
@@ -116,7 +293,6 @@ public final class TrakTheme {
         UIManager.put("ComboBox.selectionForeground", TEXT_PRIMARY);
         UIManager.put("ComboBox.disabledBackground", BG_ELEVATED);
         UIManager.put("ComboBox.disabledForeground", TEXT_MUTED);
-        // Flatten Metal L&F 3D effect — all shadow/highlight colors match background
         UIManager.put("ComboBox.selectionBorder", BorderFactory.createLineBorder(BORDER, 0));
         UIManager.put("ComboBox.buttonBackground", BG_ELEVATED);
         UIManager.put("ComboBox.buttonDarkShadow", BG_ELEVATED);
@@ -175,9 +351,6 @@ public final class TrakTheme {
 
     // ── Button styling ──
 
-    /**
-     * Primary action button.
-     */
     public static void styleButtonPrimary(JButton btn) {
         btn.setBackground(PRIMARY_BLUE);
         btn.setForeground(Color.WHITE);
@@ -189,9 +362,6 @@ public final class TrakTheme {
         btn.setBorder(new EmptyBorder(SP_XS + 2, SP_LG, SP_XS + 2, SP_LG));
     }
 
-    /**
-     * Secondary button.
-     */
     public static void styleButtonNav(JButton btn) {
         btn.setBackground(BG_ELEVATED);
         btn.setForeground(TEXT_SECONDARY);
@@ -203,9 +373,6 @@ public final class TrakTheme {
         btn.setBorder(new EmptyBorder(SP_XS + 2, SP_MD, SP_XS + 2, SP_MD));
     }
 
-    /**
-     * Accent button (gold).
-     */
     public static void styleButtonAccent(JButton btn) {
         btn.setBackground(ACCENT);
         btn.setForeground(BG_DARK);
@@ -219,9 +386,6 @@ public final class TrakTheme {
 
     // ── Card borders ──
 
-    /**
-     * Card border (rounded + padding).
-     */
     public static Border cardBorder() {
         return new CompoundBorder(
                 new LineBorder(BORDER, 1, true),
@@ -229,9 +393,6 @@ public final class TrakTheme {
         );
     }
 
-    /**
-     * Card hover border.
-     */
     public static Border cardBorderHover() {
         return new CompoundBorder(
                 new LineBorder(BORDER_HOVER, 1, true),
@@ -247,7 +408,6 @@ public final class TrakTheme {
         combo.setBackground(BG_ELEVATED);
         combo.setForeground(TEXT_PRIMARY);
         combo.setBorder(BorderFactory.createLineBorder(BORDER, 1));
-        // Replace Aqua UI with basic to respect our colors
         combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
             @Override
             protected JButton createArrowButton() {
@@ -274,15 +434,11 @@ public final class TrakTheme {
                 return this;
             }
         });
-        // Set initial foreground to match selected status
         combo.setForeground(statusColor((String) combo.getSelectedItem()));
     }
 
     // ── Table styling ──
 
-    /**
-     * Style a JTable with alternating dark rows and dark header.
-     */
     public static void styleTable(JTable table) {
         table.setBackground(BG_DARK);
         table.setForeground(TEXT_PRIMARY);
@@ -323,9 +479,6 @@ public final class TrakTheme {
         headerRenderer.setHorizontalAlignment(SwingConstants.LEFT);
     }
 
-    /**
-     * Get status color for a task status string.
-     */
     public static Color statusColor(String status) {
         if (status == null) return STATUS_READY;
         return switch (status.toUpperCase()) {
@@ -335,16 +488,10 @@ public final class TrakTheme {
         };
     }
 
-    /**
-     * Create an inset padding border.
-     */
     public static EmptyBorder pad(int all) {
         return new EmptyBorder(all, all, all, all);
     }
 
-    /**
-     * Create an inset padding border.
-     */
     public static EmptyBorder pad(int v, int h) {
         return new EmptyBorder(v, h, v, h);
     }

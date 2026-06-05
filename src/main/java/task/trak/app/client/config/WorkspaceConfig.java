@@ -9,9 +9,11 @@ import java.io.*;
 public class WorkspaceConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private String store_format;
+    private String theme;
 
     public WorkspaceConfig() {
         this.store_format = "duckdb";
+        this.theme = "dark";
     }
 
     public static WorkspaceConfig load() {
@@ -31,6 +33,14 @@ public class WorkspaceConfig {
 
     public void setStore_format(String store_format) {
         this.store_format = store_format;
+    }
+
+    public String getTheme() {
+        return theme;
+    }
+
+    public void setTheme(String theme) {
+        this.theme = theme;
     }
 
     public void save() {

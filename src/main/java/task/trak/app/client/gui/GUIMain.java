@@ -19,6 +19,7 @@ import task.trak.app.client.gui.viewmodel.UserViewModel;
 import task.trak.app.client.gui.view.MainFrame;
 import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.cli.TTApp;
+import task.trak.app.client.config.WorkspaceConfig;
 import task.trak.app.server.dao.SessionDAO;
 import task.trak.app.server.server.TrakServer;
 
@@ -92,10 +93,16 @@ public class GUIMain {
         // Initialize store (handles guest account, session loading, etc.)
         gui.initStore(local);
 
-        // Dark theme: use cross-platform L&F for full color control, then apply dark defaults
+        // Theme: use cross-platform L&F for full color control, then apply saved theme
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (Exception ignored) {
+        }
+        if (local) {
+            WorkspaceConfig config = WorkspaceConfig.load();
+            if ("light".equals(config.getTheme())) {
+                TrakTheme.setTheme(TrakTheme.Theme.LIGHT);
+            }
         }
         TrakTheme.applyDefaults();
 
