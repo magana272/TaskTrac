@@ -45,11 +45,11 @@ public class StartTaskCMD extends WorkspaceCMD {
                 return Optional.empty();
             }
             // Stop the current task via service
-            taskService.updateById(new UpdateTaskRequest(currentTaskId, null, "READY", null, null, null));
+            taskService.updateById(new UpdateTaskRequest(currentTaskId, null, "READY", null, null, null, null));
         }
 
         // Start the new task via service
-        taskService.updateById(new UpdateTaskRequest(this.taskId, null, "INPROGRESS", null, null, null));
+        taskService.updateById(new UpdateTaskRequest(this.taskId, null, "INPROGRESS", null, null, null, null));
 
         long now = System.currentTimeMillis();
         this.session.setCurrent_task_id(this.taskId);

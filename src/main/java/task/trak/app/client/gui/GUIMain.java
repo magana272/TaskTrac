@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
 
 public class GUIMain {
     public static void main(String[] args) {
@@ -36,6 +37,10 @@ public class GUIMain {
             String url = parseServerUrl(args);
             ApiClient.setBaseUrl(url);
         } else {
+            if (seedTest) {
+                deleteDirectory(Path.of(TTApp.storedir));
+                deleteDirectory(Path.of(".cache"));
+            }
             if (!Files.exists(Path.of(TTApp.storedir)) || !Files.isDirectory(Path.of(TTApp.storedir))) {
                 try {
                     Files.createDirectories(Path.of(TTApp.storedir));
@@ -69,7 +74,7 @@ public class GUIMain {
         UserViewModel userViewModel = new UserViewModel();
 
         // Create all 4 sub-controllers
-        AuthController authController = new AuthController(authService, userViewModel);
+        AuthController authController = new AuthController(authService, userService, userViewModel);
         TaskController taskController = new TaskController(taskService, taskViewModel, userViewModel);
         ProjectController projectController = new ProjectController(projectService, projectViewModel, userViewModel);
         SprintController sprintController = new SprintController(sprintService, sprintViewModel);
@@ -94,11 +99,27 @@ public class GUIMain {
         }
         TrakTheme.applyDefaults();
 
+        // Show GUI immediately
         SwingUtilities.invokeLater(() -> {
             MainFrame mainFrame = new MainFrame(
                     gui, taskViewModel, projectViewModel, sprintViewModel, userViewModel);
             mainFrame.setVisible(true);
         });
+
+        // Seed data in background if requested
+        if (seedTest) {
+            new Thread(() -> {
+                gui.seedData();
+                gui.refreshAll();
+            }, "seed-data").start();
+        }
+    }
+
+    private static void deleteDirectory(Path dir) {
+        if (!Files.exists(dir)) return;
+        try (var walk = Files.walk(dir)) {
+            walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(java.io.File::delete);
+        } catch (IOException ignored) {}
     }
 
     private static String parseServerUrl(String[] args) {

@@ -18,7 +18,7 @@ public class TaskVisibilityTest {
         TaskViewModel vm = new TaskViewModel();
         // Simulate what refreshTasks does: load only assigned tasks
         List<TaskDTO> myTasks = List.of(
-                new TaskDTO(1L, "P", "user1", "MyTask", "READY", null, null, null, null, null, 0)
+                new TaskDTO(1L, "P", "user1", "MyTask", "READY", null, null, null, null, null, 0, 0, 0, null)
         );
         vm.setAll(myTasks);
 
@@ -46,8 +46,8 @@ public class TaskVisibilityTest {
         TaskViewModel taskVM = new TaskViewModel();
         // Simulate refreshTasks loading user1's tasks
         taskVM.setAll(List.of(
-                new TaskDTO(1L, "P", "user1", "T1", "READY", null, null, null, null, null, 0),
-                new TaskDTO(2L, "P", "user1", "T2", "INPROGRESS", null, null, null, null, null, 0)
+                new TaskDTO(1L, "P", "user1", "T1", "READY", null, null, null, null, null, 0, 0, 0, null),
+                new TaskDTO(2L, "P", "user1", "T2", "INPROGRESS", null, null, null, null, null, 0, 0, 0, null)
         ));
 
         assertEquals("user1", userVM.getSession().getLogged_in_user());

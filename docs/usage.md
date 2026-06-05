@@ -25,14 +25,14 @@ This produces three jar files:
 make build-gui
 java -jar trak-gui --local --test
 ```
-Launches the GUI pre-loaded with 20 users, 10 projects, 1000 tasks, and 20 sprints. Logged in as `guest`.
+Launches the GUI with an embedded server and pre-loaded test data (20 users, 10 projects, 1000 tasks, 20 sprints). Logged in as `guest`.
 
 ### Option 2: GUI standalone
 ```bash
 make build-gui
 java -jar trak-gui --local
 ```
-Launches the GUI in local mode. Click "Continue as Guest" or sign up.
+Launches the GUI with an embedded server. Click "Continue as Guest" or sign up.
 
 ### Option 3: CLI
 ```bash
@@ -41,7 +41,7 @@ java -jar trak-cli
 # Interactive prompt — login as guest (password: guest) or create account
 ```
 
-### Option 4: Client-Server mode
+### Option 4: Dedicated server + clients
 ```bash
 # Terminal 1: start server
 make build-server
@@ -53,6 +53,8 @@ java -jar trak-gui
 # Terminal 3: CLI connecting to server
 java -jar trak-cli --remote tasks
 ```
+
+All clients communicate via HTTP REST API. The `--local` flag starts an embedded server on a random port — the GUI still talks HTTP.
 
 ---
 
@@ -200,9 +202,6 @@ The GUI uses an MVC architecture with an Observer pattern. Views implement ViewM
 ### Dark Cinematic Theme
 The GUI uses a centralized dark theme (`TrakTheme`) with a deep charcoal background (#121216), warm gold accent (#FFD54F), and an 8px spacing grid. Typography follows a scale from DISPLAY (22pt bold) down to CAPTION (10pt). All views, dialogs, tables, and input fields inherit the theme automatically via `UIManager` defaults. Custom components include `GlassPanel` (rounded gradient panels with optional drop shadow) and `FormPanel` (two-column form layout used by all dialogs).
 
-### Workspace Toggle (Mine / Team)
-The nav bar includes "⌂ Mine" and "✳ Team" toggle buttons. **Mine** (default) shows only tasks assigned to you and projects you own or belong to. **Team** shows all tasks and projects across the workspace. The toggle re-fetches data from the service layer, so it reflects the latest state. Resets to Mine on logout.
-
 ### TasksView
 - **Task cards** with gradient backgrounds, gold glow hover, status dropdown, project name, summary, deadline
 - **Status colors**: READY (red), INPROGRESS (amber), COMPLETE (green)
@@ -212,7 +211,9 @@ The nav bar includes "⌂ Mine" and "✳ Team" toggle buttons. **Mine** (default
 - **Sort** by Due Date or Estimate
 - **Filter** by Project
 - **Archive toggle** hides completed tasks (shows count)
-- **Green "+" button** (primary CTA) to add new task (project dropdown, assignee from members, date picker, time spinners)
+- **Blue "+" button** (primary CTA) to add new task (project dropdown, assignee from members, date picker, time spinners)
+- **Focus timer bar** on INPROGRESS cards shows elapsed time relative to estimate (green to amber to red)
+- **Responsive cards** fill available width (min 200x160), reflow on resize
 
 ### ProjectsView
 - **Editable table** — click Name or Description to edit inline, Save Changes button
@@ -233,6 +234,20 @@ The nav bar includes "⌂ Mine" and "✳ Team" toggle buttons. **Mine** (default
 - **LogOutView** — logout confirmation
 - **Continue as Guest** button (logs in as `guest` account)
 - Status bar shows logged-in user
+
+### Focus Timer
+INPROGRESS task cards display a focus timer bar that tracks elapsed time against the task estimate. The bar transitions from green (under 50%) to amber (50-80%) to red (over 80%) as the estimate is consumed. The timer updates in real time while the task is active.
+
+### Completion Notes
+When a task is marked as COMPLETE, the GUI prompts for a completion note via a dedicated input field. The note is stored in the `completion_note` field on the task and displayed in task detail views.
+
+### Settings
+The Settings panel (accessible from the nav bar) provides:
+- **Change Password** — update your account password
+- **Delete Account** — permanently delete your account (with confirmation)
+
+### Window Frame
+The GUI uses an undecorated frame with a custom title bar. The title bar supports drag-to-move. Window edges support resize by dragging. The task panel uses a hidden scrollbar (mousewheel scrolls).
 
 ### Error Handling
 - **ErrorAlertView** — modal error alert dialogs for validation and server errors
@@ -279,21 +294,35 @@ All endpoints return JSON. Auth required via `Authorization: Bearer <token>` hea
 | GET/POST/PUT/DELETE | `/api/tasks/{id}` | Task CRUD |
 | GET/POST | `/api/sprints` | List/create sprints |
 | GET/PUT/DELETE | `/api/sprints/{id}` | Sprint CRUD |
+| GET | `/api/sprints/name/{name}?project={}` | Get sprint by name |
 | GET/POST/PUT/DELETE | `/api/backlogs/{name}` | Backlog CRUD |
 
 ---
 
 ## Data Storage
 
-Three persistence formats (configurable via `.store/workspace.json`):
+Five persistence formats (configurable via `.store/workspace.json`):
 
 | Format | Config Value | Storage |
 |---|---|---|
-| **Parquet** (default) | `"parquet"` | `.store/User.parquet`, `.store/Task.parquet`, etc. |
+| **DuckDB** (default) | `"duckdb"` | `.store/trak.duckdb` |
+| **Redis** | `"redis"` | Keys: `trak:tasks:{id}`, `trak:projects:{name}`, etc. |
+| **Parquet** | `"parquet"` | `.store/User.parquet`, `.store/Task.parquet`, etc. |
 | **JSON** | `"json"` | `.store/user_{name}.json`, `.store/task_{id}.json`, etc. |
 | **MongoDB** | `"mongo"` | Collections: `users`, `tasks`, `projects`, `sprints`, `backlogs` |
 
 Always JSON regardless of format: `session.json` (login state), `workspace.json` (config).
+
+### DuckDB (default)
+Single embedded database file at `.store/trak.duckdb`.
+No configuration needed — works out of the box.
+
+### Redis
+Set in workspace.json: `{"store_format": "redis"}`
+Requires a running Redis server.
+```bash
+export REDIS_URL="redis://localhost:6379"
+```
 
 ### Switch to JSON
 ```json

@@ -7,6 +7,8 @@ import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeListener;
 import task.trak.app.client.gui.viewmodel.ViewModelChangeType;
 
+import task.trak.model.util.TimeUtil;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -22,6 +24,9 @@ public class TasksView extends DataView implements ViewModelChangeListener {
 
     private final GUIController guiController;
     private final JPanel taskCardsContainer;
+    private javax.swing.Timer timerTick;
+    private long lastRefreshTimestamp;
+    private List<TaskCardPanel> activeCards = new ArrayList<>();
 
     public TasksView(GUIController guiController) {
         this.guiController = guiController;
@@ -97,12 +102,23 @@ public class TasksView extends DataView implements ViewModelChangeListener {
             layoutCards(gridPanel, cards);
             taskCardsContainer.add(gridPanel, BorderLayout.CENTER);
 
+            // Store card panels for timer updates
+            this.activeCards = new ArrayList<>();
+            for (JComponent c : cards) {
+                if (c instanceof TaskCardPanel tcp) {
+                    this.activeCards.add(tcp);
+                }
+            }
+            this.lastRefreshTimestamp = System.currentTimeMillis();
+            startTimerIfNeeded();
+
             taskCardsContainer.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
                     layoutCards(gridPanel, cards);
                     gridPanel.revalidate();
-                    gridPanel.repaint();
+                    taskCardsContainer.revalidate();
+                    taskCardsContainer.repaint();
                 }
             });
         }
@@ -116,34 +132,16 @@ public class TasksView extends DataView implements ViewModelChangeListener {
     }
 
     private JPanel buildToolbar(List<TaskDTO> allTasks, long completedCount) {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, TrakTheme.SP_SM, TrakTheme.SP_SM));
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, TrakTheme.SP_MD, 0));
         toolbar.setBackground(TrakTheme.BG_SURFACE);
         toolbar.setBorder(TrakTheme.pad(TrakTheme.SP_SM, TrakTheme.SP_XL));
 
-        // Project filter
-        Set<String> projectNames = new LinkedHashSet<>();
-        projectNames.add("All");
-        if (allTasks != null) {
-            for (TaskDTO t : allTasks) {
-                if (t.projectName() != null) projectNames.add(t.projectName());
-            }
-        }
-        JLabel projectLabel = new JLabel("Project:");
-        projectLabel.setForeground(TrakTheme.TEXT_SECONDARY);
-
-        toolbar.add(projectLabel);
-        JComboBox<String> projectFilter = new JComboBox<>(projectNames.toArray(new String[0]));
-        projectFilter.setSelectedItem(guiController.getTaskController().getViewModel().getProjectFilter());
-        projectFilter.addActionListener(e -> {
-            String selected = (String) projectFilter.getSelectedItem();
-            if (selected != null) {
-                guiController.getTaskController().getViewModel().setProjectFilter(selected);
-            }
-        });
-        TrakTheme.styleComboBox(projectFilter);
-        toolbar.add(projectFilter);
-
-        toolbar.add(Box.createHorizontalStrut(8));
+        // Add Task (first)
+        JButton addBtn = new JButton("+ Add Task");
+        TrakTheme.styleButtonPrimary(addBtn);
+        addBtn.setPreferredSize(new Dimension(130, 28));
+        addBtn.addActionListener(e -> showAddTaskDialog());
+        toolbar.add(addBtn);
 
         // Sort
         JLabel sortLabel = new JLabel("Sort:");
@@ -171,14 +169,6 @@ public class TasksView extends DataView implements ViewModelChangeListener {
         archiveToggle.addActionListener(e -> guiController.getTaskController().getViewModel().setShowCompleted(archiveToggle.isSelected()));
         toolbar.add(archiveToggle);
 
-        toolbar.add(Box.createHorizontalStrut(8));
-
-        // Add Task
-        JButton addBtn = new JButton("+ Add Task");
-        TrakTheme.styleButtonPrimary(addBtn);
-        addBtn.addActionListener(e -> showAddTaskDialog());
-        toolbar.add(addBtn);
-
         return toolbar;
     }
 
@@ -195,7 +185,7 @@ public class TasksView extends DataView implements ViewModelChangeListener {
 
     private void layoutCards(JPanel panel, List<JComponent> cards) {
         panel.removeAll();
-        int minCardWidth = 240;
+        int minCardWidth = 280;
         int gap = TrakTheme.SP_SM;
         int containerWidth = taskCardsContainer.getWidth() - gap;
         if (containerWidth <= 0) containerWidth = 900;
@@ -219,5 +209,31 @@ public class TasksView extends DataView implements ViewModelChangeListener {
         gbc.gridwidth = cols;
         gbc.weighty = 1.0;
         panel.add(Box.createGlue(), gbc);
+    }
+
+    private void startTimerIfNeeded() {
+        boolean hasInProgress = activeCards.stream().anyMatch(TaskCardPanel::isInProgress);
+        if (hasInProgress && timerTick == null) {
+            timerTick = new javax.swing.Timer(1000, e -> updateTimers());
+            timerTick.start();
+        } else if (!hasInProgress && timerTick != null) {
+            timerTick.stop();
+            timerTick = null;
+        }
+    }
+
+    private void updateTimers() {
+        long now = System.currentTimeMillis();
+        long offset = now - lastRefreshTimestamp;
+        for (TaskCardPanel card : activeCards) {
+            if (card.isInProgress()) {
+                TaskDTO t = card.getTask();
+                long elapsed = t.timeSpentMs() + offset;
+                long estimateMs = TimeUtil.parseDurationToMs(t.estimate());
+                double ratio = estimateMs > 0 ? (double) elapsed / estimateMs : -1;
+                card.setTimerState(ratio, elapsed);
+                card.repaint();
+            }
+        }
     }
 }

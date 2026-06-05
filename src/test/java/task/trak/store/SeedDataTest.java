@@ -162,7 +162,7 @@ public class SeedDataTest {
             // Set some tasks to INPROGRESS or COMPLETE
             String status = STATUSES[rand.nextInt(STATUSES.length)];
             if (!"READY".equals(status)) {
-                taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null));
+                taskService.updateById(new UpdateTaskRequest(task.id(), null, status, null, null, null, null));
             }
 
             Thread.sleep(1); // ensure unique IDs

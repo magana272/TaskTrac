@@ -37,7 +37,7 @@ Trak provides a minimal but structured system for:
 - User management with password authentication
 - Session-based login/logout
 - Workspace commands (my projects, my tasks, start/end task, time tracking)
-- Triple persistence: Parquet (default), JSON, and MongoDB (configurable)
+- Five persistence formats: DuckDB (default), Redis, Parquet, JSON, and MongoDB (configurable)
 - Seed data generation for testing (`--test` flag)
 
 ### Use Case Support
@@ -62,7 +62,7 @@ Client-Server Application with CLI, GUI, and REST API
 
 ## Core Concept
 A task tracking system with three executables:
-- **Server** (`trak-server`) — REST API with token-based auth, persists data as Parquet, JSON, or MongoDB
+- **Server** (`trak-server`) — REST API with token-based auth, persists data as DuckDB (default), Redis, Parquet, JSON, or MongoDB
 - **CLI Client** (`trak-cli`) — terminal-based client, works locally or against the server
 - **GUI Client** (`trak-gui`) — Swing desktop app, works locally or against the server
 
@@ -84,7 +84,7 @@ A task tracking system with three executables:
 - The system shall allow marking tasks as COMPLETE via `complete` command
 - The system shall display tasks as cards (GUI) or formatted tables (CLI)
 - The system shall display sprint details with completed/total task counts
-- The system shall maintain state persistently via Parquet, JSON, or MongoDB
+- The system shall maintain state persistently via DuckDB (default), Redis, Parquet, JSON, or MongoDB
 - The system shall validate all user inputs
 - The system shall display clear success and error messages
 - The system shall prompt for confirmation before delete operations
@@ -95,10 +95,22 @@ A task tracking system with three executables:
 - The system shall support filtering tasks by project in GUI
 - The system shall allow seeding test data via `--test` flag (20 users, 10 projects, 1000 tasks, 20 sprints)
 - The system shall provide a centralized dark theme (TrakTheme) applied via UIManager defaults
-- The system shall allow toggling between personal workspace (Mine) and team workspace (Team) in the GUI
 - The system shall provide structured duration input (days/hours/minutes spinners) for task estimates
 - The system shall support editing task estimates in the GUI edit dialog
 - The system shall use FormPanel for consistent two-column layout in all form dialogs
+- The system shall enforce bearer token authentication on all protected REST endpoints (only login, signup, and user creation are public)
+- The system shall use request/response DTO records with `validate()` methods for all service operations
+- The system shall provide comprehensive error handling: all service calls in controllers wrapped in try-catch, all view-level controller calls wrapped, input validation on all forms
+- The system shall support deleting tasks, projects, and sprints from the GUI with confirmation dialogs
+- The GUI shall communicate exclusively via HTTP services (no direct import of `task.trak.api`)
+- The system shall use DuckDB as the default persistence store (embedded SQL, `.store/trak.duckdb`)
+- The system shall support Redis as an alternative persistence store (requires running server, `REDIS_URL` env var)
+- The GUI shall display a focus timer bar on INPROGRESS task cards (green to amber to red based on estimate)
+- The system shall prompt for a completion note when marking a task as COMPLETE
+- The system shall support sprint completion (completed flag + completed_at timestamp) and archival
+- The system shall support permanent sprint deletion
+- The GUI shall provide a Settings panel for changing password and deleting account
+- The GUI shall use an undecorated frame with a custom title bar, drag-to-move, and edge resize
 
 ---
 
@@ -120,6 +132,7 @@ A task tracking system with three executables:
 ## Security
 - Passwords stored as SHA-256 hashes (never plaintext)
 - Server uses token-based authentication (UUID bearer tokens)
+- AuthFilter enforces bearer token on all protected REST endpoints (only login, signup, and user creation are public)
 - Session state stored locally in `.store/session.json`
 
 ---
@@ -153,32 +166,37 @@ flowchart TB
         REST["REST API\nHttpServer :8080"]
         SVC["Service Layer\nBusiness Logic"]
         DAO["DAO Layer\nPersistence"]
-        STORE[("Parquet / JSON / MongoDB")]
+        STORE[("DuckDB / Redis / Parquet / JSON / MongoDB")]
         REST --> SVC --> DAO --> STORE
     end
 
-    CLI -->|"HTTP (remote)"| REST
-    GUI -->|"HTTP (remote)"| REST
-    CLI -.->|"direct (local)"| SVC
-    GUI -.->|"direct (local)"| SVC
+    CLI -->|"HTTP REST"| REST
+    GUI -->|"HTTP REST"| REST
 ```
 
 ## Package Structure
 
 ```
-task.trak.api/              ← Shared (DTOs, service interfaces, Session)
+task.trak.model/            ← Shared types (moved from task.trak.api)
+  Session                         Session state
   dto/                            TaskDTO, UserDTO, ProjectDTO, SprintDTO, BacklogDTO
-  service/                        TaskService, UserService, ..., ServiceFactory
-  model/                          Session
+  dto/request/                    CreateTaskRequest, UpdateTaskRequest, etc. (with validate() methods)
+  exception/                      TrakException, ValidationException, EntityNotFoundException,
+                                  DuplicateEntityException, AuthenticationException (all unchecked)
   util/                           TimeUtil, TeeOutputStream
 
+task.trak.api.service/      ← Service interfaces (only package remaining in api)
+  ServiceFactory, TaskService, UserService, ProjectService, SprintService, BacklogService
+
 task.trak.app.server/       ← Server (never imported by client)
-  server/                         TrakServer, REST route handlers
+  server/                         TrakServer, REST route handlers, AuthFilter
   service/                        TrakTaskService, TrakProjectService, ...
   dao/                            EntityDAO, DAOFactory, SessionDAO
   dao/json/                       JsonTaskDAO, JsonProjectDAO, ...
   dao/parquet/                    ParquetTaskDAO, ParquetProjectDAO, ...
   dao/mongo/                      MongoTaskDAO, MongoProjectDAO, ..., MongoConnection
+  dao/duckdb/                     DuckDBConnection, DuckDBTaskDAO, DuckDBProjectDAO, ...
+  dao/redis/                      RedisConnection, RedisTaskDAO, RedisProjectDAO, ...
   model/                          Task, User, Project, Sprint, BackLog
   util/                           PasswordUtil
 
@@ -188,12 +206,15 @@ task.trak.app.client/       ← Client (never imports from server)
   http/                           ApiClient, TaskHttpService, ProjectHttpService, ...
   gui/viewmodel/                  ViewModel, ObservableViewModel, TaskViewModel,
                                   ProjectViewModel, SprintViewModel, UserViewModel
+  gui/viewmodel/event/            CommandEvent, CommandEventBus, CommandEventType, CommandListener
   gui/controller/                 GUIController, AuthController, TaskController,
                                   ProjectController, SprintController
-  gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel
+                                  (controllers receive HTTP services via constructor injection)
+  gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel,
+                                  DashboardView, CommandInputPanel
   gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView, TimeInputPanel
-  gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView
-  gui/view/sprint/                SprintView, SprintAddView
+  gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView, ProjectSelectorPanel
+  gui/view/sprint/                SprintView, SprintAddView, SprintProgressPanel
   gui/view/auth/                  LoginView, SignUpView, LogOutView
   gui/view/error/                 ErrorView, ErrorAlertView,
                                   UserNameAlreadyExistErrorView,
@@ -201,10 +222,11 @@ task.trak.app.client/       ← Client (never imports from server)
                                   TaskBeforeProjectErrorView
   gui/view/form/                  FormDialogView, FormPanel
   gui/view/panel/                 OutputPanel, StatusPanel
+  gui/view/settings/              ChangePasswordView, DeleteAccountView
   config/                         WorkspaceConfig
 ```
 
-**Key boundary:** Client code (`app.client`) never imports from server code (`app.server`). Shared types live in `api`.
+**Key boundary:** Client code (`app.client`) never imports from server code (`app.server`). Shared types live in `task.trak.model`. GUI communicates exclusively via HTTP services and does not import `task.trak.api`.
 
 ## ServiceFactory (Dependency Injection)
 
@@ -212,6 +234,7 @@ task.trak.app.client/       ← Client (never imports from server)
 - `ServiceFactory.registerLocalServices()` — registers direct service implementations (server/local mode)
 - `ServiceFactory.registerHttpServices()` — registers HTTP client implementations (remote mode)
 - CMD classes call `ServiceFactory.taskService()` etc. — transparent swap, zero code changes
+- GUI does not use `ServiceFactory` — controllers receive HTTP services via constructor injection. In `--local` mode, the GUI starts an embedded TrakServer on a random port and connects via HTTP.
 
 ## REST API Server
 
@@ -223,20 +246,27 @@ The GUI follows a Model-View-Controller architecture with an Observer pattern fo
 
 - **ViewModels** (`gui/viewmodel/`): `ObservableViewModel` base class implements `addObserver()`, `removeObserver()`, and `notifyObservers()`. Concrete ViewModels (`TaskViewModel`, `ProjectViewModel`, `SprintViewModel`, `UserViewModel`) implement `Serializable` and persist state to `.cache/`.
 - **Controllers** (`gui/controller/`): `GUIController` coordinates domain controllers (`AuthController`, `TaskController`, `ProjectController`, `SprintController`). Controllers invoke the service layer and update ViewModels.
-- **Views** (`gui/view/`): `DataView` is an abstract `JPanel` with a `render()` method. Views take `GUIController` as their only constructor parameter. Views call `addObserver()` on the ViewModels they depend on and implement `onViewModelChanged()` to re-render. `MainFrame` implements `ViewModelChangeListener`.
+- **Views** (`gui/view/`): `DataView` is an abstract `JPanel` with a `render()` method. Views call `addObserver()` on the ViewModels they depend on and implement `onViewModelChanged()` to re-render. `MainFrame` implements `ViewModelChangeListener`. Views always show user-scoped data.
 - **Cross-domain observation**: Views can observe multiple ViewModels. `TasksView` observes both `TaskViewModel` and `ProjectViewModel`. `SprintView` observes `SprintViewModel`, `ProjectViewModel`, and `TaskViewModel`.
 - **Flow**: User action --> View --> Controller --> Service --> Controller updates ViewModel --> `notifyObservers()` --> Views call `render()`
 
 Features:
 - Task cards with status dropdowns (READY=red, INPROGRESS=yellow, COMPLETE=green)
+- Delete tasks (X button on cards), projects, and sprints (Delete button in toolbar) with confirmation dialogs
+- Comprehensive error handling: all 40+ service calls in controllers wrapped in try-catch, input validation on all forms
 - Editable project/sprint tables with Save button
 - Double-click cells for member management, task management, summary editing
 - Sort by due date/estimate, filter by project, archive completed tasks
 - Login/Signup/Guest dialogs, error alerts
 - Dark cinematic theme via TrakTheme (deep charcoal + warm gold accent, 8px spacing grid)
-- Workspace toggle (Mine/Team) with filtered data fetching
 - Structured duration spinners (TimeInputPanel) for task estimate input
-- Green CTA button for primary actions (Add Task)
+- Blue primary buttons (#5B9BD5) for primary actions (Add Task)
+- Focus timer bar on INPROGRESS task cards (green to amber to red based on estimate)
+- Completion note prompt when marking a task as COMPLETE
+- Responsive task cards (fill width, min 200x160)
+- Settings panel (change password, delete account)
+- Undecorated frame with custom title bar, drag-to-move, edge resize
+- Hidden scrollbar on task panel (mousewheel scrolls)
 - GlassPanel rounded containers with gradient background and optional drop shadow
 - FormPanel two-column layout for all form dialogs
 - Task cards with custom-painted rounded corners, gradient background, gold glow hover
@@ -283,6 +313,9 @@ Features:
 - `estimate` : String (e.g. "2h", "1d")
 - `time_started` : Long (epoch ms)
 - `time_spent_ms` : Long (accumulated)
+- `time_in_ready_ms` : Long (accumulated time in READY state)
+- `time_in_progress_ms` : Long (accumulated time in INPROGRESS state)
+- `completion_note` : String (note entered on task completion)
 
 ## Sprint
 - `id` : Long (auto-generated, primary key)
@@ -291,6 +324,8 @@ Features:
 - `task_ids` : List\<Long\>
 - `start_date` : Date (must be >= today)
 - `end_date` : Date (must be <= start + 1 year)
+- `completed` : boolean (whether sprint is completed)
+- `completed_at` : Date (timestamp of sprint completion)
 
 ## BackLog
 - `id` : Long (auto-generated)
@@ -360,21 +395,51 @@ trak-cli backlog add|get|update|delete
 
 ## REST API Endpoints
 ```
-POST   /api/auth/login|signup|logout
-GET|POST|PUT|DELETE  /api/users/{username}
-GET|POST|PUT|DELETE  /api/projects/{name}    ?user=
-GET|POST|PUT|DELETE  /api/tasks/{id}         ?assignee=
-GET|POST|PUT|DELETE  /api/sprints/{id}
-GET|POST|PUT|DELETE  /api/backlogs/{name}
+POST                /api/auth/login|signup|logout
+GET|POST            /api/users
+GET|PUT|DELETE      /api/users/{username}
+GET|POST            /api/projects              ?user=
+GET                 /api/projects/id/{id}
+GET                 /api/projects/name/{name}
+PUT|DELETE          /api/projects/{name}
+POST                /api/projects/{name}/members
+GET|POST            /api/tasks                 ?assignee=
+GET|PUT|DELETE      /api/tasks/{id}
+GET|POST            /api/sprints
+GET|PUT|DELETE      /api/sprints/{id}
+GET                 /api/sprints/name/{name}   ?project=
+GET|POST|PUT|DELETE /api/backlogs/{name}
 ```
 
 ---
 
 # 10. Storage
 
-Three persistence formats (configurable via `.store/workspace.json`):
+Five persistence formats (configurable via `.store/workspace.json`):
 
-### Parquet (default)
+### DuckDB (default)
+| Entity  | Table              |
+|---------|---------------------|
+| User    | `users`            |
+| Project | `projects`         |
+| Task    | `tasks`            |
+| Sprint  | `sprints`          |
+| Backlog | `backlogs`         |
+
+Single file: `.store/trak.duckdb`. No configuration needed — works out of the box.
+
+### Redis
+| Entity  | Key pattern            |
+|---------|------------------------|
+| User    | `trak:users:{username}`|
+| Project | `trak:projects:{name}` |
+| Task    | `trak:tasks:{id}`      |
+| Sprint  | `trak:sprints:{id}`    |
+| Backlog | `trak:backlogs:{name}` |
+
+Requires: `REDIS_URL` env var (default: `redis://localhost:6379`).
+
+### Parquet
 | Entity  | File                 |
 |---------|----------------------|
 | User    | `User.parquet`       |
@@ -407,7 +472,7 @@ Requires environment variables: `MONGO_URI` (connection string), `MONGO_DB` (dat
 | File | Purpose |
 |------|---------|
 | `session.json` | Current login session |
-| `workspace.json` | Store format config (`"parquet"`, `"json"`, or `"mongo"`) |
+| `workspace.json` | Store format config (`"duckdb"`, `"redis"`, `"parquet"`, `"json"`, or `"mongo"`) |
 
 ---
 

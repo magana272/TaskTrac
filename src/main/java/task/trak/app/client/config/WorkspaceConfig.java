@@ -11,7 +11,7 @@ public class WorkspaceConfig {
     private String store_format;
 
     public WorkspaceConfig() {
-        this.store_format = "parquet";
+        this.store_format = "duckdb";
     }
 
     public static WorkspaceConfig load() {

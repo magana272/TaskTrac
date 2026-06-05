@@ -9,6 +9,7 @@ public record SprintDTO(
         String name,
         List<Long> taskIds,
         Date startDate,
-        Date endDate
+        Date endDate,
+        boolean completed
 ) {
 }

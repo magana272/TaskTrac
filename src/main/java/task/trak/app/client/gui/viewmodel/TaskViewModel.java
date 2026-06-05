@@ -44,6 +44,10 @@ public class TaskViewModel extends ObservableViewModel<TaskDTO> {
         notifyObservers(ViewModelChangeType.TASKS);
     }
 
+    public void setAllSilent(List<TaskDTO> tasks) {
+        this.tasks = tasks != null ? new ArrayList<>(tasks) : new ArrayList<>();
+    }
+
     public List<TaskDTO> getFiltered() {
         List<TaskDTO> result = new ArrayList<>(tasks);
 

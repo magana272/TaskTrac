@@ -2,38 +2,22 @@ package task.trak.app.client.gui.view;
 
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.error.ErrorView;
-import task.trak.app.client.gui.view.panel.OutputPanel;
 import task.trak.app.client.gui.view.panel.StatusPanel;
-import task.trak.app.client.gui.view.project.ProjectsView;
-import task.trak.app.client.gui.view.sprint.SprintView;
-import task.trak.app.client.gui.view.task.TasksView;
 import task.trak.app.client.gui.viewmodel.*;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 
 public class MainFrame extends JFrame implements ViewModelChangeListener {
-
-    private static final String CARD_TASKS = "tasks";
-    private static final String CARD_PROJECTS = "projects";
-    private static final String CARD_SPRINTS = "sprints";
-    private static final String CARD_OUTPUT = "output";
 
     private final GUIController controller;
     private final UserViewModel userViewModel;
 
     private final StatusPanel statusPanel;
-    private final CardLayout cardLayout;
-    private final JPanel cardContainer;
-    private final TasksView tasksView;
-    private final ProjectsView projectsView;
-    private final SprintView sprintView;
-    private final OutputPanel outputPanel;
-    private JButton tasksBtn;
-    private JButton projectsBtn;
-    private JButton sprintsBtn;
-    private JButton activeNavBtn;
+    private final DashboardView dashboardView;
 
     public MainFrame(GUIController controller,
                      TaskViewModel taskViewModel,
@@ -41,6 +25,7 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                      SprintViewModel sprintViewModel,
                      UserViewModel userViewModel) {
         super("Trak");
+        setUndecorated(true);
         this.controller = controller;
         this.userViewModel = userViewModel;
 
@@ -50,12 +35,9 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         setLayout(new BorderLayout());
         getContentPane().setBackground(TrakTheme.BG_DARK);
 
-        taskViewModel.addObserver(this);
-        projectViewModel.addObserver(this);
-        sprintViewModel.addObserver(this);
         userViewModel.addObserver(this);
 
-        // ── Top section: status bar + nav ──
+        // ── Top section: status bar ──
         JPanel topSection = new JPanel();
         topSection.setLayout(new BoxLayout(topSection, BoxLayout.Y_AXIS));
         topSection.setBackground(TrakTheme.BG_SURFACE);
@@ -63,38 +45,11 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         this.statusPanel = new StatusPanel(controller);
         topSection.add(statusPanel);
 
-        // Subtle divider line
-        JSeparator sep = new JSeparator();
-        sep.setForeground(TrakTheme.BORDER);
-        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        topSection.add(sep);
-
-        topSection.add(createNavBar());
-        setNavButtonsEnabled(false);
-
         add(topSection, BorderLayout.NORTH);
 
-        // ── Center: CardLayout with views ──
-        this.cardLayout = new CardLayout();
-        this.cardContainer = new JPanel(cardLayout);
-        this.cardContainer.setBackground(TrakTheme.BG_DARK);
-
-        this.tasksView = new TasksView(controller);
-        this.projectsView = new ProjectsView(controller);
-        this.sprintView = new SprintView(controller);
-
-        this.outputPanel = new OutputPanel();
-        JScrollPane outputScroll = new JScrollPane(outputPanel);
-        outputScroll.setBorder(BorderFactory.createEmptyBorder());
-        outputScroll.getViewport().setBackground(TrakTheme.BG_DARK);
-
-        cardContainer.add(tasksView, CARD_TASKS);
-        cardContainer.add(projectsView, CARD_PROJECTS);
-        cardContainer.add(sprintView, CARD_SPRINTS);
-        cardContainer.add(outputScroll, CARD_OUTPUT);
-
-        cardLayout.show(cardContainer, CARD_OUTPUT);
-        add(cardContainer, BorderLayout.CENTER);
+        // ── Center: Dashboard ──
+        this.dashboardView = new DashboardView(controller, taskViewModel, projectViewModel, sprintViewModel);
+        add(dashboardView, BorderLayout.CENTER);
 
         // ── Bottom: command input ──
         CommandInputPanel inputPanel = new CommandInputPanel(this::onCommandSubmitted);
@@ -102,105 +57,94 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
 
         updateStatus();
         setLocationRelativeTo(null);
-    }
 
-    private JPanel createNavBar() {
-        JPanel navBar = new JPanel(new BorderLayout());
-        navBar.setBackground(TrakTheme.BG_SURFACE);
-        navBar.setBorder(new EmptyBorder(TrakTheme.SP_XS, TrakTheme.SP_XL, TrakTheme.SP_XS, TrakTheme.SP_XL));
+        // Edge-drag resize for undecorated frame
+        final int EDGE = 6;
+        final Point[] resizeStart = {null};
+        final Dimension[] startSize = {null};
+        final Point[] startLoc = {null};
+        final int[] resizeDir = {0};
 
-        // Left: view navigation
-        JPanel navGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-        navGroup.setOpaque(false);
+        JPanel glassPane = new JPanel(null);
+        glassPane.setOpaque(false);
+        setGlassPane(glassPane);
+        glassPane.setVisible(false); // hidden by default — buttons work normally
 
-        tasksBtn = createNavButton("Tasks", CARD_TASKS);
-        projectsBtn = createNavButton("Projects", CARD_PROJECTS);
-        sprintsBtn = createNavButton("Sprints", CARD_SPRINTS);
-
-        navGroup.add(projectsBtn);
-        navGroup.add(tasksBtn);
-        navGroup.add(sprintsBtn);
-
-        navBar.add(navGroup, BorderLayout.WEST);
-        return navBar;
-    }
-
-    private JButton createNavButton(String label, String card) {
-        JButton btn = new JButton(label);
-        btn.setFont(TrakTheme.FONT_BODY);
-        btn.setForeground(TrakTheme.TEXT_MUTED);
-        btn.setBackground(TrakTheme.BG_SURFACE);
-        btn.setOpaque(true);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setBorder(new EmptyBorder(TrakTheme.SP_XS + 2, TrakTheme.SP_MD, TrakTheme.SP_XS + 2, TrakTheme.SP_MD));
-
-        btn.addActionListener(e -> {
-            switch (card) {
-                case CARD_TASKS -> controller.getTaskController().refreshTasks();
-                case CARD_PROJECTS -> controller.getProjectController().refreshProjects();
-                case CARD_SPRINTS -> controller.getSprintController().refreshSprints();
+        // Glass pane only handles resize drag
+        glassPane.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                int dir = getResizeDir(e.getPoint(), getSize(), EDGE);
+                if (dir != 0) {
+                    resizeDir[0] = dir;
+                    resizeStart[0] = e.getLocationOnScreen();
+                    startSize[0] = getSize();
+                    startLoc[0] = getLocation();
+                }
             }
-            cardLayout.show(cardContainer, card);
-            setActiveNav(btn);
+            public void mouseReleased(MouseEvent e) {
+                resizeDir[0] = 0;
+                resizeStart[0] = null;
+                glassPane.setVisible(false); // hide after resize done
+            }
         });
 
-        return btn;
+        glassPane.addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                if (resizeStart[0] == null) return;
+                Point now = e.getLocationOnScreen();
+                int dx = now.x - resizeStart[0].x;
+                int dy = now.y - resizeStart[0].y;
+                int dir = resizeDir[0];
+                Rectangle r = new Rectangle(startLoc[0], startSize[0]);
+                Dimension min = getMinimumSize();
+                if ((dir & 8) != 0) r.width = Math.max(min.width, startSize[0].width + dx);
+                if ((dir & 4) != 0) { r.width = Math.max(min.width, startSize[0].width - dx); r.x = startLoc[0].x + startSize[0].width - r.width; }
+                if ((dir & 2) != 0) r.height = Math.max(min.height, startSize[0].height + dy);
+                if ((dir & 1) != 0) { r.height = Math.max(min.height, startSize[0].height - dy); r.y = startLoc[0].y + startSize[0].height - r.height; }
+                setBounds(r);
+            }
+        });
+
+        // Track mouse on the content pane — show glass pane only near edges
+        Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
+            if (!(event instanceof MouseEvent me)) return;
+            if (me.getID() != MouseEvent.MOUSE_MOVED) return;
+            if (!isActive()) return;
+            Point screenPt = me.getLocationOnScreen();
+            Point framePt = new Point(screenPt.x - getX(), screenPt.y - getY());
+            int dir = getResizeDir(framePt, getSize(), EDGE);
+            if (dir != 0 && !glassPane.isVisible()) {
+                glassPane.setVisible(true);
+                if (dir == (1|4) || dir == (2|8)) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
+                else if (dir == (1|8) || dir == (2|4)) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
+                else if ((dir & 1) != 0 || (dir & 2) != 0) glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
+                else glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
+            } else if (dir == 0 && glassPane.isVisible() && resizeStart[0] == null) {
+                glassPane.setVisible(false);
+            }
+        }, AWTEvent.MOUSE_MOTION_EVENT_MASK);
     }
 
-    private void setActiveNav(JButton btn) {
-        // Reset previous
-        if (activeNavBtn != null) {
-            activeNavBtn.setForeground(TrakTheme.TEXT_MUTED);
-            activeNavBtn.setBackground(TrakTheme.BG_SURFACE);
-        }
-        activeNavBtn = btn;
-        if (btn != null) {
-            btn.setForeground(TrakTheme.ACCENT);
-            btn.setBackground(TrakTheme.BG_ELEVATED);
-        }
-    }
-
-    private void setNavButtonsEnabled(boolean enabled) {
-        tasksBtn.setEnabled(enabled);
-        projectsBtn.setEnabled(enabled);
-        sprintsBtn.setEnabled(enabled);
-        if (!enabled) {
-            setActiveNav(null);
-        }
+    private static int getResizeDir(Point p, Dimension size, int edge) {
+        int dir = 0;
+        if (p.y < edge) dir |= 1;
+        if (p.y > size.height - edge) dir |= 2;
+        if (p.x < edge) dir |= 4;
+        if (p.x > size.width - edge) dir |= 8;
+        return dir;
     }
 
     @Override
     public void onViewModelChanged(ViewModelChangeType type) {
         SwingUtilities.invokeLater(() -> {
             switch (type) {
-                case TASKS -> {
-                    if (userViewModel.getSession() == null) return;
-                    cardLayout.show(cardContainer, CARD_TASKS);
-                    setActiveNav(tasksBtn);
-                    tasksView.render();
-                }
-                case PROJECTS -> {
-                    if (userViewModel.getSession() == null) return;
-                    cardLayout.show(cardContainer, CARD_PROJECTS);
-                    setActiveNav(projectsBtn);
-                    projectsView.render();
-                }
-                case SPRINTS -> {
-                    if (userViewModel.getSession() == null) return;
-                    cardLayout.show(cardContainer, CARD_SPRINTS);
-                    setActiveNav(sprintsBtn);
-                    sprintView.render();
-                }
                 case SESSION -> {
                     updateStatus();
                     if (userViewModel.getSession() == null) {
                         controller.clearViewModels();
-                        setNavButtonsEnabled(false);
-                        cardLayout.show(cardContainer, CARD_OUTPUT);
                     } else {
-                        setNavButtonsEnabled(true);
+                        // Refresh all data off-EDT, fires notifications when done
+                        new Thread(() -> controller.refreshAll(), "session-refresh").start();
                     }
                 }
                 case ERROR -> {
@@ -212,9 +156,11 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
                 case OUTPUT -> {
                     String output = userViewModel.getLastOutput();
                     if (output != null) {
-                        outputPanel.appendOutput(output);
+                        System.err.println(output);
                     }
-                    cardLayout.show(cardContainer, CARD_OUTPUT);
+                }
+                default -> {
+                    // TASKS, PROJECTS, SPRINTS handled by DashboardView's own observer
                 }
             }
         });

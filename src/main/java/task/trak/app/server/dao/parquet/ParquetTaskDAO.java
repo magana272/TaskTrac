@@ -32,7 +32,8 @@ public class ParquetTaskDAO implements EntityDAO<Task> {
                 {"name": "deadline", "type": ["null", "long"], "default": null},
                 {"name": "estimate", "type": ["null", "string"], "default": null},
                 {"name": "time_started", "type": ["null", "long"], "default": null},
-                {"name": "time_spent_ms", "type": ["null", "long"], "default": null}
+                {"name": "time_spent_ms", "type": ["null", "long"], "default": null},
+                {"name": "completion_note", "type": ["null", "string"], "default": null}
               ]
             }
             """;
@@ -96,6 +97,7 @@ public class ParquetTaskDAO implements EntityDAO<Task> {
         record.put("estimate", t.getEstimate());
         record.put("time_started", t.getTime_started());
         record.put("time_spent_ms", t.getTime_spent_ms());
+        record.put("completion_note", t.getCompletion_note());
         return record;
     }
 
@@ -119,6 +121,7 @@ public class ParquetTaskDAO implements EntityDAO<Task> {
         if (estimate != null) task.setEstimate(estimate);
         task.setTime_started(safeGetLong(r, "time_started"));
         task.setTime_spent_ms(safeGetLong(r, "time_spent_ms"));
+        task.setCompletion_note(safeGetString(r, "completion_note"));
         return task;
     }
 
