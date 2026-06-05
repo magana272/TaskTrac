@@ -7,6 +7,7 @@ import task.trak.app.client.gui.view.auth.LoginView;
 import task.trak.app.client.gui.view.auth.SignUpView;
 import task.trak.app.client.gui.view.settings.ChangePasswordView;
 import task.trak.app.client.gui.view.settings.DeleteAccountView;
+import task.trak.app.client.config.WorkspaceConfig;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -24,6 +25,7 @@ public class StatusPanel extends JPanel {
     private final JLabel statusDot;
     private final JButton logoutButton;
     private final JButton settingsButton;
+    private final JButton themeToggle;
     private final JButton loginButton;
     private final JButton signupButton;
     private final JButton guestButton;
@@ -87,6 +89,18 @@ public class StatusPanel extends JPanel {
         logoutButton.addActionListener(e ->
                 controller.getAuthController().logout());
 
+        themeToggle = new JButton(TrakTheme.isDark() ? "\u2600" : "\u263D");
+        themeToggle.setFont(TrakTheme.FONT_TITLE);
+        themeToggle.setForeground(TrakTheme.TEXT_SECONDARY);
+        themeToggle.setBackground(TrakTheme.BG_SURFACE);
+        themeToggle.setOpaque(true);
+        themeToggle.setBorderPainted(false);
+        themeToggle.setFocusPainted(false);
+        themeToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        themeToggle.setBorder(new EmptyBorder(2, 8, 2, 8));
+        themeToggle.setToolTipText(TrakTheme.isDark() ? "Switch to Light Mode" : "Switch to Dark Mode");
+        themeToggle.addActionListener(e -> toggleTheme());
+
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
         rightPanel.setOpaque(false);
         rightPanel.add(loginButton);
@@ -124,6 +138,7 @@ public class StatusPanel extends JPanel {
         closeBtn.setBorder(new EmptyBorder(2, 8, 2, 8));
         closeBtn.addActionListener(e -> System.exit(0));
 
+        windowControls.add(themeToggle);
         windowControls.add(minimizeBtn);
         windowControls.add(closeBtn);
 
@@ -174,6 +189,20 @@ public class StatusPanel extends JPanel {
             logoutButton.setVisible(false);
             settingsButton.setVisible(false);
         }
+    }
+
+    private void toggleTheme() {
+        TrakTheme.Theme next = TrakTheme.isDark() ? TrakTheme.Theme.LIGHT : TrakTheme.Theme.DARK;
+        java.util.Map<Color, Color> colorMap = TrakTheme.setTheme(next);
+        themeToggle.setText(TrakTheme.isDark() ? "\u2600" : "\u263D");
+        themeToggle.setToolTipText(TrakTheme.isDark() ? "Switch to Light Mode" : "Switch to Dark Mode");
+        Window w = SwingUtilities.getWindowAncestor(this);
+        if (w != null) TrakTheme.recolorTree(w, colorMap);
+        try {
+            WorkspaceConfig config = WorkspaceConfig.load();
+            config.setTheme(TrakTheme.isDark() ? "dark" : "light");
+            config.save();
+        } catch (Exception ignored) {}
     }
 
     private void showSettingsMenu() {
