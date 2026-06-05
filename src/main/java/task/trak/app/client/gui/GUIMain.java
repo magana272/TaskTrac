@@ -87,10 +87,6 @@ public class GUIMain {
         // Initialize store (handles guest account, session loading, etc.)
         gui.initStore(local);
 
-        if (seedTest) {
-            gui.seedData();
-        }
-
         // Dark theme: use cross-platform L&F for full color control, then apply dark defaults
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
@@ -98,11 +94,20 @@ public class GUIMain {
         }
         TrakTheme.applyDefaults();
 
+        // Show GUI immediately
         SwingUtilities.invokeLater(() -> {
             MainFrame mainFrame = new MainFrame(
                     gui, taskViewModel, projectViewModel, sprintViewModel, userViewModel);
             mainFrame.setVisible(true);
         });
+
+        // Seed data in background if requested
+        if (seedTest) {
+            new Thread(() -> {
+                gui.seedData();
+                gui.refreshAll();
+            }, "seed-data").start();
+        }
     }
 
     private static String parseServerUrl(String[] args) {

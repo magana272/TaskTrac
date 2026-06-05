@@ -144,7 +144,7 @@ public class SprintPlanCMD extends WorkspaceCMD {
                     sprintName, project.projectName(),
                     startDate.isEmpty() ? null : startDate,
                     endDate.isEmpty() ? null : endDate,
-                    selectedIds));
+                    selectedIds, null));
         } else if (projectTasks.isEmpty()) {
             System.out.println("Sprint \"" + sprintName + "\" created (empty).");
             return Optional.empty();

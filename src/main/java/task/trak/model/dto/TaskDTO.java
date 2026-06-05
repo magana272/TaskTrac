@@ -13,6 +13,9 @@ public record TaskDTO(
         String summary,
         Date deadline,
         String estimate,
-        long timeSpentMs
+        long timeSpentMs,
+        long timeInReadyMs,
+        long timeInProgressMs,
+        String completionNote
 ) {
 }

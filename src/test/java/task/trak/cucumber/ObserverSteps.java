@@ -64,7 +64,7 @@ public class ObserverSteps {
     @When("tasks are updated in the TaskViewModel")
     public void tasksAreUpdatedInTheTaskViewModel() {
         taskViewModel.setAll(List.of(
-                new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0)));
+                new TaskDTO(1L, "P", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null)));
     }
 
     @When("the observer is removed from the TaskViewModel")

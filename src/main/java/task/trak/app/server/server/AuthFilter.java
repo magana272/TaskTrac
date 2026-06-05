@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpHandler;
 
 /**
  * Authentication filter that wraps HttpHandlers with bearer token enforcement.
- * Usage: {@code server.createContext("/api/tasks", AuthFilter.requireAuth(new TaskListHandler()))}
  */
 public class AuthFilter {
 

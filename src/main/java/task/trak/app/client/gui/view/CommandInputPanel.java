@@ -8,7 +8,7 @@ import java.awt.event.ActionListener;
 import java.util.function.Consumer;
 
 /**
- * Dark-styled bottom command input bar with gold accent prompt.
+ * Bottom command input bar.
  */
 public class CommandInputPanel extends JPanel {
 

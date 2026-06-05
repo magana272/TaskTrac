@@ -89,6 +89,12 @@ public class TrakSprintService implements SprintService {
             sprint.setTask_ids(request.taskIds());
         }
 
+        // Mark as completed if requested
+        if (request.completed() != null && request.completed()) {
+            sprint.setCompleted(true);
+            sprint.setCompleted_at(new Date());
+        }
+
         store.save(sprint);
         return toDTO(sprint);
     }
@@ -110,6 +116,6 @@ public class TrakSprintService implements SprintService {
 
     private SprintDTO toDTO(Sprint s) {
         return new SprintDTO(s.getId(), s.getProject_name(), s.getName(),
-                s.getTask_ids(), s.getStart_date(), s.getEnd_date());
+                s.getTask_ids(), s.getStart_date(), s.getEnd_date(), s.isCompleted());
     }
 }

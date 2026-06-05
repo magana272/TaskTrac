@@ -86,7 +86,7 @@ public class SprintUpdateCMD extends SprintCMD {
         }
 
         if (newStartDate != null || newEndDate != null || taskIds != null) {
-            sprintService.update(new UpdateSprintRequest(sprint.name(), sprint.projectName(), newStartDate, newEndDate, taskIds));
+            sprintService.update(new UpdateSprintRequest(sprint.name(), sprint.projectName(), newStartDate, newEndDate, taskIds, null));
         }
 
         SprintDTO updated = sprintService.getById(sprint.id());

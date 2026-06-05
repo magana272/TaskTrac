@@ -8,7 +8,8 @@ public record UpdateTaskRequest(
         String status,
         String assignedTo,
         String summary,
-        String estimate
+        String estimate,
+        String completionNote
 ) {
     public void validate() {
         if (id == null) throw new ValidationException("Task ID is required.");

@@ -25,7 +25,7 @@ public class GUIMvcSteps {
     private ViewModelChangeListener listener;
 
     private TaskDTO task(long id, String project, String title, String status) {
-        return new TaskDTO(id, project, "user", title, status, null, null, null, null, null, 0);
+        return new TaskDTO(id, project, "user", title, status, null, null, null, null, null, 0, 0, 0, null);
     }
 
     @Given("the GUI model is initialized")
@@ -168,8 +168,8 @@ public class GUIMvcSteps {
     public void theModelHasTasksWithDifferentDeadlines() {
         taskViewModel.setShowCompleted(true);
         taskViewModel.setAll(List.of(
-                new TaskDTO(1L, "P", "u", "Late", "READY", null, null, null, new Date(9000000), null, 0),
-                new TaskDTO(2L, "P", "u", "Early", "READY", null, null, null, new Date(1000000), null, 0)
+                new TaskDTO(1L, "P", "u", "Late", "READY", null, null, null, new Date(9000000), null, 0, 0, 0, null),
+                new TaskDTO(2L, "P", "u", "Early", "READY", null, null, null, new Date(1000000), null, 0, 0, 0, null)
         ));
     }
 

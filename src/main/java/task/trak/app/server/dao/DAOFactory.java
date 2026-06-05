@@ -1,8 +1,10 @@
 package task.trak.app.server.dao;
 
+import task.trak.app.server.dao.duckdb.*;
 import task.trak.app.server.dao.json.*;
 import task.trak.app.server.dao.mongo.*;
 import task.trak.app.server.dao.parquet.*;
+import task.trak.app.server.dao.redis.*;
 import task.trak.app.server.model.backlog.BackLog;
 import task.trak.app.server.model.project.Project;
 import task.trak.app.server.model.sprint.Sprint;
@@ -11,7 +13,7 @@ import task.trak.app.server.model.user.User;
 
 public class DAOFactory {
 
-    private static Format format = Format.PARQUET;
+    private static Format format = Format.DUCKDB;
 
     public static Format getFormat() {
         return format;
@@ -26,6 +28,8 @@ public class DAOFactory {
             case PARQUET -> new ParquetUserDAO();
             case JSON -> new JsonUserDAO();
             case MONGO -> new MongoUserDAO();
+            case DUCKDB -> new DuckDBUserDAO();
+            case REDIS -> new RedisUserDAO();
         };
     }
 
@@ -34,6 +38,8 @@ public class DAOFactory {
             case PARQUET -> new ParquetProjectDAO();
             case JSON -> new JsonProjectDAO();
             case MONGO -> new MongoProjectDAO();
+            case DUCKDB -> new DuckDBProjectDAO();
+            case REDIS -> new RedisProjectDAO();
         };
     }
 
@@ -42,6 +48,8 @@ public class DAOFactory {
             case PARQUET -> new ParquetTaskDAO();
             case JSON -> new JsonTaskDAO();
             case MONGO -> new MongoTaskDAO();
+            case DUCKDB -> new DuckDBTaskDAO();
+            case REDIS -> new RedisTaskDAO();
         };
     }
 
@@ -50,6 +58,8 @@ public class DAOFactory {
             case PARQUET -> new ParquetSprintDAO();
             case JSON -> new JsonSprintDAO();
             case MONGO -> new MongoSprintDAO();
+            case DUCKDB -> new DuckDBSprintDAO();
+            case REDIS -> new RedisSprintDAO();
         };
     }
 
@@ -58,8 +68,10 @@ public class DAOFactory {
             case PARQUET -> new ParquetBacklogDAO();
             case JSON -> new JsonBacklogDAO();
             case MONGO -> new MongoBacklogDAO();
+            case DUCKDB -> new DuckDBBacklogDAO();
+            case REDIS -> new RedisBacklogDAO();
         };
     }
 
-    public enum Format {JSON, PARQUET, MONGO}
+    public enum Format {JSON, PARQUET, MONGO, DUCKDB, REDIS}
 }

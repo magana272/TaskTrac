@@ -10,11 +10,7 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 
 /**
- * Centralized dark cinematic theme for Trak GUI.
- * <p>
- * Design direction: editorial / cinematic / immersive.
- * Inspired by Apple TV, Spotify, modern glassmorphism dashboards.
- * Warm gold accent on deep charcoal. Generous spacing. Layered depth.
+ * Dark theme constants and styling methods for the Trak GUI.
  */
 public final class TrakTheme {
 
@@ -42,10 +38,11 @@ public final class TrakTheme {
     public static final Color TEXT_SECONDARY = new Color(0x8A, 0x8A, 0x94);
     public static final Color TEXT_MUTED = new Color(0x52, 0x52, 0x5C);
     // ── Accent ──
-    public static final Color ACCENT = new Color(0xFF, 0xD5, 0x4F);  // warm gold
+    public static final Color ACCENT = new Color(0xFF, 0xD5, 0x4F);
     public static final Color ACCENT_DIM = new Color(0xFF, 0xD5, 0x4F, 30); // glow
     public static final Color ACCENT_GREEN = new Color(0x34, 0xC7, 0x59);
     public static final Color ACCENT_BLUE = new Color(0x64, 0xB5, 0xF6);
+    public static final Color PRIMARY_BLUE = new Color(0x5B, 0x9B, 0xD5);
     // ── Status ──
     public static final Color STATUS_READY = new Color(0xEF, 0x53, 0x50);
     public static final Color STATUS_INPROGRESS = new Color(0xFF, 0xB7, 0x4D);
@@ -179,10 +176,10 @@ public final class TrakTheme {
     // ── Button styling ──
 
     /**
-     * Primary green call-to-action button with rounded feel.
+     * Primary action button.
      */
     public static void styleButtonPrimary(JButton btn) {
-        btn.setBackground(ACCENT_GREEN);
+        btn.setBackground(PRIMARY_BLUE);
         btn.setForeground(Color.WHITE);
         btn.setFont(FONT_BODY.deriveFont(Font.BOLD));
         btn.setOpaque(true);
@@ -193,7 +190,7 @@ public final class TrakTheme {
     }
 
     /**
-     * Subtle nav/action button.
+     * Secondary button.
      */
     public static void styleButtonNav(JButton btn) {
         btn.setBackground(BG_ELEVATED);
@@ -207,7 +204,7 @@ public final class TrakTheme {
     }
 
     /**
-     * Warm accent button.
+     * Accent button (gold).
      */
     public static void styleButtonAccent(JButton btn) {
         btn.setBackground(ACCENT);
@@ -233,7 +230,7 @@ public final class TrakTheme {
     }
 
     /**
-     * Card hover border with gold accent.
+     * Card hover border.
      */
     public static Border cardBorderHover() {
         return new CompoundBorder(

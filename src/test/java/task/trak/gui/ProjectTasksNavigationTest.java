@@ -23,9 +23,9 @@ public class ProjectTasksNavigationTest {
     public void testFilteredTasksRespectProjectFilter() {
         TaskViewModel vm = new TaskViewModel();
         vm.setAll(List.of(
-                new TaskDTO(1L, "ProjectA", "u", "T1", "READY", null, null, null, null, null, 0),
-                new TaskDTO(2L, "ProjectB", "u", "T2", "READY", null, null, null, null, null, 0),
-                new TaskDTO(3L, "ProjectA", "u", "T3", "READY", null, null, null, null, null, 0)
+                new TaskDTO(1L, "ProjectA", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null),
+                new TaskDTO(2L, "ProjectB", "u", "T2", "READY", null, null, null, null, null, 0, 0, 0, null),
+                new TaskDTO(3L, "ProjectA", "u", "T3", "READY", null, null, null, null, null, 0, 0, 0, null)
         ));
 
         vm.setProjectFilter("ProjectA");
@@ -39,8 +39,8 @@ public class ProjectTasksNavigationTest {
     public void testFilterAllShowsAllTasks() {
         TaskViewModel vm = new TaskViewModel();
         vm.setAll(List.of(
-                new TaskDTO(1L, "ProjectA", "u", "T1", "READY", null, null, null, null, null, 0),
-                new TaskDTO(2L, "ProjectB", "u", "T2", "READY", null, null, null, null, null, 0)
+                new TaskDTO(1L, "ProjectA", "u", "T1", "READY", null, null, null, null, null, 0, 0, 0, null),
+                new TaskDTO(2L, "ProjectB", "u", "T2", "READY", null, null, null, null, null, 0, 0, 0, null)
         ));
 
         vm.setProjectFilter("All");

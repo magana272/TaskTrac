@@ -78,6 +78,9 @@ public class SprintHttpService implements SprintService {
             request.taskIds().forEach(arr::add);
             body.add("taskIds", arr);
         }
+        if (request.completed() != null) {
+            body.addProperty("completed", request.completed());
+        }
         String response = ApiClient.put("/api/sprints/" + sprint.id(), body.toString());
         if (response == null) return null;
         return gson.fromJson(response, SprintDTO.class);

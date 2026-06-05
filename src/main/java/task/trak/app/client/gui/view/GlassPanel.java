@@ -5,8 +5,7 @@ import java.awt.geom.RoundRectangle2D;
 import javax.swing.*;
 
 /**
- * Custom JPanel with rounded corners, subtle gradient background,
- * and optional painted drop shadow for a glassmorphism-inspired look.
+ * JPanel with rounded corners, gradient background, and optional drop shadow.
  */
 public class GlassPanel extends JPanel {
 

@@ -27,6 +27,10 @@ public class TrakServer {
             DAOFactory.setFormat(DAOFactory.Format.JSON);
         } else if ("mongo".equalsIgnoreCase(fmt)) {
             DAOFactory.setFormat(DAOFactory.Format.MONGO);
+        } else if ("duckdb".equalsIgnoreCase(fmt)) {
+            DAOFactory.setFormat(DAOFactory.Format.DUCKDB);
+        } else if ("redis".equalsIgnoreCase(fmt)) {
+            DAOFactory.setFormat(DAOFactory.Format.REDIS);
         } else {
             DAOFactory.setFormat(DAOFactory.Format.PARQUET);
         }
@@ -62,7 +66,7 @@ public class TrakServer {
         server.createContext("/api/backlogs", AuthFilter.requireAuth(new BacklogRoutes.BacklogListHandler()));
         server.createContext("/api/backlogs/", AuthFilter.requireAuth(new BacklogRoutes.BacklogDetailHandler()));
 
-        server.setExecutor(null);
+        server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(4));
     }
 
     public static void main(String[] args) throws IOException {

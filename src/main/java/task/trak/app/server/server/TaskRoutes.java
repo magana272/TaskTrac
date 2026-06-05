@@ -112,7 +112,8 @@ public class TaskRoutes {
                         bodyRequest.status(),
                         bodyRequest.assignedTo(),
                         bodyRequest.summary(),
-                        bodyRequest.estimate()
+                        bodyRequest.estimate(),
+                        bodyRequest.completionNote()
                 );
                 request.validate();
 

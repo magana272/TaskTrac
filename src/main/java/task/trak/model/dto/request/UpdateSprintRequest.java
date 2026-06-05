@@ -9,7 +9,8 @@ public record UpdateSprintRequest(
         String projectName,
         String startDate,
         String endDate,
-        List<Long> taskIds
+        List<Long> taskIds,
+        Boolean completed
 ) {
     public void validate() {
         if (name == null || name.isBlank()) throw new ValidationException("Sprint name is required.");

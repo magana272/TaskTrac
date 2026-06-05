@@ -89,7 +89,7 @@ public class TaskEditView extends FormDialogView {
 
         if (titleArg != null || assigneeArg != null || statusArg != null || summaryArg != null || estimateArg != null) {
             try {
-                taskController.updateTask(task.id(), titleArg, statusArg, assigneeArg, summaryArg, estimateArg);
+                taskController.updateTask(task.id(), titleArg, statusArg, assigneeArg, summaryArg, estimateArg, null);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
