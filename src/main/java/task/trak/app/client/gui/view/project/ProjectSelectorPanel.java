@@ -14,6 +14,7 @@ public class ProjectSelectorPanel extends JPanel {
 
     private final GUIController controller;
     private final ProjectViewModel projectViewModel;
+    private final JLabel projectLabel;
     private final JComboBox<String> projectCombo;
 
     public ProjectSelectorPanel(GUIController controller) {
@@ -24,10 +25,10 @@ public class ProjectSelectorPanel extends JPanel {
         setBackground(TrakTheme.BG_SURFACE);
         setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_XL, TrakTheme.SP_SM, TrakTheme.SP_XL));
 
-        JLabel label = new JLabel("Project:");
-        label.setFont(TrakTheme.FONT_TITLE);
-        label.setForeground(TrakTheme.ACCENT);
-        add(label);
+        projectLabel = new JLabel("Project:");
+        projectLabel.setFont(TrakTheme.FONT_TITLE);
+        projectLabel.setForeground(TrakTheme.ACCENT);
+        add(projectLabel);
 
         projectCombo = new JComboBox<>();
         TrakTheme.styleComboBox(projectCombo);
@@ -51,6 +52,9 @@ public class ProjectSelectorPanel extends JPanel {
     private boolean refreshing = false;
 
     public void refresh(List<ProjectDTO> projects) {
+        boolean hasProjects = !projects.isEmpty();
+        projectLabel.setVisible(hasProjects);
+        projectCombo.setVisible(hasProjects);
         refreshing = true;
         try {
             String current = projectViewModel.getSelectedProject();
