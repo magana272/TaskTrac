@@ -33,7 +33,7 @@ make build          # build all 3 jars
 make build-gui      # build GUI jar only
 make build-cli      # build CLI jar only
 make build-server   # build server jar only
-make test           # run ~200 tests
+make test           # run tests
 make clean          # clean artifacts
 make reset          # clean + remove .store and .cache
 ```
@@ -105,15 +105,10 @@ Data persisted in `.store/`. Five backends (configurable via `.store/workspace.j
 
 Redis requires `REDIS_URL` env var. MongoDB requires `MONGO_URI` and `MONGO_DB`.
 
-## Examples
-
-- [`examples/api-demo.sh`](examples/api-demo.sh) — REST API curl demo
-- [`examples/cli-demo.sh`](examples/cli-demo.sh) — CLI workflow demo
-
 ## Tests
 
 ```bash
-make test    # ~200 tests across 20+ suites
+make test  
 ```
 
 ## Documentation
