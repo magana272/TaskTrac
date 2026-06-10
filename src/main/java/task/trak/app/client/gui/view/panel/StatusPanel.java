@@ -6,6 +6,7 @@ import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.auth.LoginView;
 import task.trak.app.client.gui.view.auth.SignUpView;
 import task.trak.app.client.gui.view.settings.ChangePasswordView;
+import task.trak.app.client.gui.view.settings.ChangeUserInfoView;
 import task.trak.app.client.gui.view.settings.DeleteAccountView;
 import task.trak.app.client.config.WorkspaceConfig;
 
@@ -212,16 +213,62 @@ public class StatusPanel extends JPanel {
         dialog.setLayout(new BorderLayout());
         dialog.getContentPane().setBackground(TrakTheme.BG_SURFACE);
 
-        JLabel titleLabel = new JLabel("Account Settings");
+        JLabel titleLabel = new JLabel("Settings");
         titleLabel.setFont(TrakTheme.FONT_HEADING);
         titleLabel.setForeground(TrakTheme.TEXT_PRIMARY);
         titleLabel.setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
         dialog.add(titleLabel, BorderLayout.NORTH);
 
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        buttonPanel.setBackground(TrakTheme.BG_SURFACE);
-        buttonPanel.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(TrakTheme.BG_SURFACE);
+        content.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+
+        // ── Profile Info ──
+        JLabel profileLabel = new JLabel("Profile Info");
+        profileLabel.setFont(TrakTheme.FONT_BODY);
+        profileLabel.setForeground(TrakTheme.TEXT_MUTED);
+        profileLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(profileLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
+
+        task.trak.model.dto.UserDTO userInfo = controller.getAuthController().getUserInfo();
+        String username = userInfo != null && userInfo.userName() != null ? userInfo.userName() : "-";
+        String email = userInfo != null && userInfo.email() != null ? userInfo.email() : "-";
+
+        JLabel usernameLabel = new JLabel("Username:  " + username);
+        usernameLabel.setFont(TrakTheme.FONT_BODY);
+        usernameLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        usernameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(usernameLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
+
+        JLabel emailLabel = new JLabel("Email:  " + email);
+        emailLabel.setFont(TrakTheme.FONT_BODY);
+        emailLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        emailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(emailLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_SM));
+
+        JButton changeInfoBtn = new JButton("Change User Name");
+        TrakTheme.styleButtonAccent(changeInfoBtn);
+        changeInfoBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        changeInfoBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        changeInfoBtn.addActionListener(e -> {
+            dialog.dispose();
+            new ChangeUserInfoView(this, controller.getAuthController()).show();
+        });
+        content.add(changeInfoBtn);
+
+        content.add(Box.createVerticalStrut(TrakTheme.SP_MD));
+
+        // ── Account Settings ──
+        JLabel accountLabel = new JLabel("Account Settings");
+        accountLabel.setFont(TrakTheme.FONT_BODY);
+        accountLabel.setForeground(TrakTheme.TEXT_MUTED);
+        accountLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(accountLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
 
         JButton changePassBtn = new JButton("Change Password");
         TrakTheme.styleButtonAccent(changePassBtn);
@@ -231,6 +278,8 @@ public class StatusPanel extends JPanel {
             dialog.dispose();
             new ChangePasswordView(this, controller.getAuthController()).show();
         });
+        content.add(changePassBtn);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_SM));
 
         JButton deleteAccBtn = new JButton("Delete Account");
         TrakTheme.styleButtonNav(deleteAccBtn);
@@ -240,11 +289,9 @@ public class StatusPanel extends JPanel {
             dialog.dispose();
             new DeleteAccountView(this, controller.getAuthController()).show();
         });
+        content.add(deleteAccBtn);
 
-        buttonPanel.add(changePassBtn);
-        buttonPanel.add(Box.createVerticalStrut(TrakTheme.SP_SM));
-        buttonPanel.add(deleteAccBtn);
-        dialog.add(buttonPanel, BorderLayout.CENTER);
+        dialog.add(content, BorderLayout.CENTER);
 
         JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
         bottomRow.setBackground(TrakTheme.BG_SURFACE);
