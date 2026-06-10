@@ -16,6 +16,7 @@ public class TaskAddView extends FormDialogView {
     private final TaskController taskController;
     private final List<ProjectDTO> projects;
     private final int defaultProjectIndex;
+    private final boolean lockProject;
 
     private JTextField titleField;
     private JComboBox<String> projectCombo;
@@ -26,14 +27,15 @@ public class TaskAddView extends FormDialogView {
     private TimeInputPanel estimatePanel;
 
     public TaskAddView(Component parent, TaskController taskController, List<ProjectDTO> projects) {
-        this(parent, taskController, projects, 0);
+        this(parent, taskController, projects, 0, false);
     }
 
-    public TaskAddView(Component parent, TaskController taskController, List<ProjectDTO> projects, int defaultProjectIndex) {
+    public TaskAddView(Component parent, TaskController taskController, List<ProjectDTO> projects, int defaultProjectIndex, boolean lockProject) {
         super(parent, "Add Task");
         this.taskController = taskController;
         this.projects = projects;
         this.defaultProjectIndex = defaultProjectIndex;
+        this.lockProject = lockProject;
     }
 
     @Override
@@ -61,6 +63,9 @@ public class TaskAddView extends FormDialogView {
             projectCombo.setSelectedIndex(defaultProjectIndex);
         }
         TrakTheme.styleComboBox(projectCombo);
+        if (lockProject) {
+            projectCombo.setEnabled(false);
+        }
         form.addField("Project:", projectCombo);
 
         assignedCombo = new JComboBox<>();

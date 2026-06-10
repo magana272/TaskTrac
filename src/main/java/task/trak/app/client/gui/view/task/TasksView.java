@@ -259,6 +259,17 @@ public class TasksView extends DataView implements ViewModelChangeListener {
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        String selected = guiController.getProjectController().getViewModel().getSelectedProject();
+        if (selected != null && !"All".equals(selected)) {
+            // Find the index of the selected project and lock the dropdown
+            for (int i = 0; i < projects.size(); i++) {
+                if (selected.equals(projects.get(i).projectName())) {
+                    new TaskAddView(SwingUtilities.getWindowAncestor(this),
+                            guiController.getTaskController(), projects, i, true).show();
+                    return;
+                }
+            }
+        }
         new TaskAddView(SwingUtilities.getWindowAncestor(this), guiController.getTaskController(), projects).show();
     }
 

@@ -20,6 +20,7 @@ public class SprintAddView extends FormDialogView {
     private final SprintController sprintController;
     private final List<ProjectDTO> projects;
     private final List<TaskDTO> tasks;
+    private final String lockedProject;
     private final List<JCheckBox> taskCheckboxes = new ArrayList<>();
     private JTextField nameField;
     private JComboBox<String> projectDropdown;
@@ -30,10 +31,16 @@ public class SprintAddView extends FormDialogView {
 
     public SprintAddView(Component parent, SprintController sprintController,
                          List<ProjectDTO> projects, List<TaskDTO> tasks) {
+        this(parent, sprintController, projects, tasks, null);
+    }
+
+    public SprintAddView(Component parent, SprintController sprintController,
+                         List<ProjectDTO> projects, List<TaskDTO> tasks, String lockedProject) {
         super(parent, "Add Sprint");
         this.sprintController = sprintController;
         this.projects = projects;
         this.tasks = tasks;
+        this.lockedProject = lockedProject;
     }
 
     @Override
@@ -47,6 +54,10 @@ public class SprintAddView extends FormDialogView {
                 .map(ProjectDTO::projectName)
                 .toArray(String[]::new);
         projectDropdown = new JComboBox<>(projectNames);
+        if (lockedProject != null) {
+            projectDropdown.setSelectedItem(lockedProject);
+            projectDropdown.setEnabled(false);
+        }
         projectDropdown.addActionListener(e -> updateTaskCheckboxes());
         TrakTheme.styleComboBox(projectDropdown);
         form.addField("Project:", projectDropdown);
