@@ -64,12 +64,7 @@ public class SprintProgressPanel extends JPanel {
         deleteSprintBtn.setVisible(false);
         deleteSprintBtn.addActionListener(e -> {
             if (activeSprint == null) return;
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Permanently delete sprint \"" + activeSprint.name() + "\" and remove all task associations?",
-                    "Delete Sprint", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (confirm == JOptionPane.YES_OPTION) {
-                controller.getSprintController().deleteSprint(activeSprint.name());
-            }
+            showDeleteConfirmDialog(activeSprint);
         });
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
@@ -174,5 +169,51 @@ public class SprintProgressPanel extends JPanel {
         int pct = total > 0 ? (int)(progress * 100) : 0;
         statsLabel.setText("Ready: " + ready + "  │  In Progress: " + inProgress
                 + "  │  Complete: " + complete + "    " + complete + "/" + total + " tasks  " + pct + "%");
+    }
+
+    private void showDeleteConfirmDialog(SprintDTO sprint) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Delete Sprint", true);
+        dialog.setUndecorated(true);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(TrakTheme.BG_SURFACE);
+
+        JLabel titleLabel = new JLabel("Delete Sprint");
+        titleLabel.setFont(TrakTheme.FONT_HEADING);
+        titleLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        titleLabel.setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        dialog.add(titleLabel, BorderLayout.NORTH);
+
+        JLabel msgLabel = new JLabel("Permanently delete sprint \"" + sprint.name() + "\" and remove all task associations?");
+        msgLabel.setFont(TrakTheme.FONT_BODY);
+        msgLabel.setForeground(TrakTheme.TEXT_SECONDARY);
+        msgLabel.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        dialog.add(msgLabel, BorderLayout.CENTER);
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
+        buttonRow.setBackground(TrakTheme.BG_SURFACE);
+        buttonRow.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_MD, TrakTheme.SP_LG));
+
+        JButton cancelBtn = new JButton("Cancel");
+        TrakTheme.styleButtonNav(cancelBtn);
+        cancelBtn.setPreferredSize(new Dimension(80, 28));
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        JButton deleteBtn = new JButton("Delete");
+        TrakTheme.styleButtonPrimary(deleteBtn);
+        deleteBtn.setPreferredSize(new Dimension(80, 28));
+        deleteBtn.addActionListener(e -> {
+            dialog.dispose();
+            controller.getSprintController().deleteSprint(sprint.name());
+        });
+
+        buttonRow.add(cancelBtn);
+        buttonRow.add(deleteBtn);
+        dialog.add(buttonRow, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(400, dialog.getPreferredSize().height));
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 }
