@@ -54,7 +54,7 @@ java -jar trak-gui [--local] [--test]     # GUI
 
 ## Authentication
 
-A `guest` account (password: `guest`) is created automatically.
+A `guest` account (password: `Guest1!`) is created automatically.
 
 ```bash
 # Interactive login/signup

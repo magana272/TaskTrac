@@ -46,7 +46,7 @@ public class GUIMvcSteps {
     public void aTestUserExists(String username) {
         var userService = ServiceFactory.userService();
         if (userService.getByUsername(username) == null) {
-            userService.create(new CreateUserRequest(username, "Test", "User", username + "@test.com", "password"));
+            userService.create(new CreateUserRequest(username, "Test", "User", username + "@test.com", "Test1!"));
         }
     }
 
