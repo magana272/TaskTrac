@@ -93,7 +93,7 @@ public class SeedDataTest {
         usernames.add("guest");
 
         for (int i = 0; i < 19; i++) {
-            String username = FIRST_NAMES[i].toLowerCase() + (i + 1);
+            String username = FIRST_NAMES[i].toLowerCase() + String.format("%02d", i + 1);
             userService.create(new CreateUserRequest(username, FIRST_NAMES[i], LAST_NAMES[i],
                     FIRST_NAMES[i].toLowerCase() + "@company.com", "Pass1!"));
             usernames.add(username);
