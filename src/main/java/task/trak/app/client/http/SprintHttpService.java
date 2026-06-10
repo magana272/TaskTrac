@@ -94,4 +94,10 @@ public class SprintHttpService implements SprintService {
         }.getType();
         return gson.fromJson(response, listType);
     }
+
+    @Override
+    public List<SprintDTO> listByUser(String username) {
+        // Server automatically filters by authenticated user's projects
+        return listAll();
+    }
 }

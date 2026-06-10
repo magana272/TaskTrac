@@ -5,6 +5,8 @@ import task.trak.model.dto.request.CreateSprintRequest;
 import task.trak.model.dto.request.UpdateSprintRequest;
 import task.trak.model.exception.EntityNotFoundException;
 import task.trak.api.service.SprintService;
+import task.trak.model.dto.ProjectDTO;
+import task.trak.api.service.ServiceFactory;
 import task.trak.app.server.dao.DAOFactory;
 import task.trak.app.server.dao.EntityDAO;
 import task.trak.app.server.model.sprint.Sprint;
@@ -13,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TrakSprintService implements SprintService {
@@ -102,6 +105,17 @@ public class TrakSprintService implements SprintService {
     @Override
     public List<SprintDTO> listAll() {
         return store.loadAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SprintDTO> listByUser(String username) {
+        Set<String> userProjectNames = ServiceFactory.projectService().listByUser(username).stream()
+                .map(ProjectDTO::projectName)
+                .collect(Collectors.toSet());
+        return store.loadAll().stream()
+                .filter(s -> s.getProject_name() != null && userProjectNames.contains(s.getProject_name()))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
