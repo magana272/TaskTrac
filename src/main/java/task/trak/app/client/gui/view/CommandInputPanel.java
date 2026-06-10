@@ -146,13 +146,12 @@ public class CommandInputPanel extends JPanel {
         }
 
         JScrollPane scroll = new JScrollPane(content);
-        scroll.setBorder(null);
+        TrakTheme.styleScrollPane(scroll);
         scroll.getViewport().setBackground(TrakTheme.BG_SURFACE);
         dialog.add(scroll, BorderLayout.CENTER);
 
-        dialog.pack();
-        dialog.setMinimumSize(new Dimension(420, 300));
-        dialog.setSize(480, dialog.getPreferredSize().height);
+        dialog.setSize(680, 420);
+        dialog.setResizable(false);
         dialog.setLocationRelativeTo(owner);
         dialog.setVisible(true);
     }
