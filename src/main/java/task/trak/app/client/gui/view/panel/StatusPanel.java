@@ -206,15 +206,60 @@ public class StatusPanel extends JPanel {
     }
 
     private void showSettingsMenu() {
-        String[] options = {"Change Password", "Delete Account", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(this, "Account Settings",
-                "Settings", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
-                null, options, options[2]);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Settings", true);
+        dialog.setUndecorated(true);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(TrakTheme.BG_SURFACE);
 
-        if (choice == 0) {
+        JLabel titleLabel = new JLabel("Account Settings");
+        titleLabel.setFont(TrakTheme.FONT_HEADING);
+        titleLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        titleLabel.setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        dialog.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setBackground(TrakTheme.BG_SURFACE);
+        buttonPanel.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+
+        JButton changePassBtn = new JButton("Change Password");
+        TrakTheme.styleButtonAccent(changePassBtn);
+        changePassBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        changePassBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        changePassBtn.addActionListener(e -> {
+            dialog.dispose();
             new ChangePasswordView(this, controller.getAuthController()).show();
-        } else if (choice == 1) {
+        });
+
+        JButton deleteAccBtn = new JButton("Delete Account");
+        TrakTheme.styleButtonNav(deleteAccBtn);
+        deleteAccBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        deleteAccBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        deleteAccBtn.addActionListener(e -> {
+            dialog.dispose();
             new DeleteAccountView(this, controller.getAuthController()).show();
-        }
+        });
+
+        buttonPanel.add(changePassBtn);
+        buttonPanel.add(Box.createVerticalStrut(TrakTheme.SP_SM));
+        buttonPanel.add(deleteAccBtn);
+        dialog.add(buttonPanel, BorderLayout.CENTER);
+
+        JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
+        bottomRow.setBackground(TrakTheme.BG_SURFACE);
+        bottomRow.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_MD, TrakTheme.SP_LG));
+
+        JButton cancelBtn = new JButton("Cancel");
+        TrakTheme.styleButtonNav(cancelBtn);
+        cancelBtn.setPreferredSize(new Dimension(80, 28));
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        bottomRow.add(cancelBtn);
+        dialog.add(bottomRow, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(300, dialog.getPreferredSize().height));
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 }
