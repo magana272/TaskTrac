@@ -31,7 +31,13 @@ public class SprintRoutes {
         private void handleList(HttpExchange exchange) throws IOException {
             try {
                 SprintService sprintService = ServiceFactory.sprintService();
-                List<SprintDTO> sprints = sprintService.listAll();
+                String username = (String) exchange.getAttribute("username");
+                List<SprintDTO> sprints;
+                if (username != null) {
+                    sprints = sprintService.listByUser(username);
+                } else {
+                    sprints = sprintService.listAll();
+                }
                 JsonHelper.sendJson(exchange, 200, sprints);
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
