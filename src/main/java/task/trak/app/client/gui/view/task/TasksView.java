@@ -1,5 +1,6 @@
 package task.trak.app.client.gui.view.task;
 
+import task.trak.model.dto.SprintDTO;
 import task.trak.model.dto.TaskDTO;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.DataView;
@@ -136,15 +137,36 @@ public class TasksView extends DataView implements ViewModelChangeListener {
             FlexGridPanel gridPanel = new FlexGridPanel(gap, minCardWidth);
             gridPanel.setBackground(TrakTheme.BG_DARK);
 
+            // Build task-id -> sprint-name lookup
+            Map<Long, String> taskSprintMap = new HashMap<>();
+            for (SprintDTO sprint : guiController.getSprintController().getViewModel().get()) {
+                if (sprint.taskIds() != null) {
+                    for (Long tid : sprint.taskIds()) {
+                        taskSprintMap.putIfAbsent(tid, sprint.name());
+                    }
+                }
+            }
+
             Map<String, List<String>> memberCache = new HashMap<>();
             this.activeCards = new ArrayList<>();
             List<JComponent> cards = new ArrayList<>();
 
+            long now = System.currentTimeMillis();
             for (TaskDTO task : visible) {
                 List<String> assignees = memberCache.computeIfAbsent(
                         task.projectName(),
                         name -> guiController.getProjectController().getProjectMembers(name));
-                TaskCardPanel card = new TaskCardPanel(task, guiController.getTaskController(), assignees);
+                String sprintName = taskSprintMap.get(task.id());
+                TaskCardPanel card = new TaskCardPanel(task, guiController.getTaskController(), assignees, sprintName);
+
+                // Initialize timer state immediately for in-progress tasks
+                if ("INPROGRESS".equals(task.status()) && task.estimate() != null) {
+                    long elapsed = task.timeSpentMs() + (now - lastRefreshTimestamp);
+                    long estimateMs = TimeUtil.parseDurationToMs(task.estimate());
+                    double ratio = estimateMs > 0 ? (double) elapsed / estimateMs : -1;
+                    card.setTimerState(ratio, elapsed);
+                }
+
                 cards.add(card);
                 this.activeCards.add(card);
             }
@@ -173,7 +195,10 @@ public class TasksView extends DataView implements ViewModelChangeListener {
 
             taskCardsContainer.add(scrollPane, BorderLayout.CENTER);
 
-            this.lastRefreshTimestamp = System.currentTimeMillis();
+            // Only reset timestamp on first load (when no active timer exists)
+            if (lastRefreshTimestamp == 0) {
+                lastRefreshTimestamp = System.currentTimeMillis();
+            }
             startTimerIfNeeded();
         }
 
