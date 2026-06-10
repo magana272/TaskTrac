@@ -43,6 +43,46 @@ public class UserRoutes {
         }
     }
 
+    public static class UserExistsHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"GET".equals(exchange.getRequestMethod())) {
+                JsonHelper.sendError(exchange, 405, "Method not allowed");
+                return;
+            }
+            String username = JsonHelper.extractPathParam(exchange.getRequestURI().getPath(), "/api/users/exists/");
+            if (username.isEmpty()) {
+                JsonHelper.sendError(exchange, 400, "Username is required");
+                return;
+            }
+            UserService userService = ServiceFactory.userService();
+            boolean exists = userService.getByUsername(username) != null;
+            Map<String, Boolean> resp = new LinkedHashMap<>();
+            resp.put("exists", exists);
+            JsonHelper.sendJson(exchange, 200, resp);
+        }
+    }
+
+    public static class EmailExistsHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"GET".equals(exchange.getRequestMethod())) {
+                JsonHelper.sendError(exchange, 405, "Method not allowed");
+                return;
+            }
+            String email = JsonHelper.extractPathParam(exchange.getRequestURI().getPath(), "/api/users/email-exists/");
+            if (email.isEmpty()) {
+                JsonHelper.sendError(exchange, 400, "Email is required");
+                return;
+            }
+            UserService userService = ServiceFactory.userService();
+            boolean exists = userService.getByEmail(email) != null;
+            Map<String, Boolean> resp = new LinkedHashMap<>();
+            resp.put("exists", exists);
+            JsonHelper.sendJson(exchange, 200, resp);
+        }
+    }
+
     public static class UserDetailHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {

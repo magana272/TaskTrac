@@ -88,6 +88,20 @@ public class AuthController {
         userViewModel.setSession(null);
     }
 
+    public boolean usernameExists(String username) {
+        if (userService instanceof task.trak.app.client.http.UserHttpService httpService) {
+            return httpService.usernameExists(username);
+        }
+        return userService.getByUsername(username) != null;
+    }
+
+    public boolean emailExists(String email) {
+        if (userService instanceof task.trak.app.client.http.UserHttpService httpService) {
+            return httpService.emailExists(email);
+        }
+        return userService.getByEmail(email) != null;
+    }
+
     public UserDTO getUserInfo() {
         Session session = userViewModel.getSession();
         if (session == null) return null;

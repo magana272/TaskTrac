@@ -2,10 +2,10 @@ Feature: User Management
 
 
   Scenario: User creates a new user
-    Given a user with the username "jdoe" does not already exist
-    When the user runs the command "tasktracker user add jdoe --first_name Jane --last_name Doe --email jane@example.com"
-    Then a new user named "jdoe" is created
-    And the user "jdoe" is saved successfully
+    Given a user with the username "jdoe1" does not already exist
+    When the user runs the command "tasktracker user add jdoe1 --first_name Jane --last_name Doe --email jane@example.com"
+    Then a new user named "jdoe1" is created
+    And the user "jdoe1" is saved successfully
 
   Scenario: User creates a new user with minimal info
     Given a user with the username "mmagana" does not already exist

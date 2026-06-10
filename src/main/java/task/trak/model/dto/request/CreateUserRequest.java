@@ -11,6 +11,12 @@ public record CreateUserRequest(
 ) {
     public void validate() {
         if (username == null || username.isBlank()) throw new ValidationException("Username is required.");
+        if (username.length() < 5 || username.length() > 17) {
+            throw new ValidationException("Username must be 5–17 characters long.");
+        }
+        if (!username.matches("[a-zA-Z0-9]+")) {
+            throw new ValidationException("Username must be alphanumeric.");
+        }
         if (password != null) validatePassword(password);
     }
 
