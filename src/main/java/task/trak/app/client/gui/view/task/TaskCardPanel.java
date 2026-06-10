@@ -25,14 +25,17 @@ public class TaskCardPanel extends JPanel {
     private final TaskDTO task;
     private final TaskController taskController;
     private final List<String> assignees;
+    private final String sprintName;
     private boolean hovered = false;
     private double timerRatio = -1; // -1 means no timer
     private long timerElapsedMs = 0;
+    private JLabel timerLabel;
 
-    public TaskCardPanel(TaskDTO task, TaskController taskController, List<String> assignees) {
+    public TaskCardPanel(TaskDTO task, TaskController taskController, List<String> assignees, String sprintName) {
         this.task = task;
         this.taskController = taskController;
         this.assignees = assignees;
+        this.sprintName = sprintName;
 
         setLayout(new BorderLayout(4, 4));
         setMinimumSize(new Dimension(200, 160));
@@ -66,6 +69,9 @@ public class TaskCardPanel extends JPanel {
     public void setTimerState(double ratio, long elapsedMs) {
         this.timerRatio = ratio;
         this.timerElapsedMs = elapsedMs;
+        if (timerLabel != null) {
+            timerLabel.setText(TimeUtil.formatDuration(elapsedMs));
+        }
     }
 
     public boolean isInProgress() {
@@ -128,12 +134,6 @@ public class TaskCardPanel extends JPanel {
                 g2.fillRoundRect(barInset, barY, fillWidth, barHeight, 4, 4);
             }
 
-            // Time text
-            String timeText = TimeUtil.formatDuration(timerElapsedMs);
-            g2.setFont(TrakTheme.FONT_CAPTION);
-            g2.setColor(TrakTheme.TEXT_SECONDARY);
-            FontMetrics fm = g2.getFontMetrics();
-            g2.drawString(timeText, barInset + barWidth - fm.stringWidth(timeText), barY - 2);
         }
 
         g2.dispose();
@@ -242,12 +242,27 @@ public class TaskCardPanel extends JPanel {
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setOpaque(false);
 
+        // Project name + Due date on one line
         String projectText = task.projectName() != null ? task.projectName() : "-";
-        JLabel projectLabel = new JLabel(projectText);
-        projectLabel.setFont(TrakTheme.FONT_CAPTION);
-        projectLabel.setForeground(TrakTheme.TEXT_MUTED);
-        projectLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        centerPanel.add(projectLabel);
+        String infoLine = projectText;
+        if (task.deadline() != null) {
+            infoLine += "   Due: " + DATE_FMT.format(task.deadline());
+        }
+        JLabel infoLabel = new JLabel(infoLine);
+        infoLabel.setFont(TrakTheme.FONT_CAPTION);
+        infoLabel.setForeground(TrakTheme.TEXT_MUTED);
+        infoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        centerPanel.add(infoLabel);
+
+        // Sprint name (if associated)
+        if (sprintName != null) {
+            JLabel sprintLabel = new JLabel("Sprint: " + sprintName);
+            sprintLabel.setFont(TrakTheme.FONT_CAPTION);
+            sprintLabel.setForeground(TrakTheme.ACCENT_BLUE);
+            sprintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            centerPanel.add(sprintLabel);
+        }
+
         centerPanel.add(Box.createVerticalStrut(TrakTheme.SP_XS));
 
         String summaryText = task.summary() != null ? task.summary() : "";
@@ -277,20 +292,21 @@ public class TaskCardPanel extends JPanel {
         bottomRow.setLayout(new BoxLayout(bottomRow, BoxLayout.X_AXIS));
         bottomRow.setOpaque(false);
 
-        if (task.deadline() != null) {
-            JLabel deadlineLabel = new JLabel("Due " + DATE_FMT.format(task.deadline()));
-            deadlineLabel.setFont(TrakTheme.FONT_CAPTION.deriveFont(Font.ITALIC));
-            deadlineLabel.setForeground(TrakTheme.TEXT_MUTED);
-            bottomRow.add(deadlineLabel);
-        }
-
         if (task.estimate() != null && !task.estimate().isBlank()) {
-            if (task.deadline() != null) bottomRow.add(Box.createHorizontalStrut(TrakTheme.SP_SM));
             JLabel estimateLabel = new JLabel("Est " + task.estimate());
             estimateLabel.setFont(TrakTheme.FONT_CAPTION.deriveFont(Font.ITALIC));
             estimateLabel.setForeground(TrakTheme.ACCENT_BLUE);
             bottomRow.add(estimateLabel);
         }
+
+        // Timer elapsed label (updated live by setTimerState)
+        timerLabel = new JLabel("");
+        timerLabel.setFont(TrakTheme.FONT_CAPTION);
+        timerLabel.setForeground(TrakTheme.TEXT_SECONDARY);
+        if (task.estimate() != null && !task.estimate().isBlank()) {
+            bottomRow.add(Box.createHorizontalStrut(TrakTheme.SP_SM));
+        }
+        bottomRow.add(timerLabel);
 
         bottomRow.add(Box.createHorizontalGlue());
 
