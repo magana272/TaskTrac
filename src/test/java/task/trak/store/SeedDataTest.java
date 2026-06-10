@@ -89,13 +89,13 @@ public class SeedDataTest {
 
         // --- Create 20 users (including guest) ---
         List<String> usernames = new ArrayList<>();
-        userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+        userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "Guest1!"));
         usernames.add("guest");
 
         for (int i = 0; i < 19; i++) {
             String username = FIRST_NAMES[i].toLowerCase() + (i + 1);
             userService.create(new CreateUserRequest(username, FIRST_NAMES[i], LAST_NAMES[i],
-                    FIRST_NAMES[i].toLowerCase() + "@company.com", "password"));
+                    FIRST_NAMES[i].toLowerCase() + "@company.com", "Pass1!"));
             usernames.add(username);
             Thread.sleep(2); // ensure unique IDs
         }

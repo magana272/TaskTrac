@@ -11,5 +11,6 @@ public record UpdateUserRequest(
 ) {
     public void validate() {
         if (username == null || username.isBlank()) throw new ValidationException("Username is required.");
+        if (password != null) CreateUserRequest.validatePassword(password);
     }
 }

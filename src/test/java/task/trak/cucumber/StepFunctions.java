@@ -600,7 +600,7 @@ public class StepFunctions {
         // Create user with password and log in
         UserService userService = new TrakUserService();
         if (userService.getByUsername(username) == null) {
-            userService.create(new CreateUserRequest(username, "Test", "User", username + "@example.com", "testpass"));
+            userService.create(new CreateUserRequest(username, "Test", "User", username + "@example.com", "Test1!"));
         }
         Session s = new Session(username);
         SessionDAO.save(s);

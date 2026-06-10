@@ -79,7 +79,7 @@ public class StatusPanel extends JPanel {
         guestButton = new JButton("Guest");
         TrakTheme.styleButtonNav(guestButton);
         guestButton.addActionListener(e ->
-                controller.getAuthController().login("guest", "guest"));
+                controller.getAuthController().login("guest", "Guest1!"));
 
         settingsButton = new JButton("\u2699 Settings");
         TrakTheme.styleButtonNav(settingsButton);

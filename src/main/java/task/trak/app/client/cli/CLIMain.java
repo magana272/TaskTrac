@@ -59,7 +59,7 @@ public class CLIMain {
     private static void ensureGuestAccount() {
         var userService = ServiceFactory.userService();
         if (userService.getByUsername("guest") == null) {
-            userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+            userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "Guest1!"));
         }
     }
 
