@@ -234,6 +234,8 @@ public class StatusPanel extends JPanel {
 
         task.trak.model.dto.UserDTO userInfo = controller.getAuthController().getUserInfo();
         String username = userInfo != null && userInfo.userName() != null ? userInfo.userName() : "-";
+        String firstName = userInfo != null && userInfo.firstName() != null ? userInfo.firstName() : "-";
+        String lastName = userInfo != null && userInfo.lastName() != null ? userInfo.lastName() : "-";
         String email = userInfo != null && userInfo.email() != null ? userInfo.email() : "-";
 
         JLabel usernameLabel = new JLabel("Username:  " + username);
@@ -243,6 +245,13 @@ public class StatusPanel extends JPanel {
         content.add(usernameLabel);
         content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
 
+        JLabel nameLabel = new JLabel("Name:  " + firstName + " " + lastName);
+        nameLabel.setFont(TrakTheme.FONT_BODY);
+        nameLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(nameLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
+
         JLabel emailLabel = new JLabel("Email:  " + email);
         emailLabel.setFont(TrakTheme.FONT_BODY);
         emailLabel.setForeground(TrakTheme.TEXT_PRIMARY);
@@ -250,7 +259,7 @@ public class StatusPanel extends JPanel {
         content.add(emailLabel);
         content.add(Box.createVerticalStrut(TrakTheme.SP_SM));
 
-        JButton changeInfoBtn = new JButton("Change User Name");
+        JButton changeInfoBtn = new JButton("Edit User Info");
         TrakTheme.styleButtonAccent(changeInfoBtn);
         changeInfoBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
         changeInfoBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
