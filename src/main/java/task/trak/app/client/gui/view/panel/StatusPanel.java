@@ -13,12 +13,10 @@ import task.trak.app.client.config.WorkspaceConfig;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
 
 /**
- * Top status bar with branding, user info, and auth buttons.
+ * Top status bar with user info and auth buttons.
+ * Native macOS traffic lights handle close/minimize/fullscreen.
  */
 public class StatusPanel extends JPanel {
 
@@ -36,7 +34,7 @@ public class StatusPanel extends JPanel {
         this.controller = controller;
         setLayout(new BorderLayout());
         setBackground(TrakTheme.BG_SURFACE);
-        setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_XL, TrakTheme.SP_MD, TrakTheme.SP_XL));
+        setBorder(new EmptyBorder(2, 72, TrakTheme.SP_SM, TrakTheme.SP_XL));
 
         // ── Left: Brand + user ──
         JPanel leftPanel = new JPanel();
@@ -47,7 +45,6 @@ public class StatusPanel extends JPanel {
         titleLabel.setFont(TrakTheme.FONT_DISPLAY);
         titleLabel.setForeground(TrakTheme.ACCENT);
 
-        // Thin separator line
         JLabel divider = new JLabel("  \u2502  ");
         divider.setForeground(TrakTheme.TEXT_MUTED);
         divider.setFont(TrakTheme.FONT_BODY);
@@ -65,7 +62,7 @@ public class StatusPanel extends JPanel {
         leftPanel.add(statusDot);
         leftPanel.add(userLabel);
 
-        // ── Right: Auth buttons ──
+        // ── Right: Auth buttons + theme toggle ──
         loginButton = new JButton("Login");
         TrakTheme.styleButtonAccent(loginButton);
         loginButton.addActionListener(e ->
@@ -109,65 +106,10 @@ public class StatusPanel extends JPanel {
         rightPanel.add(guestButton);
         rightPanel.add(settingsButton);
         rightPanel.add(logoutButton);
-
-        // Window controls (Spotify-style)
-        JPanel windowControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
-        windowControls.setOpaque(false);
-
-        JButton minimizeBtn = new JButton("\u2013");
-        minimizeBtn.setFont(TrakTheme.FONT_BODY);
-        minimizeBtn.setForeground(TrakTheme.STATUS_INPROGRESS);
-        minimizeBtn.setBackground(TrakTheme.BG_SURFACE);
-        minimizeBtn.setOpaque(true);
-        minimizeBtn.setBorderPainted(false);
-        minimizeBtn.setFocusPainted(false);
-        minimizeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        minimizeBtn.setBorder(new EmptyBorder(2, 8, 2, 8));
-        minimizeBtn.addActionListener(e -> {
-            Window w = SwingUtilities.getWindowAncestor(this);
-            if (w instanceof Frame f) f.setExtendedState(Frame.ICONIFIED);
-        });
-
-        JButton closeBtn = new JButton("\u2715");
-        closeBtn.setFont(TrakTheme.FONT_BODY);
-        closeBtn.setForeground(TrakTheme.STATUS_READY);
-        closeBtn.setBackground(TrakTheme.BG_SURFACE);
-        closeBtn.setOpaque(true);
-        closeBtn.setBorderPainted(false);
-        closeBtn.setFocusPainted(false);
-        closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        closeBtn.setBorder(new EmptyBorder(2, 8, 2, 8));
-        closeBtn.addActionListener(e -> System.exit(0));
-
-        windowControls.add(themeToggle);
-        windowControls.add(minimizeBtn);
-        windowControls.add(closeBtn);
-
-        // Right side: auth buttons + window controls
-        JPanel rightWrapper = new JPanel(new BorderLayout());
-        rightWrapper.setOpaque(false);
-        rightWrapper.add(rightPanel, BorderLayout.CENTER);
-        rightWrapper.add(windowControls, BorderLayout.EAST);
+        rightPanel.add(themeToggle);
 
         add(leftPanel, BorderLayout.WEST);
-        add(rightWrapper, BorderLayout.EAST);
-
-        // Drag-to-move (anywhere on this panel)
-        final Point[] dragStart = {null};
-        addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) { dragStart[0] = e.getPoint(); }
-            public void mouseReleased(MouseEvent e) { dragStart[0] = null; }
-        });
-        addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
-                if (dragStart[0] == null) return;
-                Window w = SwingUtilities.getWindowAncestor(StatusPanel.this);
-                if (w != null) {
-                    Point loc = w.getLocation();
-                    w.setLocation(loc.x + e.getX() - dragStart[0].x, loc.y + e.getY() - dragStart[0].y);
-                }
-            }
-        });
+        add(rightPanel, BorderLayout.EAST);
     }
 
     public void update(Session session) {

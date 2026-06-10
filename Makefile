@@ -1,6 +1,6 @@
 .PHONY: test build build-gui build-cli build-server clean reset server gui gui-test gui-server gui-test-server cli cli-test cli-server cli-test-server all all-test
 
-# ── Build ────────────────────────────────────────────────
+# Build
 build:
 	./gradlew allJars
 	cp build/libs/trak-server-0.1.0.jar trak-server
@@ -9,7 +9,7 @@ build:
 	chmod +x trak-server trak-cli trak-gui
 
 build-gui:
-	./gradlew trak-gui
+	./gradlew trak-gui --rerun-tasks
 	cp build/libs/trak-gui-0.1.0.jar trak-gui
 	chmod +x trak-gui
 
@@ -33,6 +33,23 @@ clean:
 reset: clean
 	rm -rf .store .cache
 
+# macOS native full-screen requires these module opens
+GUI_JVM_ARGS = --add-opens java.desktop/com.apple.eawt=ALL-UNNAMED --add-opens java.desktop/com.apple.eawt.event=ALL-UNNAMED
+
+# GUI
+gui: build-gui
+	java $(GUI_JVM_ARGS) -jar trak-gui --local
+
+gui-test: build-gui
+	java $(GUI_JVM_ARGS) -jar trak-gui --local --test
+
+gui-server: build-gui
+	java $(GUI_JVM_ARGS) -jar trak-gui --remote
+
+gui-test-server: build-gui
+	java $(GUI_JVM_ARGS) -jar trak-gui --remote --test
+
+# CLI
 cli: build
 	@echo "Usage: java -jar trak-cli <command>"
 	@echo "Example: java -jar trak-cli info"
@@ -40,7 +57,7 @@ cli: build
 cli-test: build
 	java -jar trak-cli info
 
-# ── CLI (remote, needs server running) ───────────────────
+# CLI (remote, needs server running)
 cli-server: build
 	@echo "Usage: java -jar trak-cli --remote <command>"
 	@echo "Example: java -jar trak-cli --remote info"
@@ -48,7 +65,7 @@ cli-server: build
 cli-test-server: build
 	java -jar trak-cli --remote info
 
-# ── All (local with test data) ───────────────────────────
+# All (local with test data)
 all-test: test build
 	@echo ""
 	@echo "Built 3 executables (local + test data):"
@@ -57,7 +74,7 @@ all-test: test build
 	@echo "  make gui-test-server # GUI with test data (remote)"
 	@echo "  make cli             # CLI (local)"
 
-# ── All (local, no test data) ────────────────────────────
+# All (local, no test data)
 all: test build
 	@echo ""
 	@echo "Built 3 executables:"

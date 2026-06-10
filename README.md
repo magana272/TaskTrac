@@ -1,6 +1,6 @@
 # Trak
 
-**Version 0.0.9**
+**Version 0.1.0**
 
 A sprint planning and task tracking tool. Create projects, break work into tasks, plan sprints, and track progress. When a sprint is active, in-progress tasks show a live countdown against their estimate. Sprints track completed vs total task counts. Available as a CLI, Swing desktop GUI, and REST API server.
 
@@ -13,7 +13,7 @@ make build  # build all executables
 ```
 
 ```bash
-make build-gui && java -jar trak-gui --local --test  # launch GUI with test data
+make gui-test  # build + launch GUI with test data
 ```
 
 Or start the server and connect clients:
@@ -26,7 +26,7 @@ java -jar trak-cli --remote tasks            # Terminal 3: CLI
 
 ## Build
 
-Requires Java 17+ and Gradle.
+Requires Java 23+ and Gradle.
 
 ```bash
 make build          # build all 3 jars
@@ -36,6 +36,10 @@ make build-server   # build server jar only
 make test           # run tests
 make clean          # clean artifacts
 make reset          # clean + remove .store and .cache
+
+make gui            # build + launch GUI (local)
+make gui-test       # build + launch GUI (local + test data)
+make gui-server     # build + launch GUI (remote)
 ```
 
 ## Executables
@@ -46,10 +50,12 @@ make reset          # clean + remove .store and .cache
 | `trak-cli` | Command-line client | Local (direct DB) |
 | `trak-gui` | Swing desktop client | Remote (needs server) |
 
+On macOS, the GUI uses native full-screen and transparent title bar. The `make gui*` targets include the required `--add-opens` JVM flags automatically.
+
 ```bash
 java -jar trak-server [port]              # start server
 java -jar trak-cli [--remote] <command>   # CLI
-java -jar trak-gui [--local] [--test]     # GUI
+java -jar trak-gui [--local] [--test]     # GUI (use make targets for macOS full-screen support)
 ```
 
 ## Authentication
