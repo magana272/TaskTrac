@@ -12,22 +12,23 @@ public class ChangeUserInfoView extends FormDialogView {
     private final AuthController authController;
     private JTextField firstNameField;
     private JTextField lastNameField;
-    private JTextField emailField;
 
     public ChangeUserInfoView(Component parent, AuthController authController) {
-        super(parent, "Change User Info");
+        super(parent, "Edit User Info");
         this.authController = authController;
     }
 
     @Override
     protected FormPanel buildPanel() {
         FormPanel form = new FormPanel();
-        firstNameField = new JTextField();
-        lastNameField = new JTextField();
-        emailField = new JTextField();
+
+        task.trak.model.dto.UserDTO current = authController.getUserInfo();
+
+        firstNameField = new JTextField(current != null ? current.firstName() : "");
+        lastNameField = new JTextField(current != null ? current.lastName() : "");
+
         form.addField("First Name:", firstNameField);
         form.addField("Last Name:", lastNameField);
-        form.addField("Email:", emailField);
         return form;
     }
 
@@ -35,9 +36,8 @@ public class ChangeUserInfoView extends FormDialogView {
     protected void onConfirm() {
         String firstName = firstNameField.getText().trim();
         String lastName = lastNameField.getText().trim();
-        String email = emailField.getText().trim();
 
-        if (firstName.isEmpty() && lastName.isEmpty() && email.isEmpty()) {
+        if (firstName.isEmpty() && lastName.isEmpty()) {
             JOptionPane.showMessageDialog(parent, "Enter at least one field to update.",
                     "Validation Error", JOptionPane.WARNING_MESSAGE);
             return;
@@ -47,7 +47,7 @@ public class ChangeUserInfoView extends FormDialogView {
             authController.changeUserInfo(
                     firstName.isEmpty() ? null : firstName,
                     lastName.isEmpty() ? null : lastName,
-                    email.isEmpty() ? null : email);
+                    null);
             JOptionPane.showMessageDialog(parent, "User info updated.", "Success",
                     JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
