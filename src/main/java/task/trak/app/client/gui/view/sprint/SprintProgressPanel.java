@@ -56,7 +56,9 @@ public class SprintProgressPanel extends JPanel {
             // Open sprint add dialog
             List<task.trak.model.dto.ProjectDTO> projects = controller.getProjectController().getViewModel().get();
             List<TaskDTO> tasks = controller.getTaskController().getViewModel().get();
-            new SprintAddView(this, controller.getSprintController(), projects, tasks).show();
+            String selected = controller.getProjectController().getViewModel().getSelectedProject();
+            String locked = (selected != null && !"All".equals(selected)) ? selected : null;
+            new SprintAddView(this, controller.getSprintController(), projects, tasks, locked).show();
         });
 
         completeSprintBtn = new JButton("Complete Sprint");
