@@ -67,6 +67,20 @@ public class TrakProjectService implements ProjectService {
 
     @Override
     public boolean deleteByName(String name) {
+        // Cascade delete tasks belonging to this project
+        EntityDAO<task.trak.app.server.model.task.Task> taskStore = DAOFactory.taskDAO();
+        for (var task : taskStore.loadAll()) {
+            if (name.equals(task.getProject_name())) {
+                taskStore.deleteByKey(String.valueOf(task.getId()));
+            }
+        }
+        // Cascade delete sprints belonging to this project
+        EntityDAO<task.trak.app.server.model.sprint.Sprint> sprintStore = DAOFactory.sprintDAO();
+        for (var sprint : sprintStore.loadAll()) {
+            if (name.equals(sprint.getProject_name())) {
+                sprintStore.deleteByKey(sprint.getName());
+            }
+        }
         return store.deleteByKey(name);
     }
 

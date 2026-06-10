@@ -34,6 +34,10 @@ dependencies {
 
 application {
     mainClass.set("task.trak.Main")
+    applicationDefaultJvmArgs = listOf(
+        "--add-opens", "java.desktop/com.apple.eawt=ALL-UNNAMED",
+        "--add-opens", "java.desktop/com.apple.eawt.event=ALL-UNNAMED"
+    )
 }
 
 fun createFatJar(name: String, mainClassName: String): TaskProvider<Jar> {

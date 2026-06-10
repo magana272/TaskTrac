@@ -20,4 +20,6 @@ public interface SprintService {
     SprintDTO update(UpdateSprintRequest request);
 
     List<SprintDTO> listAll();
+
+    List<SprintDTO> listByUser(String username);
 }

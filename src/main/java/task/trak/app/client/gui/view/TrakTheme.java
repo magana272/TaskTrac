@@ -488,6 +488,39 @@ public final class TrakTheme {
         };
     }
 
+    public static void styleScrollPane(JScrollPane sp) {
+        sp.setBorder(BorderFactory.createEmptyBorder());
+        sp.getViewport().setBackground(BG_DARK);
+        for (JScrollBar bar : new JScrollBar[]{sp.getVerticalScrollBar(), sp.getHorizontalScrollBar()}) {
+            bar.setOpaque(false);
+            bar.setPreferredSize(new Dimension(8, 8));
+            bar.setUnitIncrement(16);
+            bar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+                @Override protected void configureScrollBarColors() {
+                    thumbColor = TEXT_MUTED;
+                    trackColor = new Color(0, 0, 0, 0);
+                }
+                @Override protected JButton createDecreaseButton(int orientation) { return zeroButton(); }
+                @Override protected JButton createIncreaseButton(int orientation) { return zeroButton(); }
+                private JButton zeroButton() {
+                    JButton b = new JButton();
+                    b.setPreferredSize(new Dimension(0, 0));
+                    return b;
+                }
+                @Override protected void paintTrack(Graphics g, JComponent c, Rectangle r) { /* transparent */ }
+                @Override protected void paintThumb(Graphics g, JComponent c, Rectangle r) {
+                    if (r.isEmpty() || !c.isEnabled()) return;
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(TEXT_MUTED);
+                    int arc = Math.min(r.width, r.height);
+                    g2.fillRoundRect(r.x + 1, r.y + 1, r.width - 2, r.height - 2, arc, arc);
+                    g2.dispose();
+                }
+            });
+        }
+    }
+
     public static EmptyBorder pad(int all) {
         return new EmptyBorder(all, all, all, all);
     }

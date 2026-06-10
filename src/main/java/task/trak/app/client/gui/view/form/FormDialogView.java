@@ -61,9 +61,16 @@ public abstract class FormDialogView {
         dialog.add(buttonRow, BorderLayout.SOUTH);
 
         dialog.getRootPane().setBorder(BorderFactory.createLineBorder(TrakTheme.BORDER, 1));
+
+        onDialogReady(dialog, okBtn);
+
         dialog.pack();
         dialog.setMinimumSize(new Dimension(400, 250));
         dialog.setLocationRelativeTo(parent);
         dialog.setVisible(true);
+    }
+
+    protected void onDialogReady(JDialog dialog, JButton okBtn) {
+        // Subclasses can override to customize the dialog after construction
     }
 }

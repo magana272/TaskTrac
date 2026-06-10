@@ -1,6 +1,7 @@
 package task.trak.app.client.gui.controller;
 
 import task.trak.model.Session;
+import task.trak.model.dto.UserDTO;
 import task.trak.model.dto.request.UpdateUserRequest;
 import task.trak.app.client.http.AuthHttpService;
 import task.trak.app.client.http.UserHttpService;
@@ -66,6 +67,13 @@ public class AuthController {
         userService.updateByUsername(new UpdateUserRequest(username, null, null, null, newPassword));
     }
 
+    public void changeUserInfo(String firstName, String lastName, String email) {
+        Session session = userViewModel.getSession();
+        if (session == null) throw new RuntimeException("Not logged in.");
+        String username = session.getLogged_in_user();
+        userService.updateByUsername(new UpdateUserRequest(username, firstName, lastName, email, null));
+    }
+
     public void deleteAccount(String password) {
         Session session = userViewModel.getSession();
         if (session == null) throw new RuntimeException("Not logged in.");
@@ -78,6 +86,20 @@ public class AuthController {
         userService.deleteByUsername(username);
         try { authService.logout(); } catch (Exception ignored) { }
         userViewModel.setSession(null);
+    }
+
+    public boolean usernameExists(String username) {
+        return userService.usernameExists(username);
+    }
+
+    public boolean emailExists(String email) {
+        return userService.emailExists(email);
+    }
+
+    public UserDTO getUserInfo() {
+        Session session = userViewModel.getSession();
+        if (session == null) return null;
+        return userService.getByUsername(session.getLogged_in_user());
     }
 
     public Session getSession() {

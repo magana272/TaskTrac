@@ -6,18 +6,17 @@ import task.trak.app.client.gui.view.TrakTheme;
 import task.trak.app.client.gui.view.auth.LoginView;
 import task.trak.app.client.gui.view.auth.SignUpView;
 import task.trak.app.client.gui.view.settings.ChangePasswordView;
+import task.trak.app.client.gui.view.settings.ChangeUserInfoView;
 import task.trak.app.client.gui.view.settings.DeleteAccountView;
 import task.trak.app.client.config.WorkspaceConfig;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
 
 /**
- * Top status bar with branding, user info, and auth buttons.
+ * Top status bar with user info and auth buttons.
+ * Native macOS traffic lights handle close/minimize/fullscreen.
  */
 public class StatusPanel extends JPanel {
 
@@ -35,7 +34,7 @@ public class StatusPanel extends JPanel {
         this.controller = controller;
         setLayout(new BorderLayout());
         setBackground(TrakTheme.BG_SURFACE);
-        setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_XL, TrakTheme.SP_MD, TrakTheme.SP_XL));
+        setBorder(new EmptyBorder(2, 72, TrakTheme.SP_SM, TrakTheme.SP_XL));
 
         // ── Left: Brand + user ──
         JPanel leftPanel = new JPanel();
@@ -46,7 +45,6 @@ public class StatusPanel extends JPanel {
         titleLabel.setFont(TrakTheme.FONT_DISPLAY);
         titleLabel.setForeground(TrakTheme.ACCENT);
 
-        // Thin separator line
         JLabel divider = new JLabel("  \u2502  ");
         divider.setForeground(TrakTheme.TEXT_MUTED);
         divider.setFont(TrakTheme.FONT_BODY);
@@ -64,7 +62,7 @@ public class StatusPanel extends JPanel {
         leftPanel.add(statusDot);
         leftPanel.add(userLabel);
 
-        // ── Right: Auth buttons ──
+        // ── Right: Auth buttons + theme toggle ──
         loginButton = new JButton("Login");
         TrakTheme.styleButtonAccent(loginButton);
         loginButton.addActionListener(e ->
@@ -78,7 +76,7 @@ public class StatusPanel extends JPanel {
         guestButton = new JButton("Guest");
         TrakTheme.styleButtonNav(guestButton);
         guestButton.addActionListener(e ->
-                controller.getAuthController().login("guest", "guest"));
+                controller.getAuthController().login("guest", "Guest1!"));
 
         settingsButton = new JButton("\u2699 Settings");
         TrakTheme.styleButtonNav(settingsButton);
@@ -108,65 +106,10 @@ public class StatusPanel extends JPanel {
         rightPanel.add(guestButton);
         rightPanel.add(settingsButton);
         rightPanel.add(logoutButton);
-
-        // Window controls (Spotify-style)
-        JPanel windowControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
-        windowControls.setOpaque(false);
-
-        JButton minimizeBtn = new JButton("\u2013");
-        minimizeBtn.setFont(TrakTheme.FONT_BODY);
-        minimizeBtn.setForeground(TrakTheme.STATUS_INPROGRESS);
-        minimizeBtn.setBackground(TrakTheme.BG_SURFACE);
-        minimizeBtn.setOpaque(true);
-        minimizeBtn.setBorderPainted(false);
-        minimizeBtn.setFocusPainted(false);
-        minimizeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        minimizeBtn.setBorder(new EmptyBorder(2, 8, 2, 8));
-        minimizeBtn.addActionListener(e -> {
-            Window w = SwingUtilities.getWindowAncestor(this);
-            if (w instanceof Frame f) f.setExtendedState(Frame.ICONIFIED);
-        });
-
-        JButton closeBtn = new JButton("\u2715");
-        closeBtn.setFont(TrakTheme.FONT_BODY);
-        closeBtn.setForeground(TrakTheme.STATUS_READY);
-        closeBtn.setBackground(TrakTheme.BG_SURFACE);
-        closeBtn.setOpaque(true);
-        closeBtn.setBorderPainted(false);
-        closeBtn.setFocusPainted(false);
-        closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        closeBtn.setBorder(new EmptyBorder(2, 8, 2, 8));
-        closeBtn.addActionListener(e -> System.exit(0));
-
-        windowControls.add(themeToggle);
-        windowControls.add(minimizeBtn);
-        windowControls.add(closeBtn);
-
-        // Right side: auth buttons + window controls
-        JPanel rightWrapper = new JPanel(new BorderLayout());
-        rightWrapper.setOpaque(false);
-        rightWrapper.add(rightPanel, BorderLayout.CENTER);
-        rightWrapper.add(windowControls, BorderLayout.EAST);
+        rightPanel.add(themeToggle);
 
         add(leftPanel, BorderLayout.WEST);
-        add(rightWrapper, BorderLayout.EAST);
-
-        // Drag-to-move (anywhere on this panel)
-        final Point[] dragStart = {null};
-        addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) { dragStart[0] = e.getPoint(); }
-            public void mouseReleased(MouseEvent e) { dragStart[0] = null; }
-        });
-        addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
-                if (dragStart[0] == null) return;
-                Window w = SwingUtilities.getWindowAncestor(StatusPanel.this);
-                if (w != null) {
-                    Point loc = w.getLocation();
-                    w.setLocation(loc.x + e.getX() - dragStart[0].x, loc.y + e.getY() - dragStart[0].y);
-                }
-            }
-        });
+        add(rightPanel, BorderLayout.EAST);
     }
 
     public void update(Session session) {
@@ -206,15 +149,115 @@ public class StatusPanel extends JPanel {
     }
 
     private void showSettingsMenu() {
-        String[] options = {"Change Password", "Delete Account", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(this, "Account Settings",
-                "Settings", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
-                null, options, options[2]);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Settings", true);
+        dialog.setUndecorated(true);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(TrakTheme.BG_SURFACE);
 
-        if (choice == 0) {
+        JLabel titleLabel = new JLabel("Settings");
+        titleLabel.setFont(TrakTheme.FONT_HEADING);
+        titleLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        titleLabel.setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        dialog.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(TrakTheme.BG_SURFACE);
+        content.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+
+        // ── Profile Info ──
+        JLabel profileLabel = new JLabel("Profile Info");
+        profileLabel.setFont(TrakTheme.FONT_BODY);
+        profileLabel.setForeground(TrakTheme.TEXT_MUTED);
+        profileLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(profileLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
+
+        task.trak.model.dto.UserDTO userInfo = controller.getAuthController().getUserInfo();
+        String username = userInfo != null && userInfo.userName() != null ? userInfo.userName() : "-";
+        String firstName = userInfo != null && userInfo.firstName() != null ? userInfo.firstName() : "-";
+        String lastName = userInfo != null && userInfo.lastName() != null ? userInfo.lastName() : "-";
+        String email = userInfo != null && userInfo.email() != null ? userInfo.email() : "-";
+
+        JLabel usernameLabel = new JLabel("Username:  " + username);
+        usernameLabel.setFont(TrakTheme.FONT_BODY);
+        usernameLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        usernameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(usernameLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
+
+        JLabel nameLabel = new JLabel("Name:  " + firstName + " " + lastName);
+        nameLabel.setFont(TrakTheme.FONT_BODY);
+        nameLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(nameLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
+
+        JLabel emailLabel = new JLabel("Email:  " + email);
+        emailLabel.setFont(TrakTheme.FONT_BODY);
+        emailLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        emailLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(emailLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_SM));
+
+        JButton changeInfoBtn = new JButton("Edit User Info");
+        TrakTheme.styleButtonAccent(changeInfoBtn);
+        changeInfoBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        changeInfoBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        changeInfoBtn.addActionListener(e -> {
+            dialog.dispose();
+            new ChangeUserInfoView(this, controller.getAuthController()).show();
+        });
+        content.add(changeInfoBtn);
+
+        content.add(Box.createVerticalStrut(TrakTheme.SP_MD));
+
+        // ── Account Settings ──
+        JLabel accountLabel = new JLabel("Account Settings");
+        accountLabel.setFont(TrakTheme.FONT_BODY);
+        accountLabel.setForeground(TrakTheme.TEXT_MUTED);
+        accountLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(accountLabel);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_XS));
+
+        JButton changePassBtn = new JButton("Change Password");
+        TrakTheme.styleButtonAccent(changePassBtn);
+        changePassBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        changePassBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        changePassBtn.addActionListener(e -> {
+            dialog.dispose();
             new ChangePasswordView(this, controller.getAuthController()).show();
-        } else if (choice == 1) {
+        });
+        content.add(changePassBtn);
+        content.add(Box.createVerticalStrut(TrakTheme.SP_SM));
+
+        JButton deleteAccBtn = new JButton("Delete Account");
+        TrakTheme.styleButtonNav(deleteAccBtn);
+        deleteAccBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 32));
+        deleteAccBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        deleteAccBtn.addActionListener(e -> {
+            dialog.dispose();
             new DeleteAccountView(this, controller.getAuthController()).show();
-        }
+        });
+        content.add(deleteAccBtn);
+
+        dialog.add(content, BorderLayout.CENTER);
+
+        JPanel bottomRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
+        bottomRow.setBackground(TrakTheme.BG_SURFACE);
+        bottomRow.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_MD, TrakTheme.SP_LG));
+
+        JButton cancelBtn = new JButton("Cancel");
+        TrakTheme.styleButtonNav(cancelBtn);
+        cancelBtn.setPreferredSize(new Dimension(80, 28));
+        cancelBtn.addActionListener(e -> dialog.dispose());
+        bottomRow.add(cancelBtn);
+        dialog.add(bottomRow, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(300, dialog.getPreferredSize().height));
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 }

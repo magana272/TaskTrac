@@ -40,10 +40,10 @@ Feature: Project Management
   Scenario: User creates a project with members by username
     Given the command is correctly formatted
     And a user with the username "projowner" exists
-    And a user with the username "alice" exists
-    And a user with the username "bob" exists
+    And a user with the username "alice1" exists
+    And a user with the username "bobby1" exists
     And a project with the name "TeamProject" does not already exist
-    When the user runs the command "tasktracker project add TeamProject --owner projowner --members [alice,bob]"
+    When the user runs the command "tasktracker project add TeamProject --owner projowner --members [alice1,bobby1]"
     Then a new project named "TeamProject" is created
     And the project "TeamProject" has 2 members
 

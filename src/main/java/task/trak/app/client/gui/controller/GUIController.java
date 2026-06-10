@@ -164,7 +164,7 @@ public class GUIController implements App, CommandListener {
             // In REMOTE mode, no local store setup needed
             // Ensure guest exists on the server
             try {
-                this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+                this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "Guest1!"));
             } catch (Exception ignored) {
             }
             return;
@@ -178,7 +178,7 @@ public class GUIController implements App, CommandListener {
 
         // Ensure guest admin account exists (create is unprotected; ignore if already exists)
         try {
-            this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "guest"));
+            this.userService.create(new CreateUserRequest("guest", "Guest", "Admin", "guest@trak", "Guest1!"));
         } catch (Exception ignored) {
         }
     }
@@ -245,7 +245,7 @@ public class GUIController implements App, CommandListener {
     public void seedData() {
         try {
             // guest account already created by initStore — login to get bearer token
-            Session session = this.authService.login("guest", "guest");
+            Session session = this.authService.login("guest", "Guest1!");
             userViewModel.setSession(session);
             save();
 

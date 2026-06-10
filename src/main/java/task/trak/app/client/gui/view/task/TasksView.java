@@ -1,5 +1,6 @@
 package task.trak.app.client.gui.view.task;
 
+import task.trak.model.dto.SprintDTO;
 import task.trak.model.dto.TaskDTO;
 import task.trak.app.client.gui.controller.GUIController;
 import task.trak.app.client.gui.view.DataView;
@@ -79,17 +80,95 @@ public class TasksView extends DataView implements ViewModelChangeListener {
             JPanel toolbar = buildToolbar(allTasks, completedCount);
             taskCardsContainer.add(toolbar, BorderLayout.NORTH);
 
-            JPanel gridPanel = new JPanel(new GridBagLayout());
+            int gap = TrakTheme.SP_SM;
+            int minCardWidth = 280;
+
+            // Scrollable grid panel — cards flex to fill row (like CSS flex: 1, flex-wrap: wrap)
+            @SuppressWarnings("serial")
+            class FlexGridPanel extends JPanel implements Scrollable {
+                private final int gap;
+                private final int minCardW;
+
+                FlexGridPanel(int gap, int minCardW) {
+                    super(new GridBagLayout());
+                    this.gap = gap;
+                    this.minCardW = minCardW;
+                }
+
+                void layoutCards(List<JComponent> cards) {
+                    removeAll();
+                    int w = getWidth();
+                    if (w <= 0) w = getParent() != null ? getParent().getWidth() : 0;
+                    if (w <= 0) w = 900;
+                    int cols = Math.max(2, (w + gap) / (minCardW + gap));
+
+                    GridBagConstraints gbc = new GridBagConstraints();
+                    gbc.insets = new Insets(gap / 2, gap / 2, gap / 2, gap / 2);
+                    gbc.anchor = GridBagConstraints.NORTH;
+                    gbc.fill = GridBagConstraints.HORIZONTAL;
+                    gbc.weightx = 1.0;
+
+                    for (int i = 0; i < cards.size(); i++) {
+                        gbc.gridx = i % cols;
+                        gbc.gridy = i / cols;
+                        gbc.weighty = 0;
+                        add(cards.get(i), gbc);
+                    }
+
+                    // Vertical glue to push cards to the top
+                    gbc.gridx = 0;
+                    gbc.gridy = (cards.size() / cols) + 1;
+                    gbc.gridwidth = cols;
+                    gbc.weighty = 1.0;
+                    gbc.fill = GridBagConstraints.VERTICAL;
+                    add(Box.createGlue(), gbc);
+
+                    revalidate();
+                    repaint();
+                }
+
+                @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+                @Override public int getScrollableUnitIncrement(Rectangle vr, int o, int d) { return 16; }
+                @Override public int getScrollableBlockIncrement(Rectangle vr, int o, int d) { return vr.height; }
+                @Override public boolean getScrollableTracksViewportWidth() { return true; }
+                @Override public boolean getScrollableTracksViewportHeight() { return false; }
+            }
+
+            FlexGridPanel gridPanel = new FlexGridPanel(gap, minCardWidth);
             gridPanel.setBackground(TrakTheme.BG_DARK);
 
-            Map<String, List<String>> memberCache = new HashMap<>();
+            // Build task-id -> sprint-name lookup
+            Map<Long, String> taskSprintMap = new HashMap<>();
+            for (SprintDTO sprint : guiController.getSprintController().getViewModel().get()) {
+                if (sprint.taskIds() != null) {
+                    for (Long tid : sprint.taskIds()) {
+                        taskSprintMap.putIfAbsent(tid, sprint.name());
+                    }
+                }
+            }
 
+            Map<String, List<String>> memberCache = new HashMap<>();
+            this.activeCards = new ArrayList<>();
             List<JComponent> cards = new ArrayList<>();
+
+            long now = System.currentTimeMillis();
             for (TaskDTO task : visible) {
                 List<String> assignees = memberCache.computeIfAbsent(
                         task.projectName(),
                         name -> guiController.getProjectController().getProjectMembers(name));
-                cards.add(new TaskCardPanel(task, guiController.getTaskController(), assignees));
+                String sprintName = taskSprintMap.get(task.id());
+                TaskCardPanel card = new TaskCardPanel(task, guiController.getTaskController(), assignees, sprintName);
+
+                // Initialize timer state immediately for in-progress tasks
+                if ("INPROGRESS".equals(task.status()) && task.estimate() != null) {
+                    long elapsed = task.timeSpentMs() + (now - lastRefreshTimestamp);
+                    long estimateMs = TimeUtil.parseDurationToMs(task.estimate());
+                    double ratio = estimateMs > 0 ? (double) elapsed / estimateMs : -1;
+                    card.setTimerState(ratio, elapsed);
+                }
+
+                cards.add(card);
+                this.activeCards.add(card);
             }
 
             if (cards.isEmpty()) {
@@ -99,28 +178,28 @@ public class TasksView extends DataView implements ViewModelChangeListener {
                 cards.add(emptyLabel);
             }
 
-            layoutCards(gridPanel, cards);
-            taskCardsContainer.add(gridPanel, BorderLayout.CENTER);
+            gridPanel.layoutCards(cards);
 
-            // Store card panels for timer updates
-            this.activeCards = new ArrayList<>();
-            for (JComponent c : cards) {
-                if (c instanceof TaskCardPanel tcp) {
-                    this.activeCards.add(tcp);
-                }
-            }
-            this.lastRefreshTimestamp = System.currentTimeMillis();
-            startTimerIfNeeded();
+            JScrollPane scrollPane = new JScrollPane(gridPanel);
+            TrakTheme.styleScrollPane(scrollPane);
+            scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-            taskCardsContainer.addComponentListener(new ComponentAdapter() {
+            // Re-layout on viewport resize so columns adjust
+            scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
-                    layoutCards(gridPanel, cards);
-                    gridPanel.revalidate();
-                    taskCardsContainer.revalidate();
-                    taskCardsContainer.repaint();
+                    gridPanel.layoutCards(cards);
                 }
             });
+
+            taskCardsContainer.add(scrollPane, BorderLayout.CENTER);
+
+            // Only reset timestamp on first load (when no active timer exists)
+            if (lastRefreshTimestamp == 0) {
+                lastRefreshTimestamp = System.currentTimeMillis();
+            }
+            startTimerIfNeeded();
         }
 
         taskCardsContainer.revalidate();
@@ -180,35 +259,18 @@ public class TasksView extends DataView implements ViewModelChangeListener {
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        new TaskAddView(SwingUtilities.getWindowAncestor(this), guiController.getTaskController(), projects).show();
-    }
-
-    private void layoutCards(JPanel panel, List<JComponent> cards) {
-        panel.removeAll();
-        int minCardWidth = 280;
-        int gap = TrakTheme.SP_SM;
-        int containerWidth = taskCardsContainer.getWidth() - gap;
-        if (containerWidth <= 0) containerWidth = 900;
-        int cols = Math.max(1, (containerWidth + gap) / (minCardWidth + gap));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(gap / 2, gap / 2, gap / 2, gap / 2);
-        gbc.anchor = GridBagConstraints.NORTH;
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.weightx = 1.0;
-
-        for (int i = 0; i < cards.size(); i++) {
-            gbc.gridx = i % cols;
-            gbc.gridy = i / cols;
-            gbc.weighty = 0;
-            panel.add(cards.get(i), gbc);
+        String selected = guiController.getProjectController().getViewModel().getSelectedProject();
+        if (selected != null && !"All".equals(selected)) {
+            // Find the index of the selected project and lock the dropdown
+            for (int i = 0; i < projects.size(); i++) {
+                if (selected.equals(projects.get(i).projectName())) {
+                    new TaskAddView(SwingUtilities.getWindowAncestor(this),
+                            guiController.getTaskController(), projects, i, true).show();
+                    return;
+                }
+            }
         }
-
-        gbc.gridx = 0;
-        gbc.gridy = (cards.size() / cols) + 1;
-        gbc.gridwidth = cols;
-        gbc.weighty = 1.0;
-        panel.add(Box.createGlue(), gbc);
+        new TaskAddView(SwingUtilities.getWindowAncestor(this), guiController.getTaskController(), projects).show();
     }
 
     private void startTimerIfNeeded() {
