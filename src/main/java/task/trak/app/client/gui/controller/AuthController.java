@@ -89,17 +89,11 @@ public class AuthController {
     }
 
     public boolean usernameExists(String username) {
-        if (userService instanceof task.trak.app.client.http.UserHttpService httpService) {
-            return httpService.usernameExists(username);
-        }
-        return userService.getByUsername(username) != null;
+        return userService.usernameExists(username);
     }
 
     public boolean emailExists(String email) {
-        if (userService instanceof task.trak.app.client.http.UserHttpService httpService) {
-            return httpService.emailExists(email);
-        }
-        return userService.getByEmail(email) != null;
+        return userService.emailExists(email);
     }
 
     public UserDTO getUserInfo() {
