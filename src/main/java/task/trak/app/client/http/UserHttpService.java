@@ -63,6 +63,28 @@ public class UserHttpService implements UserService {
         return gson.fromJson(response, UserDTO.class);
     }
 
+    public boolean usernameExists(String username) {
+        try {
+            String response = ApiClient.get("/api/users/exists/" + username);
+            if (response == null) return false;
+            JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+            return json.has("exists") && json.get("exists").getAsBoolean();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean emailExists(String email) {
+        try {
+            String response = ApiClient.get("/api/users/email-exists/" + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8));
+            if (response == null) return false;
+            JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+            return json.has("exists") && json.get("exists").getAsBoolean();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     @Override
     public boolean authenticate(String username, String password) {
         JsonObject body = new JsonObject();

@@ -44,6 +44,8 @@ public class TrakServer {
         server.createContext("/api/auth/logout", AuthFilter.requireAuth(new AuthRoutes.LogoutHandler()));
 
         // User routes (POST /api/users is open for registration; detail requires auth)
+        server.createContext("/api/users/exists/", new UserRoutes.UserExistsHandler());
+        server.createContext("/api/users/email-exists/", new UserRoutes.EmailExistsHandler());
         server.createContext("/api/users", new UserRoutes.UserListHandler());
         server.createContext("/api/users/", AuthFilter.requireAuth(new UserRoutes.UserDetailHandler()));
 
