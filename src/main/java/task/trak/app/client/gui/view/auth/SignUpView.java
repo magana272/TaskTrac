@@ -45,6 +45,7 @@ public class SignUpView extends FormDialogView {
     private volatile boolean emailAvailResult = false;
     private Timer asyncTimer;
     private JButton okBtnRef;
+    private JDialog dialogRef;
 
     public SignUpView(Component parent, AuthController authController) {
         super(parent, "Sign Up");
@@ -109,11 +110,23 @@ public class SignUpView extends FormDialogView {
         pwReq.add(pwMatchCheck);
         form.addField("", pwReq);
 
+        // Separator + Google sign-up
+        JSeparator sep = new JSeparator();
+        sep.setForeground(TrakTheme.BORDER);
+        form.addField("", sep);
+
+        JButton googleBtn = new JButton("Sign up with Google");
+        TrakTheme.styleButtonNav(googleBtn);
+        googleBtn.setPreferredSize(new Dimension(200, 32));
+        googleBtn.addActionListener(e -> onGoogleSignUp());
+        form.addField("", googleBtn);
+
         return form;
     }
 
     @Override
     protected void onDialogReady(JDialog dialog, JButton okBtn) {
+        this.dialogRef = dialog;
         this.okBtnRef = okBtn;
         okBtn.setEnabled(false);
 
@@ -242,6 +255,22 @@ public class SignUpView extends FormDialogView {
             label.setText("\u2717 " + text);
             label.setForeground(TrakTheme.TEXT_MUTED);
         }
+    }
+
+    private void onGoogleSignUp() {
+        if (dialogRef != null) {
+            dialogRef.dispose();
+        }
+        new Thread(() -> {
+            try {
+                String idToken = GoogleOAuthHelper.getIdToken();
+                SwingUtilities.invokeLater(() -> authController.loginWithGoogle(idToken));
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() ->
+                        JOptionPane.showMessageDialog(parent, "Google sign-up failed: " + ex.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE));
+            }
+        }).start();
     }
 
     @Override

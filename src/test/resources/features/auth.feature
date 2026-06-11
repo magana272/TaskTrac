@@ -45,6 +45,20 @@ Feature: Authentication
     Then the user "newsignup" is logged in
     And the user "newsignup" is saved successfully
 
+  Scenario: Google sign-in creates new user when email not found
+    Given no user with email "googleuser@gmail.com" exists
+    When a Google sign-in is completed with email "googleuser@gmail.com" name "Google" "User"
+    Then a user with email "googleuser@gmail.com" is logged in
+
+  Scenario: Google sign-in matches existing user by email
+    Given a user "existgoogle" exists with password "Pass1!" and email "existing@gmail.com"
+    When a Google sign-in is completed with email "existing@gmail.com" name "Existing" "User"
+    Then the user "existgoogle" is logged in
+
+  Scenario: Google sign-in rejects invalid token
+    When a Google sign-in is attempted with an invalid token
+    Then the Google sign-in is rejected
+
   Scenario: Logout clears all view data
     Given a user "viewclearuser" exists with password "Pass1!"
     And the user "viewclearuser" is currently logged in

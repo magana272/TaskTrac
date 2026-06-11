@@ -37,6 +37,15 @@ public class AuthController {
         }
     }
 
+    public void loginWithGoogle(String idToken) {
+        try {
+            Session session = this.authService.loginWithGoogle(idToken);
+            userViewModel.setSession(session);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
+    }
+
     public void logout() {
         try {
             this.authService.logout();
