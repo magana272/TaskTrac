@@ -24,6 +24,16 @@ public class LoginView extends FormDialogView {
         passwordField = new JPasswordField();
         form.addField("Username:", usernameField);
         form.addField("Password:", passwordField);
+
+        JButton forgotBtn = new JButton("Forgot Password?");
+        forgotBtn.setBorderPainted(false);
+        forgotBtn.setContentAreaFilled(false);
+        forgotBtn.setForeground(new Color(100, 149, 237));
+        forgotBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        forgotBtn.setFont(forgotBtn.getFont().deriveFont(11f));
+        forgotBtn.addActionListener(e -> new ForgotPasswordView(parent, authController).show());
+        form.addField("", forgotBtn);
+
         return form;
     }
 

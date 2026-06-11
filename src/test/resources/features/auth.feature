@@ -51,3 +51,25 @@ Feature: Authentication
     When the user runs the command "tasktracker logout"
     Then no user is logged in
     And the output contains "Logged out"
+
+  Scenario: User requests password reset with valid email
+    Given a user "resetuser" exists with password "OldPass1!"
+    When the user requests a password reset for email "resetuser@example.com"
+    Then the output contains "reset code has been sent"
+
+  Scenario: User resets password with valid code
+    Given a user "resetuser2" exists with password "OldPass1!"
+    And a password reset code exists for user "resetuser2"
+    When the user resets the password with the code and new password "NewPass1!"
+    Then the user "resetuser2" can authenticate with password "NewPass1!"
+    And the user "resetuser2" cannot authenticate with password "OldPass1!"
+
+  Scenario: User cannot reset with invalid code
+    When the user runs the command "tasktracker reset-password --code 000000 --password NewPass1!"
+    Then the system displays an error containing "Invalid or expired"
+
+  Scenario: Reset code is single-use
+    Given a user "singleuse" exists with password "OldPass1!"
+    And a password reset code exists for user "singleuse"
+    When the user resets the password with the code and new password "NewPass1!"
+    Then the same reset code cannot be used again

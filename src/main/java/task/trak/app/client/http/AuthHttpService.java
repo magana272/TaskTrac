@@ -59,6 +59,31 @@ public class AuthHttpService implements AuthService {
         ApiClient.setAuthToken(null);
     }
 
+    public String requestPasswordReset(String email) {
+        JsonObject body = new JsonObject();
+        body.addProperty("email", email);
+        String response = ApiClient.post("/api/auth/forgot-password", body.toString());
+        if (response == null) return null;
+        JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+        if (json.has("error")) {
+            throw new RuntimeException(json.get("error").getAsString());
+        }
+        return json.get("message").getAsString();
+    }
+
+    public String resetPassword(String code, String newPassword) {
+        JsonObject body = new JsonObject();
+        body.addProperty("code", code);
+        body.addProperty("newPassword", newPassword);
+        String response = ApiClient.post("/api/auth/reset-password", body.toString());
+        if (response == null) return null;
+        JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+        if (json.has("error")) {
+            throw new RuntimeException(json.get("error").getAsString());
+        }
+        return json.get("message").getAsString();
+    }
+
     @Override
     public Session getCurrentSession() {
         // Client manages session locally; no server-side session retrieval

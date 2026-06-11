@@ -3,9 +3,13 @@ package task.trak.app.server.server;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import task.trak.model.Session;
+import task.trak.model.dto.UserDTO;
+import task.trak.model.dto.request.CreateUserRequest;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.UserService;
+import task.trak.app.server.service.email.EmailService;
+import task.trak.app.server.service.email.SmtpEmailService;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -84,6 +88,98 @@ public class AuthRoutes {
                 JsonHelper.sendJson(exchange, 200, resp);
             } catch (IllegalArgumentException e) {
                 JsonHelper.sendError(exchange, 400, e.getMessage());
+            } catch (Exception e) {
+                JsonHelper.sendError(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    public static class ForgotPasswordHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                JsonHelper.sendError(exchange, 405, "Method not allowed");
+                return;
+            }
+            try {
+                String body = JsonHelper.readBody(exchange);
+                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
+                String email = req.get("email");
+
+                if (email == null || email.isBlank()) {
+                    JsonHelper.sendError(exchange, 400, "email is required");
+                    return;
+                }
+
+                UserService userService = ServiceFactory.userService();
+                UserDTO user = userService.getByEmail(email);
+
+                if (user != null) {
+                    String code = PasswordResetStore.createCode(user.userName());
+                    try {
+                        EmailService emailService = new SmtpEmailService();
+                        emailService.sendEmail(email, "Trak Password Reset",
+                                "Your password reset code is: " + code + "\n\nThis code expires in 15 minutes.");
+                    } catch (Exception e) {
+                        System.err.println("Failed to send reset email: " + e.getMessage());
+                    }
+                }
+
+                // Always return same message for security
+                Map<String, String> resp = new LinkedHashMap<>();
+                resp.put("message", "If an account with that email exists, a reset code has been sent.");
+                JsonHelper.sendJson(exchange, 200, resp);
+            } catch (Exception e) {
+                JsonHelper.sendError(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    public static class ResetPasswordHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                JsonHelper.sendError(exchange, 405, "Method not allowed");
+                return;
+            }
+            try {
+                String body = JsonHelper.readBody(exchange);
+                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
+                String code = req.get("code");
+                String newPassword = req.get("newPassword");
+
+                if (code == null || code.isBlank()) {
+                    JsonHelper.sendError(exchange, 400, "code is required");
+                    return;
+                }
+                if (newPassword == null || newPassword.isBlank()) {
+                    JsonHelper.sendError(exchange, 400, "newPassword is required");
+                    return;
+                }
+
+                String username = PasswordResetStore.validateCode(code);
+                if (username == null) {
+                    JsonHelper.sendError(exchange, 400, "Invalid or expired reset code");
+                    return;
+                }
+
+                // Validate password complexity
+                try {
+                    CreateUserRequest.validatePassword(newPassword);
+                } catch (Exception e) {
+                    JsonHelper.sendError(exchange, 400, e.getMessage());
+                    return;
+                }
+
+                UserService userService = ServiceFactory.userService();
+                userService.updateByUsername(
+                        new task.trak.model.dto.request.UpdateUserRequest(username, null, null, null, newPassword));
+
+                PasswordResetStore.removeCode(code);
+
+                Map<String, String> resp = new LinkedHashMap<>();
+                resp.put("message", "Password reset successful.");
+                JsonHelper.sendJson(exchange, 200, resp);
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
             }

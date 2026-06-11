@@ -88,6 +88,24 @@ public class AuthController {
         userViewModel.setSession(null);
     }
 
+    public String requestPasswordReset(String email) {
+        try {
+            return authService.requestPasswordReset(email);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return null;
+        }
+    }
+
+    public String resetPassword(String code, String newPassword) {
+        try {
+            return authService.resetPassword(code, newPassword);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return null;
+        }
+    }
+
     public boolean usernameExists(String username) {
         return userService.usernameExists(username);
     }
