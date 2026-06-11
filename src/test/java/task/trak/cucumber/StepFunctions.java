@@ -579,6 +579,74 @@ public class StepFunctions {
         authService.signup(firstName, lastName, username, email, password);
     }
 
+    // --- Google Auth steps ---
+
+    @Given("no user with email {string} exists")
+    public void noUserWithEmailExists(String email) {
+        File storeDir = new File(TTApp.storedir);
+        if (!storeDir.exists()) storeDir.mkdirs();
+        UserService userService = new TrakUserService();
+        task.trak.model.dto.UserDTO byEmail = userService.getByEmail(email);
+        if (byEmail != null) {
+            userService.deleteByUsername(byEmail.userName());
+        }
+    }
+
+    @Given("a user {string} exists with password {string} and email {string}")
+    public void aUserExistsWithPasswordAndEmail(String username, String password, String email) {
+        File storeDir = new File(TTApp.storedir);
+        if (!storeDir.exists()) storeDir.mkdirs();
+        UserService userService = new TrakUserService();
+        userService.create(new CreateUserRequest(username, "Test", "User", email, password));
+    }
+
+    @When("a Google sign-in is completed with email {string} name {string} {string}")
+    public void googleSignInCompleted(String email, String firstName, String lastName) {
+        File storeDir = new File(TTApp.storedir);
+        if (!storeDir.exists()) storeDir.mkdirs();
+        UserService userService = new TrakUserService();
+
+        // Simulate what GoogleAuthService.verifyAndLogin does (without calling Google's API)
+        task.trak.model.dto.UserDTO existing = userService.getByEmail(email);
+        if (existing != null) {
+            SessionDAO.save(new Session(existing.userName()));
+        } else {
+            String localPart = email.split("@")[0].replaceAll("[^a-zA-Z0-9]", "");
+            if (localPart.length() < 5) localPart = localPart + "user1";
+            if (localPart.length() > 17) localPart = localPart.substring(0, 17);
+            userService.create(new CreateUserRequest(localPart, firstName, lastName, email, null));
+            SessionDAO.save(new Session(localPart));
+        }
+    }
+
+    @Then("a user with email {string} is logged in")
+    public void aUserWithEmailIsLoggedIn(String email) {
+        Session session = SessionDAO.load();
+        assertNotNull("Session should exist", session);
+        UserService userService = new TrakUserService();
+        task.trak.model.dto.UserDTO user = userService.getByEmail(email);
+        assertNotNull("User with email should exist", user);
+        assertEquals(user.userName(), session.getLogged_in_user());
+    }
+
+    @When("a Google sign-in is attempted with an invalid token")
+    public void googleSignInWithInvalidToken() {
+        try {
+            task.trak.app.server.service.auth.GoogleAuthService googleAuth =
+                    new task.trak.app.server.service.auth.GoogleAuthService(new TrakUserService());
+            googleAuth.verifyAndLogin("invalid-token-xyz");
+            consoleOutput = "success";
+        } catch (Exception e) {
+            consoleOutput = "rejected: " + e.getMessage();
+        }
+    }
+
+    @Then("the Google sign-in is rejected")
+    public void googleSignInIsRejected() {
+        assertTrue("Expected sign-in to be rejected but got: " + consoleOutput,
+                consoleOutput.startsWith("rejected:"));
+    }
+
     // --- Password steps ---
 
     @Then("the user {string} has a password set")

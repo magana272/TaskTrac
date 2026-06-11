@@ -10,6 +10,7 @@ import task.trak.api.service.ServiceFactory;
 import task.trak.api.service.UserService;
 import task.trak.app.server.service.email.EmailService;
 import task.trak.app.server.service.email.SmtpEmailService;
+import task.trak.app.server.service.auth.GoogleAuthService;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -180,6 +181,41 @@ public class AuthRoutes {
                 Map<String, String> resp = new LinkedHashMap<>();
                 resp.put("message", "Password reset successful.");
                 JsonHelper.sendJson(exchange, 200, resp);
+            } catch (Exception e) {
+                JsonHelper.sendError(exchange, 500, e.getMessage());
+            }
+        }
+    }
+
+    public static class GoogleLoginHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!"POST".equals(exchange.getRequestMethod())) {
+                JsonHelper.sendError(exchange, 405, "Method not allowed");
+                return;
+            }
+            try {
+                String body = JsonHelper.readBody(exchange);
+                Map<String, String> req = JsonHelper.fromJson(body, Map.class);
+                String idToken = req.get("idToken");
+
+                if (idToken == null || idToken.isBlank()) {
+                    JsonHelper.sendError(exchange, 400, "idToken is required");
+                    return;
+                }
+
+                GoogleAuthService googleAuth = new GoogleAuthService();
+                String username = googleAuth.verifyAndLogin(idToken);
+
+                String token = SessionManager.createToken(username);
+                Map<String, String> resp = new LinkedHashMap<>();
+                resp.put("token", token);
+                resp.put("username", username);
+                JsonHelper.sendJson(exchange, 200, resp);
+            } catch (SecurityException e) {
+                JsonHelper.sendError(exchange, 401, e.getMessage());
+            } catch (IllegalArgumentException e) {
+                JsonHelper.sendError(exchange, 400, e.getMessage());
             } catch (Exception e) {
                 JsonHelper.sendError(exchange, 500, e.getMessage());
             }
