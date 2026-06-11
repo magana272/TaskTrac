@@ -53,7 +53,11 @@ public class SprintProgressPanel extends JPanel {
         addSprintBtn = new JButton("+ Add Sprint");
         TrakTheme.styleButtonPrimary(addSprintBtn);
         addSprintBtn.addActionListener(e -> {
-            // Open sprint add dialog
+            if (controller.getAuthController().getSession() == null) {
+                new task.trak.app.client.gui.view.auth.AuthPromptView(
+                        this, controller.getAuthController(), "add a sprint").show();
+                return;
+            }
             List<task.trak.model.dto.ProjectDTO> projects = controller.getProjectController().getViewModel().get();
             List<TaskDTO> tasks = controller.getTaskController().getViewModel().get();
             String selected = controller.getProjectController().getViewModel().getSelectedProject();

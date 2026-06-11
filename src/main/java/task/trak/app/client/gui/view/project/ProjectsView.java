@@ -187,6 +187,11 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
     }
 
     private void openCreateDialog() {
+        if (guiController.getAuthController().getSession() == null) {
+            new task.trak.app.client.gui.view.auth.AuthPromptView(
+                    this, guiController.getAuthController(), "create a project").show();
+            return;
+        }
         new ProjectCreateView(this, guiController.getProjectController()).show();
     }
 
