@@ -27,7 +27,7 @@ public class SprintController {
         try {
             this.sprintService.create(new CreateSprintRequest(name, project));
             if (startDate != null || endDate != null || (taskIds != null && !taskIds.isEmpty())) {
-                this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds, null));
+                this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds, null, null));
             }
             refreshSprints();
         } catch (Exception e) {
@@ -37,7 +37,7 @@ public class SprintController {
 
     public void updateSprint(String name, String startDate, String endDate) {
         try {
-            this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null, null));
+            this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null, null, null));
             refreshSprints();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
@@ -60,16 +60,16 @@ public class SprintController {
             if (!taskIds.contains(taskId)) {
                 taskIds.add(taskId);
             }
-            this.sprintService.update(new UpdateSprintRequest(sprintName, project, null, null, taskIds, null));
+            this.sprintService.update(new UpdateSprintRequest(sprintName, project, null, null, taskIds, null, null));
             refreshSprints();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
         }
     }
 
-    public void completeSprint(String name, String project) {
+    public void completeSprint(String name, String project, String review) {
         try {
-            sprintService.update(new UpdateSprintRequest(name, project, null, null, null, true));
+            sprintService.update(new UpdateSprintRequest(name, project, null, null, null, true, review));
             refreshSprints();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());

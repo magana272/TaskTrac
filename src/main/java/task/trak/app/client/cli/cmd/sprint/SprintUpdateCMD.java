@@ -77,6 +77,8 @@ public class SprintUpdateCMD extends SprintCMD {
 
         String newStartDate = this.options.get("start_date");
         String newEndDate = this.options.get("end_date");
+        String review = this.options.get("review");
+        boolean complete = this.options.containsKey("complete");
 
         List<Long> taskIds = null;
         String addTaskId = this.options.get("add_task");
@@ -85,8 +87,10 @@ public class SprintUpdateCMD extends SprintCMD {
             taskIds.add(Long.parseLong(addTaskId));
         }
 
-        if (newStartDate != null || newEndDate != null || taskIds != null) {
-            sprintService.update(new UpdateSprintRequest(sprint.name(), sprint.projectName(), newStartDate, newEndDate, taskIds, null));
+        Boolean completed = complete ? true : null;
+
+        if (newStartDate != null || newEndDate != null || taskIds != null || completed != null || review != null) {
+            sprintService.update(new UpdateSprintRequest(sprint.name(), sprint.projectName(), newStartDate, newEndDate, taskIds, completed, review));
         }
 
         SprintDTO updated = sprintService.getById(sprint.id());

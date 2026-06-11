@@ -76,6 +76,9 @@ public class MongoSprintDAO implements EntityDAO<Sprint> {
         doc.put("task_ids", s.getTask_ids());
         doc.put("start_date", s.getStart_date());
         doc.put("end_date", s.getEnd_date());
+        doc.put("completed", s.isCompleted());
+        doc.put("completed_at", s.getCompleted_at());
+        doc.put("review", s.getReview());
         return doc;
     }
 
@@ -86,6 +89,13 @@ public class MongoSprintDAO implements EntityDAO<Sprint> {
         List<Long> taskIds = doc.getList("task_ids", Long.class);
         Date startDate = doc.getDate("start_date");
         Date endDate = doc.getDate("end_date");
-        return new Sprint(id, projectName, name, taskIds, startDate, endDate);
+        Boolean completed = doc.getBoolean("completed");
+        Date completedAt = doc.getDate("completed_at");
+        String review = doc.getString("review");
+        Sprint sprint = new Sprint(id, projectName, name, taskIds, startDate, endDate);
+        sprint.setCompleted(completed != null && completed);
+        sprint.setCompleted_at(completedAt);
+        sprint.setReview(review);
+        return sprint;
     }
 }

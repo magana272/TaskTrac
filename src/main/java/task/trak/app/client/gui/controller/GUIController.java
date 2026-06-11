@@ -293,7 +293,7 @@ public class GUIController implements App, CommandListener {
             this.sprintService.create(new CreateSprintRequest("Sprint1", "FocusApp"));
             this.sprintService.update(new UpdateSprintRequest(
                     "Sprint1", "FocusApp", "2026-05-14", "2026-05-21",
-                    taskIds.subList(0, 10), null));
+                    taskIds.subList(0, 10), null, null));
 
             // 3 tasks in progress
             this.taskService.updateById(new UpdateTaskRequest(taskIds.get(0), null, "INPROGRESS", null, null, null, null));

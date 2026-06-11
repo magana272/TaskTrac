@@ -420,6 +420,21 @@ public class StepFunctions {
         assertTrue("Expected deletion message", consoleOutput.contains("deleted"));
     }
 
+    @Then("the sprint {string} is completed")
+    public void theSprintIsCompleted(String name) {
+        Sprint loaded = DAOFactory.sprintDAO().loadByKey(name);
+        assertNotNull("Sprint should exist", loaded);
+        assertTrue("Sprint should be completed", loaded.isCompleted());
+        assertNotNull("Completed_at should be set", loaded.getCompleted_at());
+    }
+
+    @Then("the sprint {string} has review {string}")
+    public void theSprintHasReview(String name, String review) {
+        Sprint loaded = DAOFactory.sprintDAO().loadByKey(name);
+        assertNotNull("Sprint should exist", loaded);
+        assertEquals(review, loaded.getReview());
+    }
+
     // --- Task Management steps ---
 
     @When("the user adds a task with title {string} to project {string} assigned to {string}")
