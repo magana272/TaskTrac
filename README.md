@@ -1,6 +1,6 @@
 # Trak
 
-**Version 0.1.0**
+**Version 1.0.0**
 
 A sprint planning and task tracking tool. Create projects, break work into tasks, plan sprints, and track progress. When a sprint is active, in-progress tasks show a live countdown against their estimate. Sprints track completed vs total task counts. Available as a CLI, Swing desktop GUI, and REST API server.
 
@@ -19,14 +19,14 @@ make gui-test  # build + launch GUI with test data
 Or start the server and connect clients:
 
 ```bash
-make build-server && java -jar trak-server   # Terminal 1: start REST API
+make server                                  # Terminal 1: start REST API
 java -jar trak-gui                           # Terminal 2: launch GUI
 java -jar trak-cli --remote tasks            # Terminal 3: CLI
 ```
 
 ## Build
 
-Requires Java 23+ and Gradle.
+Requires Java 23+ and Gradle 9.5+.
 
 ```bash
 make build          # build all 3 jars
@@ -37,6 +37,7 @@ make test           # run tests
 make clean          # clean artifacts
 make reset          # clean + remove .store and .cache
 
+make server         # build + start REST server
 make gui            # build + launch GUI (local)
 make gui-test       # build + launch GUI (local + test data)
 make gui-server     # build + launch GUI (remote)
