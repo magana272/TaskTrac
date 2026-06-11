@@ -7,12 +7,12 @@ import task.trak.model.Session;
 import task.trak.app.App;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.client.cli.cmd.CMD_Factory;
-import task.trak.app.client.http.TaskHttpService;
-import task.trak.app.client.http.ProjectHttpService;
-import task.trak.app.client.http.SprintHttpService;
-import task.trak.app.client.http.UserHttpService;
-import task.trak.app.client.http.BacklogHttpService;
-import task.trak.app.client.http.AuthHttpService;
+import task.trak.api.service.TaskService;
+import task.trak.api.service.ProjectService;
+import task.trak.api.service.SprintService;
+import task.trak.api.service.UserService;
+import task.trak.api.service.BacklogService;
+import task.trak.api.service.AuthService;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 import task.trak.app.client.gui.viewmodel.event.CommandEvent;
 import task.trak.app.client.gui.viewmodel.event.CommandEventBus;
@@ -28,28 +28,29 @@ import java.util.function.Supplier;
 public class GUIController implements App, CommandListener {
 
     private final ExecutorService commandExecutor = Executors.newSingleThreadExecutor();
+    private final Map<CommandEventType, Consumer<CommandEvent>> eventHandlers;
     private final AuthController authController;
     private final TaskController taskController;
     private final ProjectController projectController;
     private final SprintController sprintController;
     private final UserViewModel userViewModel;
 
-    private final TaskHttpService taskService;
-    private final ProjectHttpService projectService;
-    private final SprintHttpService sprintService;
-    private final UserHttpService userService;
-    private final BacklogHttpService backlogService;
-    private final AuthHttpService authService;
+    private final TaskService taskService;
+    private final ProjectService projectService;
+    private final SprintService sprintService;
+    private final UserService userService;
+    private final BacklogService backlogService;
+    private final AuthService authService;
 
     private Consumer<Session> sessionSaver;
     private Supplier<Session> sessionLoader;
 
-    public GUIController(TaskHttpService taskService,
-                         ProjectHttpService projectService,
-                         SprintHttpService sprintService,
-                         UserHttpService userService,
-                         BacklogHttpService backlogService,
-                         AuthHttpService authService,
+    public GUIController(TaskService taskService,
+                         ProjectService projectService,
+                         SprintService sprintService,
+                         UserService userService,
+                         BacklogService backlogService,
+                         AuthService authService,
                          AuthController authController,
                          TaskController taskController,
                          ProjectController projectController,
@@ -67,8 +68,47 @@ public class GUIController implements App, CommandListener {
         this.sprintController = sprintController;
         this.userViewModel = userViewModel;
 
+        this.eventHandlers = buildEventHandlers();
+
         TTApp.setInstance(this);
         CommandEventBus.addListener(this);
+    }
+
+    private Map<CommandEventType, Consumer<CommandEvent>> buildEventHandlers() {
+        Map<CommandEventType, Consumer<CommandEvent>> map = new EnumMap<>(CommandEventType.class);
+
+        Consumer<CommandEvent> refreshTasks = e -> taskController.refreshTasks();
+        for (CommandEventType t : List.of(
+                CommandEventType.TASK_CREATED, CommandEventType.TASK_UPDATED,
+                CommandEventType.TASK_DELETED, CommandEventType.TASK_LIST,
+                CommandEventType.COMPLETE_TASK, CommandEventType.START_TASK,
+                CommandEventType.END_TASK, CommandEventType.CURRENT_TASK)) {
+            map.put(t, refreshTasks);
+        }
+
+        Consumer<CommandEvent> refreshProjects = e -> projectController.refreshProjects();
+        for (CommandEventType t : List.of(
+                CommandEventType.PROJECT_CREATED, CommandEventType.PROJECT_UPDATED,
+                CommandEventType.PROJECT_DELETED, CommandEventType.PROJECT_LIST,
+                CommandEventType.ADD_MEMBER)) {
+            map.put(t, refreshProjects);
+        }
+
+        Consumer<CommandEvent> refreshSprints = e -> sprintController.refreshSprints();
+        for (CommandEventType t : List.of(
+                CommandEventType.SPRINT_CREATED, CommandEventType.SPRINT_UPDATED,
+                CommandEventType.SPRINT_DELETED, CommandEventType.SPRINT_LIST,
+                CommandEventType.SPRINT_PLAN, CommandEventType.ADD_TASK)) {
+            map.put(t, refreshSprints);
+        }
+
+        map.put(CommandEventType.LOGIN, e -> userViewModel.setSession(getSession()));
+        map.put(CommandEventType.LOGOUT, e -> userViewModel.setSession(null));
+        map.put(CommandEventType.ERROR, e -> userViewModel.setError(e.errorMessage()));
+        map.put(CommandEventType.INFO, e -> userViewModel.setOutput(e.textOutput()));
+        map.put(CommandEventType.DETAIL, e -> userViewModel.setOutput(e.textOutput()));
+
+        return Collections.unmodifiableMap(map);
     }
 
     public void executeCommand(String input) {
@@ -88,35 +128,9 @@ public class GUIController implements App, CommandListener {
     @Override
     public void onCommandExecuted(CommandEvent event) {
         try {
-            CommandEventType type = event.type();
-
-            switch (type) {
-                case TASK_CREATED, TASK_UPDATED, TASK_DELETED, TASK_LIST,
-                     COMPLETE_TASK, START_TASK, END_TASK, CURRENT_TASK:
-                    taskController.refreshTasks();
-                    break;
-                case PROJECT_CREATED, PROJECT_UPDATED, PROJECT_DELETED, PROJECT_LIST,
-                     ADD_MEMBER:
-                    projectController.refreshProjects();
-                    break;
-                case SPRINT_CREATED, SPRINT_UPDATED, SPRINT_DELETED, SPRINT_LIST,
-                     SPRINT_PLAN, ADD_TASK:
-                    sprintController.refreshSprints();
-                    break;
-                case LOGIN:
-                    userViewModel.setSession(getSession());
-                    break;
-                case LOGOUT:
-                    userViewModel.setSession(null);
-                    break;
-                case ERROR:
-                    userViewModel.setError(event.errorMessage());
-                    break;
-                case INFO, DETAIL:
-                    userViewModel.setOutput(event.textOutput());
-                    break;
-                default:
-                    break;
+            Consumer<CommandEvent> handler = eventHandlers.get(event.type());
+            if (handler != null) {
+                handler.accept(event);
             }
         } catch (Exception e) {
             userViewModel.setError(e.getMessage());
@@ -293,7 +307,7 @@ public class GUIController implements App, CommandListener {
             this.sprintService.create(new CreateSprintRequest("Sprint1", "FocusApp"));
             this.sprintService.update(new UpdateSprintRequest(
                     "Sprint1", "FocusApp", "2026-05-14", "2026-05-21",
-                    taskIds.subList(0, 10), null));
+                    taskIds.subList(0, 10), null, null));
 
             // 3 tasks in progress
             this.taskService.updateById(new UpdateTaskRequest(taskIds.get(0), null, "INPROGRESS", null, null, null, null));

@@ -5,8 +5,11 @@ import task.trak.app.client.gui.view.error.ErrorView;
 import task.trak.app.client.gui.view.panel.StatusPanel;
 import task.trak.app.client.gui.viewmodel.*;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainFrame extends JFrame implements ViewModelChangeListener {
 
@@ -32,6 +35,7 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
         getRootPane().putClientProperty("apple.awt.fullscreenable", true);
         getRootPane().putClientProperty("apple.awt.windowTitleVisible", false);
 
+        loadAppIcons();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1060, 700);
         setMinimumSize(new Dimension(800, 500));
@@ -100,5 +104,16 @@ public class MainFrame extends JFrame implements ViewModelChangeListener {
 
     private void updateStatus() {
         statusPanel.update(userViewModel.getSession());
+    }
+
+    private void loadAppIcons() {
+        int[] sizes = {16, 32, 48, 64, 128, 256};
+        List<Image> icons = new ArrayList<>();
+        for (int s : sizes) {
+            try (var in = getClass().getResourceAsStream("/icons/trak-" + s + ".png")) {
+                if (in != null) icons.add(ImageIO.read(in));
+            } catch (Exception ignored) {}
+        }
+        if (!icons.isEmpty()) setIconImages(icons);
     }
 }

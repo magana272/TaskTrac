@@ -181,12 +181,11 @@ task.trak.model/            ← Shared types (moved from task.trak.api)
   Session                         Session state
   dto/                            TaskDTO, UserDTO, ProjectDTO, SprintDTO, BacklogDTO
   dto/request/                    CreateTaskRequest, UpdateTaskRequest, etc. (with validate() methods)
-  exception/                      TrakException, ValidationException, EntityNotFoundException,
-                                  DuplicateEntityException, AuthenticationException (all unchecked)
+  exception/                      TrakException, ValidationException, EntityNotFoundException (all unchecked)
   util/                           TimeUtil, TeeOutputStream
 
 task.trak.api.service/      ← Service interfaces (only package remaining in api)
-  ServiceFactory, TaskService, UserService, ProjectService, SprintService, BacklogService
+  ServiceFactory, AuthService, TaskService, UserService, ProjectService, SprintService, BacklogService
 
 task.trak.app.server/       ← Server (never imported by client)
   server/                         TrakServer, REST route handlers, AuthFilter
@@ -209,20 +208,19 @@ task.trak.app.client/       ← Client (never imports from server)
   gui/viewmodel/event/            CommandEvent, CommandEventBus, CommandEventType, CommandListener
   gui/controller/                 GUIController, AuthController, TaskController,
                                   ProjectController, SprintController
-                                  (controllers receive HTTP services via constructor injection)
-  gui/view/                       DataView (abstract), MainFrame, TrakTheme, GlassPanel,
+                                  (controllers depend on service interfaces via constructor injection)
+  gui/view/                       DataView (abstract), MainFrame, TrakTheme,
                                   DashboardView, CommandInputPanel
   gui/view/task/                  TasksView, TaskCardPanel, TaskAddView, TaskEditView, TimeInputPanel
   gui/view/project/               ProjectsView, ProjectCreateView, ProjectAddView, ProjectSelectorPanel
   gui/view/sprint/                SprintView, SprintAddView, SprintProgressPanel
-  gui/view/auth/                  LoginView, SignUpView, LogOutView
-  gui/view/error/                 ErrorView, ErrorAlertView,
-                                  UserNameAlreadyExistErrorView,
-                                  EmailAlreadyExistErrorView,
-                                  TaskBeforeProjectErrorView
+  gui/view/auth/                  LoginView, SignUpView, AuthPromptView
+  gui/view/error/                 ErrorView
   gui/view/form/                  FormDialogView, FormPanel
-  gui/view/panel/                 OutputPanel, StatusPanel
+  gui/view/panel/                 StatusPanel
+  gui/view/util/                  TableUtil
   gui/view/settings/              ChangePasswordView, DeleteAccountView
+  gui/view/setup/                 SetupWizard
   config/                         WorkspaceConfig
 ```
 
@@ -234,7 +232,7 @@ task.trak.app.client/       ← Client (never imports from server)
 - `ServiceFactory.registerLocalServices()` — registers direct service implementations (server/local mode)
 - `ServiceFactory.registerHttpServices()` — registers HTTP client implementations (remote mode)
 - CMD classes call `ServiceFactory.taskService()` etc. — transparent swap, zero code changes
-- GUI does not use `ServiceFactory` — controllers receive HTTP services via constructor injection. In `--local` mode, the GUI starts an embedded TrakServer on a random port and connects via HTTP.
+- GUI does not use `ServiceFactory` — controllers depend on service interfaces (e.g. `TaskService`, `AuthService`) via constructor injection; `GUIMain` passes HTTP implementations. In `--local` mode, the GUI starts an embedded TrakServer on a random port and connects via HTTP.
 
 ## REST API Server
 
@@ -267,7 +265,6 @@ Features:
 - Settings panel (change password, delete account)
 - Undecorated frame with custom title bar, drag-to-move, edge resize
 - Hidden scrollbar on task panel (mousewheel scrolls)
-- GlassPanel rounded containers with gradient background and optional drop shadow
 - FormPanel two-column layout for all form dialogs
 - Task cards with custom-painted rounded corners, gradient background, gold glow hover
 
@@ -354,6 +351,9 @@ make build-server   # Build server jar only
 make test           # Run tests
 make clean          # Clean artifacts
 make reset          # Clean + remove .store and .cache
+make server         # Build + start REST server
+make gui            # Build + launch GUI (local)
+make gui-test       # Build + launch GUI (local + test data)
 make cli            # Build + CLI usage
 make cli-test       # Build + quick CLI test
 make all            # Build + run tests

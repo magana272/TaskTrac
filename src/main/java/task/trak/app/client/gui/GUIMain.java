@@ -18,6 +18,7 @@ import task.trak.app.client.gui.viewmodel.SprintViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 import task.trak.app.client.gui.view.MainFrame;
 import task.trak.app.client.gui.view.TrakTheme;
+import task.trak.app.client.gui.view.setup.SetupWizard;
 import task.trak.app.client.cli.TTApp;
 import task.trak.app.client.config.WorkspaceConfig;
 import task.trak.app.server.dao.SessionDAO;
@@ -34,9 +35,43 @@ public class GUIMain {
     public static void main(String[] args) {
         boolean seedTest = Arrays.asList(args).contains("--test");
         boolean local = Arrays.asList(args).contains("--local");
+
+        // First-run setup wizard (skipped when --test seeds fresh data)
+        boolean wizardConfiguredRemote = false;
+        if (!seedTest && SetupWizard.isFirstRun()) {
+            try { UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName()); } catch (Exception ignored) {}
+            TrakTheme.applyDefaults();
+            SetupWizard wizard = new SetupWizard();
+            if (!wizard.show()) {
+                System.exit(0);
+            }
+            wizard.apply();
+            // Wizard result overrides the CLI flag
+            local = "local".equals(wizard.getChosenMode());
+            if (!local) {
+                ApiClient.setBaseUrl(wizard.getChosenServerUrl());
+                wizardConfiguredRemote = true;
+            }
+        } else if (!seedTest) {
+            // Not first run — load saved config from app support path
+            String appStoreDir = System.getProperty("user.home")
+                    + "/Library/Application Support/trak1.0.0/.store";
+            if (Files.exists(Path.of(appStoreDir, "workspace.json"))) {
+                TTApp.storedir = appStoreDir;
+                WorkspaceConfig saved = WorkspaceConfig.load();
+                if ("remote".equals(saved.getMode()) && saved.getServer_url() != null) {
+                    local = false;
+                    ApiClient.setBaseUrl(saved.getServer_url());
+                    wizardConfiguredRemote = true;
+                }
+            }
+        }
+
         if (!local) {
-            String url = parseServerUrl(args);
-            ApiClient.setBaseUrl(url);
+            if (!wizardConfiguredRemote) {
+                String url = parseServerUrl(args);
+                ApiClient.setBaseUrl(url);
+            }
         } else {
             if (seedTest) {
                 deleteDirectory(Path.of(TTApp.storedir));

@@ -53,7 +53,11 @@ public class SprintProgressPanel extends JPanel {
         addSprintBtn = new JButton("+ Add Sprint");
         TrakTheme.styleButtonPrimary(addSprintBtn);
         addSprintBtn.addActionListener(e -> {
-            // Open sprint add dialog
+            if (controller.getAuthController().getSession() == null) {
+                new task.trak.app.client.gui.view.auth.AuthPromptView(
+                        this, controller.getAuthController(), "add a sprint").show();
+                return;
+            }
             List<task.trak.model.dto.ProjectDTO> projects = controller.getProjectController().getViewModel().get();
             List<TaskDTO> tasks = controller.getTaskController().getViewModel().get();
             String selected = controller.getProjectController().getViewModel().getSelectedProject();
@@ -66,12 +70,7 @@ public class SprintProgressPanel extends JPanel {
         completeSprintBtn.setVisible(false);
         completeSprintBtn.addActionListener(e -> {
             if (activeSprint == null) return;
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Complete sprint \"" + activeSprint.name() + "\"? It will be archived.",
-                    "Complete Sprint", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                controller.getSprintController().completeSprint(activeSprint.name(), activeSprint.projectName());
-            }
+            showSprintReviewDialog(activeSprint);
         });
 
         deleteSprintBtn = new JButton("Delete");
@@ -226,6 +225,97 @@ public class SprintProgressPanel extends JPanel {
         }
         statsLabel.setText("Ready: " + ready + "  │  In Progress: " + inProgress
                 + "  │  Complete: " + complete + "    " + complete + "/" + total + " tasks  " + pct + "%" + dates);
+    }
+
+    private void showSprintReviewDialog(SprintDTO sprint) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, "Sprint Review", true);
+        dialog.setUndecorated(true);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(TrakTheme.BG_SURFACE);
+
+        JLabel titleLabel = new JLabel("Complete Sprint: \"" + sprint.name() + "\"");
+        titleLabel.setFont(TrakTheme.FONT_HEADING);
+        titleLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        titleLabel.setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        dialog.add(titleLabel, BorderLayout.NORTH);
+
+        JPanel centerPanel = new JPanel(new BorderLayout(0, TrakTheme.SP_XS));
+        centerPanel.setBackground(TrakTheme.BG_SURFACE);
+        centerPanel.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+
+        JLabel promptLabel = new JLabel("How did the sprint go? (required, max 300 characters)");
+        promptLabel.setFont(TrakTheme.FONT_BODY);
+        promptLabel.setForeground(TrakTheme.TEXT_SECONDARY);
+        centerPanel.add(promptLabel, BorderLayout.NORTH);
+
+        JTextArea reviewArea = new JTextArea(4, 40);
+        reviewArea.setLineWrap(true);
+        reviewArea.setWrapStyleWord(true);
+        reviewArea.setFont(TrakTheme.FONT_BODY);
+        reviewArea.setBackground(TrakTheme.BG_ELEVATED);
+        reviewArea.setForeground(TrakTheme.TEXT_PRIMARY);
+        reviewArea.setCaretColor(TrakTheme.TEXT_PRIMARY);
+
+        JScrollPane scroll = new JScrollPane(reviewArea);
+        scroll.setBorder(BorderFactory.createLineBorder(TrakTheme.BORDER));
+        centerPanel.add(scroll, BorderLayout.CENTER);
+
+        JLabel charCount = new JLabel("0 / 300");
+        charCount.setFont(TrakTheme.FONT_SMALL);
+        charCount.setForeground(TrakTheme.TEXT_SECONDARY);
+        charCount.setHorizontalAlignment(SwingConstants.RIGHT);
+        centerPanel.add(charCount, BorderLayout.SOUTH);
+
+        reviewArea.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private void update() {
+                int len = reviewArea.getText().length();
+                charCount.setText(len + " / 300");
+                charCount.setForeground(len > 300 ? TrakTheme.STATUS_READY : TrakTheme.TEXT_SECONDARY);
+            }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { update(); }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { update(); }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { update(); }
+        });
+
+        dialog.add(centerPanel, BorderLayout.CENTER);
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
+        buttonRow.setBackground(TrakTheme.BG_SURFACE);
+        buttonRow.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_MD, TrakTheme.SP_LG));
+
+        JButton cancelBtn = new JButton("Cancel");
+        TrakTheme.styleButtonNav(cancelBtn);
+        cancelBtn.setPreferredSize(new Dimension(80, 28));
+        cancelBtn.addActionListener(ev -> dialog.dispose());
+
+        JButton completeBtn = new JButton("Complete");
+        TrakTheme.styleButtonPrimary(completeBtn);
+        completeBtn.setPreferredSize(new Dimension(100, 28));
+        completeBtn.addActionListener(ev -> {
+            String review = reviewArea.getText().trim();
+            if (review.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Review is required to complete the sprint.",
+                        "Review Required", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (review.length() > 300) {
+                JOptionPane.showMessageDialog(dialog, "Review must be 300 characters or less.",
+                        "Too Long", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            dialog.dispose();
+            controller.getSprintController().completeSprint(sprint.name(), sprint.projectName(), review);
+        });
+
+        buttonRow.add(cancelBtn);
+        buttonRow.add(completeBtn);
+        dialog.add(buttonRow, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(450, dialog.getPreferredSize().height));
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private void showDeleteConfirmDialog(SprintDTO sprint) {

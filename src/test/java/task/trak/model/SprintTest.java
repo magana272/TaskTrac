@@ -70,4 +70,28 @@ public class SprintTest {
         sprint.setTask_ids(tasks);
         assertEquals(3, sprint.getTask_ids().size());
     }
+
+    @Test
+    public void TestReviewDefaultsToNull() {
+        Sprint sprint = new Sprint(7L, "Proj", "Sprint", null, null, null);
+        assertNull(sprint.getReview());
+    }
+
+    @Test
+    public void TestSetReview() {
+        Sprint sprint = new Sprint(8L, "Proj", "Sprint", null, null, null);
+        sprint.setReview("Great sprint, delivered all features on time.");
+        assertEquals("Great sprint, delivered all features on time.", sprint.getReview());
+    }
+
+    @Test
+    public void TestCompletionWithReview() {
+        Sprint sprint = new Sprint(9L, "Proj", "Sprint", null, null, null);
+        sprint.setCompleted(true);
+        sprint.setCompleted_at(new Date());
+        sprint.setReview("All tasks completed successfully.");
+        assertTrue(sprint.isCompleted());
+        assertNotNull(sprint.getCompleted_at());
+        assertEquals("All tasks completed successfully.", sprint.getReview());
+    }
 }

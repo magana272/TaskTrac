@@ -193,7 +193,7 @@ flowchart TB
         viewmodel[gui/viewmodel/<br>TaskViewModel, ProjectViewModel, ...]
         eventbus[gui/viewmodel/event/<br>CommandEventBus]
         controller[gui/controller/<br>GUIController, AuthController, ...]
-        views[gui/view/<br>TrakTheme, GlassPanel,<br>task/ +TimeInputPanel, form/ +FormPanel,<br>project/, sprint/, auth/, error/, panel/]
+        views[gui/view/<br>TrakTheme, task/ +TimeInputPanel,<br>form/ +FormPanel, util/ +TableUtil,<br>project/, sprint/, auth/, error/, panel/]
     end
 
     subgraph server["task.trak.app.server"]
@@ -330,7 +330,7 @@ flowchart TB
         direction LR
         Colors["Colors<br>BG_DARK, ACCENT,<br>STATUS_*"]
         Fonts["Typography<br>DISPLAY → CAPTION<br>+ MONO"]
-        Spacing["Spacing Grid<br>SP_XS(4) → SP_3XL(48)"]
+        Spacing["Spacing Grid<br>SP_XS(4) → SP_XL(24)"]
     end
 
     subgraph Methods["Styling Methods"]
@@ -343,7 +343,6 @@ flowchart TB
     TrakTheme --> Methods
 
     subgraph CustomPanels["Custom Panels"]
-        GlassPanel["GlassPanel<br>rounded gradient + shadow"]
         FormPanel["FormPanel<br>two-column GridBag"]
     end
 
@@ -633,25 +632,13 @@ classDiagram
         missing user, task, project, sprint
     }
 
-    class AuthenticationException {
-        bad credentials or expired token
-    }
-
-    class DuplicateEntityException {
-        username or email already exists
-    }
-
     RuntimeException <|-- TrakException
     TrakException <|-- ValidationException
     TrakException <|-- EntityNotFoundException
-    TrakException <|-- AuthenticationException
-    TrakException <|-- DuplicateEntityException
 
     style TrakException fill:#fff3e0,stroke:#e65100
     style ValidationException fill:#e3f2fd,stroke:#1565c0
     style EntityNotFoundException fill:#e3f2fd,stroke:#1565c0
-    style AuthenticationException fill:#fce4ec,stroke:#c62828
-    style DuplicateEntityException fill:#e3f2fd,stroke:#1565c0
 ```
 
 All exceptions are unchecked (`RuntimeException`). Route handlers catch `TrakException` subclasses and map them to HTTP status codes (400, 401, 404, 409).

@@ -1,6 +1,6 @@
 # Trak
 
-**Version 0.1.0**
+**Version 1.0.0**
 
 A sprint planning and task tracking tool. Create projects, break work into tasks, plan sprints, and track progress. When a sprint is active, in-progress tasks show a live countdown against their estimate. Sprints track completed vs total task counts. Available as a CLI, Swing desktop GUI, and REST API server.
 
@@ -19,14 +19,14 @@ make gui-test  # build + launch GUI with test data
 Or start the server and connect clients:
 
 ```bash
-make build-server && java -jar trak-server   # Terminal 1: start REST API
+make server                                  # Terminal 1: start REST API
 java -jar trak-gui                           # Terminal 2: launch GUI
 java -jar trak-cli --remote tasks            # Terminal 3: CLI
 ```
 
 ## Build
 
-Requires Java 23+ and Gradle.
+Requires Java 23+ and Gradle 9.5+.
 
 ```bash
 make build          # build all 3 jars
@@ -37,9 +37,11 @@ make test           # run tests
 make clean          # clean artifacts
 make reset          # clean + remove .store and .cache
 
+make server         # build + start REST server
 make gui            # build + launch GUI (local)
 make gui-test       # build + launch GUI (local + test data)
 make gui-server     # build + launch GUI (remote)
+make installer      # native installer via jpackage
 ```
 
 ## Executables
@@ -56,7 +58,30 @@ On macOS, the GUI uses native full-screen and transparent title bar. The `make g
 java -jar trak-server [port]              # start server
 java -jar trak-cli [--remote] <command>   # CLI
 java -jar trak-gui [--local] [--test]     # GUI (use make targets for macOS full-screen support)
+
+# macOS (with full-screen and native title bar support)
+java --add-opens java.desktop/com.apple.eawt=ALL-UNNAMED --add-opens java.desktop/com.apple.eawt.event=ALL-UNNAMED -jar trak-gui --local --test
 ```
+
+## Native Installer
+
+Build a platform-native installer (`.dmg` on macOS, `.msi` on Windows, `.deb` on Linux):
+
+```bash
+make installer   # outputs to build/installer/
+```
+
+Bundles a JRE, the GUI fat jar, and the application icon. No separate Java install required on the target machine. Requires JDK 16+ with `jpackage` on PATH.
+
+## First-Run Setup
+
+On first launch (or reinstall), a setup wizard prompts for:
+
+1. **Connection Mode** -- Local (embedded server) or Remote (connect to existing server)
+2. **Storage Backend** -- DuckDB (default), JSON, Parquet, Redis, or MongoDB
+3. **Connection Settings** -- Redis URL or MongoDB URI/DB if applicable
+
+Data is stored at `~/Library/Application Support/trak1.0.0/.store/`. The wizard writes `workspace.json` there and is skipped when `--test` is passed. On reinstall (new build), the old store is wiped and the wizard re-appears.
 
 ## Authentication
 
@@ -110,6 +135,32 @@ Data persisted in `.store/`. Five backends (configurable via `.store/workspace.j
 ```
 
 Redis requires `REDIS_URL` env var. MongoDB requires `MONGO_URI` and `MONGO_DB`.
+
+## Environment Variables
+
+Secrets and service credentials are loaded by `EnvLoader` in this order (first match wins):
+
+1. **System environment variables** (always checked first)
+2. **`src/main/resources/env.properties`** (bundled in jar for installed app)
+3. **`~/Library/Application Support/trak1.0.0/.env`** (app support directory)
+4. **`.env`** in working directory (development)
+
+### `.env` / `env.properties` format
+
+```properties
+# Google OAuth
+clientID=<your-google-client-id>
+clientsecret=<your-google-client-secret>
+
+# SMTP (password recovery emails)
+TRAK_SMTP_HOST=smtp.sendgrid.net
+TRAK_SMTP_PORT=587
+TRAK_SMTP_USER=apikey
+TRAK_SMTP_PASSWORD=<your-smtp-password>
+TRAK_SMTP_FROM=noreply@example.com
+```
+
+For development, create a `.env` file in the project root (gitignored). For the native installer, copy `.env` to `src/main/resources/env.properties` before building -- it gets bundled into the jar. `env.properties` is also gitignored to prevent committing secrets.
 
 ## Tests
 

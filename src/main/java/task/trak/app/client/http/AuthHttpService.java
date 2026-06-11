@@ -49,6 +49,21 @@ public class AuthHttpService implements AuthService {
         return new Session(user);
     }
 
+    public Session loginWithGoogle(String idToken) {
+        JsonObject body = new JsonObject();
+        body.addProperty("idToken", idToken);
+        String response = ApiClient.post("/api/auth/google", body.toString());
+        if (response == null) return null;
+        JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+        if (json.has("error")) {
+            throw new RuntimeException(json.get("error").getAsString());
+        }
+        String token = json.get("token").getAsString();
+        String user = json.get("username").getAsString();
+        ApiClient.setAuthToken(token);
+        return new Session(user);
+    }
+
     @Override
     public void logout() {
         try {
@@ -59,14 +74,29 @@ public class AuthHttpService implements AuthService {
         ApiClient.setAuthToken(null);
     }
 
-    @Override
-    public Session getCurrentSession() {
-        // Client manages session locally; no server-side session retrieval
-        return null;
+    public String requestPasswordReset(String email) {
+        JsonObject body = new JsonObject();
+        body.addProperty("email", email);
+        String response = ApiClient.post("/api/auth/forgot-password", body.toString());
+        if (response == null) return null;
+        JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+        if (json.has("error")) {
+            throw new RuntimeException(json.get("error").getAsString());
+        }
+        return json.get("message").getAsString();
     }
 
-    @Override
-    public boolean isLoggedIn() {
-        return ApiClient.getAuthToken() != null;
+    public String resetPassword(String code, String newPassword) {
+        JsonObject body = new JsonObject();
+        body.addProperty("code", code);
+        body.addProperty("newPassword", newPassword);
+        String response = ApiClient.post("/api/auth/reset-password", body.toString());
+        if (response == null) return null;
+        JsonObject json = JsonParser.parseString(response).getAsJsonObject();
+        if (json.has("error")) {
+            throw new RuntimeException(json.get("error").getAsString());
+        }
+        return json.get("message").getAsString();
     }
+
 }

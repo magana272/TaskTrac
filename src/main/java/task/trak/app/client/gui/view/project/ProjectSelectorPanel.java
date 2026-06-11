@@ -49,7 +49,14 @@ public class ProjectSelectorPanel extends JPanel {
         JButton addBtn = new JButton("+ Add Project");
         TrakTheme.styleButtonPrimary(addBtn);
         addBtn.setPreferredSize(new Dimension(130, 28));
-        addBtn.addActionListener(e -> new ProjectCreateView(this, controller.getProjectController()).show());
+        addBtn.addActionListener(e -> {
+            if (controller.getAuthController().getSession() == null) {
+                new task.trak.app.client.gui.view.auth.AuthPromptView(
+                        this, controller.getAuthController(), "create a project").show();
+                return;
+            }
+            new ProjectCreateView(this, controller.getProjectController()).show();
+        });
         add(addBtn);
 
         deleteBtn = new JButton("Delete Project");

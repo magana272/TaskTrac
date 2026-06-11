@@ -10,9 +10,15 @@ public record UpdateSprintRequest(
         String startDate,
         String endDate,
         List<Long> taskIds,
-        Boolean completed
+        Boolean completed,
+        String review
 ) {
     public void validate() {
         if (name == null || name.isBlank()) throw new ValidationException("Sprint name is required.");
+        if (completed != null && completed) {
+            if (review == null || review.isBlank()) throw new ValidationException("Review is required when completing a sprint.");
+            if (review.length() > 300) throw new ValidationException("Review must be 300 characters or less.");
+        }
+        if (review != null && review.length() > 300) throw new ValidationException("Review must be 300 characters or less.");
     }
 }

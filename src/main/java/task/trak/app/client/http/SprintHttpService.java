@@ -81,6 +81,9 @@ public class SprintHttpService implements SprintService {
         if (request.completed() != null) {
             body.addProperty("completed", request.completed());
         }
+        if (request.review() != null) {
+            body.addProperty("review", request.review());
+        }
         String response = ApiClient.put("/api/sprints/" + sprint.id(), body.toString());
         if (response == null) return null;
         return gson.fromJson(response, SprintDTO.class);

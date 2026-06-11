@@ -27,8 +27,6 @@ public final class TrakTheme {
     public static final int SP_MD = 12;
     public static final int SP_LG = 16;
     public static final int SP_XL = 24;
-    public static final int SP_2XL = 32;
-    public static final int SP_3XL = 48;
 
     // ── Backgrounds ──
     public static Color BG_DARK = new Color(0x12, 0x12, 0x16);
@@ -76,9 +74,7 @@ public final class TrakTheme {
     public static final Font FONT_CAPTION = new Font("SansSerif", Font.PLAIN, 10);
     public static final Font FONT_MONO = new Font(Font.MONOSPACED, Font.PLAIN, 13);
     // ── Corner radii — theme-independent ──
-    public static final int RADIUS_SM = 6;
     public static final int RADIUS_MD = 10;
-    public static final int RADIUS_LG = 16;
 
     private TrakTheme() {
     }
@@ -280,6 +276,11 @@ public final class TrakTheme {
         UIManager.put("PasswordField.background", BG_INPUT);
         UIManager.put("PasswordField.foreground", TEXT_PRIMARY);
         UIManager.put("PasswordField.caretForeground", ACCENT);
+        UIManager.put("PasswordField.selectionBackground", TABLE_SELECTION);
+        UIManager.put("PasswordField.selectionForeground", TEXT_PRIMARY);
+        UIManager.put("PasswordField.border", BorderFactory.createCompoundBorder(
+                new LineBorder(BORDER, 1, true),
+                new EmptyBorder(SP_XS, SP_SM, SP_XS, SP_SM)));
 
         UIManager.put("TextArea.background", BG_INPUT);
         UIManager.put("TextArea.foreground", TEXT_PRIMARY);

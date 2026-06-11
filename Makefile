@@ -1,4 +1,6 @@
-.PHONY: test build build-gui build-cli build-server clean reset server gui gui-test gui-server gui-test-server cli cli-test cli-server cli-test-server all all-test
+.PHONY: test build build-gui build-cli build-server clean reset server gui gui-test gui-server gui-test-server cli cli-test cli-server cli-test-server all all-test installer
+
+# Requires: Java 23+, Gradle 9.5+
 
 # Build
 build:
@@ -35,6 +37,10 @@ reset: clean
 
 # macOS native full-screen requires these module opens
 GUI_JVM_ARGS = --add-opens java.desktop/com.apple.eawt=ALL-UNNAMED --add-opens java.desktop/com.apple.eawt.event=ALL-UNNAMED
+
+# Server
+server: build-server
+	java -jar trak-server
 
 # GUI
 gui: build-gui
@@ -73,6 +79,11 @@ all-test: test build
 	@echo "  make gui-test        # GUI with test data (local)"
 	@echo "  make gui-test-server # GUI with test data (remote)"
 	@echo "  make cli             # CLI (local)"
+
+# Native installer (requires jpackage / JDK 16+)
+installer:
+	./gradlew jpackage-gui
+	@echo "Installer written to build/installer/"
 
 # All (local, no test data)
 all: test build

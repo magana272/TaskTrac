@@ -3,18 +3,17 @@ package task.trak.app.client.gui.controller;
 import task.trak.model.dto.SprintDTO;
 import task.trak.model.dto.request.CreateSprintRequest;
 import task.trak.model.dto.request.UpdateSprintRequest;
-import task.trak.app.client.http.SprintHttpService;
+import task.trak.api.service.SprintService;
 import task.trak.app.client.gui.viewmodel.SprintViewModel;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SprintController {
 
-    private final SprintHttpService sprintService;
+    private final SprintService sprintService;
     private final SprintViewModel sprintViewModel;
 
-    public SprintController(SprintHttpService sprintService, SprintViewModel sprintViewModel) {
+    public SprintController(SprintService sprintService, SprintViewModel sprintViewModel) {
         this.sprintService = sprintService;
         this.sprintViewModel = sprintViewModel;
     }
@@ -27,7 +26,7 @@ public class SprintController {
         try {
             this.sprintService.create(new CreateSprintRequest(name, project));
             if (startDate != null || endDate != null || (taskIds != null && !taskIds.isEmpty())) {
-                this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds, null));
+                this.sprintService.update(new UpdateSprintRequest(name, project, startDate, endDate, taskIds, null, null));
             }
             refreshSprints();
         } catch (Exception e) {
@@ -37,7 +36,7 @@ public class SprintController {
 
     public void updateSprint(String name, String startDate, String endDate) {
         try {
-            this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null, null));
+            this.sprintService.update(new UpdateSprintRequest(name, null, startDate, endDate, null, null, null));
             refreshSprints();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
@@ -53,23 +52,9 @@ public class SprintController {
         }
     }
 
-    public void addTaskToSprint(String sprintName, String project, long taskId) {
+    public void completeSprint(String name, String project, String review) {
         try {
-            SprintDTO sprint = this.sprintService.getByNameAndProject(sprintName, project);
-            List<Long> taskIds = new ArrayList<>(sprint.taskIds());
-            if (!taskIds.contains(taskId)) {
-                taskIds.add(taskId);
-            }
-            this.sprintService.update(new UpdateSprintRequest(sprintName, project, null, null, taskIds, null));
-            refreshSprints();
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-        }
-    }
-
-    public void completeSprint(String name, String project) {
-        try {
-            sprintService.update(new UpdateSprintRequest(name, project, null, null, null, true));
+            sprintService.update(new UpdateSprintRequest(name, project, null, null, null, true, review));
             refreshSprints();
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());

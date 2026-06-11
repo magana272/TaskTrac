@@ -163,7 +163,8 @@ public class SprintRoutes {
                         bodyRequest.startDate(),
                         bodyRequest.endDate(),
                         taskIds,
-                        bodyRequest.completed()
+                        bodyRequest.completed(),
+                        bodyRequest.review()
                 );
                 request.validate();
 

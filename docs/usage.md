@@ -69,6 +69,9 @@ All clients communicate via HTTP REST API. The `--local` flag starts an embedded
 | `make test` | Run all tests |
 | `make clean` | Clean build artifacts |
 | `make reset` | Clean + remove `.store` and `.cache` |
+| `make server` | Build + start REST server |
+| `make gui` | Build + launch GUI (local) |
+| `make gui-test` | Build + launch GUI (local + test data) |
 | `make cli` | Build + show CLI usage |
 | `make cli-test` | Build + quick CLI test (runs `info`) |
 | `make cli-server` | Build + show CLI remote usage |
@@ -200,7 +203,7 @@ java -jar trak-cli backlog delete MainBacklog
 The GUI uses an MVC architecture with an Observer pattern. Views implement ViewModelChangeListener and register on ViewModels via `addObserver()`, so changes in one domain (e.g. tasks) automatically refresh related views (e.g. sprints).
 
 ### Dark Cinematic Theme
-The GUI uses a centralized dark theme (`TrakTheme`) with a deep charcoal background (#121216), warm gold accent (#FFD54F), and an 8px spacing grid. Typography follows a scale from DISPLAY (22pt bold) down to CAPTION (10pt). All views, dialogs, tables, and input fields inherit the theme automatically via `UIManager` defaults. Custom components include `GlassPanel` (rounded gradient panels with optional drop shadow) and `FormPanel` (two-column form layout used by all dialogs).
+The GUI uses a centralized dark theme (`TrakTheme`) with a deep charcoal background (#121216), warm gold accent (#FFD54F), and an 8px spacing grid. Typography follows a scale from DISPLAY (22pt bold) down to CAPTION (10pt). All views, dialogs, tables, and input fields inherit the theme automatically via `UIManager` defaults. Custom components include `FormPanel` (two-column form layout used by all dialogs).
 
 ### TasksView
 - **Task cards** with gradient backgrounds, gold glow hover, status dropdown, project name, summary, deadline
@@ -230,8 +233,8 @@ The GUI uses a centralized dark theme (`TrakTheme`) with a deep charcoal backgro
 
 ### Authentication Views
 - **LoginView** — login form dialog
-- **SignUpView** — signup form dialog
-- **LogOutView** — logout confirmation
+- **SignUpView** — multi-page signup wizard with Google sign-in
+- **AuthPromptView** — prompts user to log in or sign up when accessing protected features
 - **Continue as Guest** button (logs in as `guest` account)
 - Status bar shows logged-in user
 
@@ -250,7 +253,7 @@ The Settings panel (accessible from the nav bar) provides:
 The GUI uses an undecorated frame with a custom title bar. The title bar supports drag-to-move. Window edges support resize by dragging. The task panel uses a hidden scrollbar (mousewheel scrolls).
 
 ### Error Handling
-- **ErrorAlertView** — modal error alert dialogs for validation and server errors
+- **ErrorView** — themed modal error dialogs for validation and server errors
 
 ---
 

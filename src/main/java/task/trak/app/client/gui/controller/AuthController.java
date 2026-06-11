@@ -3,17 +3,17 @@ package task.trak.app.client.gui.controller;
 import task.trak.model.Session;
 import task.trak.model.dto.UserDTO;
 import task.trak.model.dto.request.UpdateUserRequest;
-import task.trak.app.client.http.AuthHttpService;
-import task.trak.app.client.http.UserHttpService;
+import task.trak.api.service.AuthService;
+import task.trak.api.service.UserService;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 
 public class AuthController {
 
-    private final AuthHttpService authService;
-    private final UserHttpService userService;
+    private final AuthService authService;
+    private final UserService userService;
     private final UserViewModel userViewModel;
 
-    public AuthController(AuthHttpService authService, UserHttpService userService, UserViewModel userViewModel) {
+    public AuthController(AuthService authService, UserService userService, UserViewModel userViewModel) {
         this.authService = authService;
         this.userService = userService;
         this.userViewModel = userViewModel;
@@ -37,21 +37,21 @@ public class AuthController {
         }
     }
 
+    public void loginWithGoogle(String idToken) {
+        try {
+            Session session = this.authService.loginWithGoogle(idToken);
+            userViewModel.setSession(session);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+        }
+    }
+
     public void logout() {
         try {
             this.authService.logout();
             userViewModel.setSession(null);
         } catch (Exception e) {
             userViewModel.setError(e.getMessage());
-        }
-    }
-
-    public boolean isLoggedIn() {
-        try {
-            return this.authService.isLoggedIn();
-        } catch (Exception e) {
-            userViewModel.setError(e.getMessage());
-            return false;
         }
     }
 
@@ -86,6 +86,24 @@ public class AuthController {
         userService.deleteByUsername(username);
         try { authService.logout(); } catch (Exception ignored) { }
         userViewModel.setSession(null);
+    }
+
+    public String requestPasswordReset(String email) {
+        try {
+            return authService.requestPasswordReset(email);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return null;
+        }
+    }
+
+    public String resetPassword(String code, String newPassword) {
+        try {
+            return authService.resetPassword(code, newPassword);
+        } catch (Exception e) {
+            userViewModel.setError(e.getMessage());
+            return null;
+        }
     }
 
     public boolean usernameExists(String username) {
