@@ -81,7 +81,8 @@ public class DuckDBConnection {
                         start_date BIGINT,
                         end_date BIGINT,
                         completed BOOLEAN DEFAULT FALSE,
-                        completed_at BIGINT
+                        completed_at BIGINT,
+                        review VARCHAR
                     )""");
 
             stmt.execute("""

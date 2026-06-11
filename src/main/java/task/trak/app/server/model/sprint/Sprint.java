@@ -13,6 +13,7 @@ public class Sprint {
     private Date end_date;
     private boolean completed = false;
     private Date completed_at;
+    private String review;
 
     public Sprint(Long id, String projectName, String name, List<Long> taskIds, Date startDate, Date endDate) {
         this.id = id;
@@ -77,5 +78,13 @@ public class Sprint {
 
     public void setCompleted_at(Date completed_at) {
         this.completed_at = completed_at;
+    }
+
+    public String getReview() {
+        return this.review;
+    }
+
+    public void setReview(String review) {
+        this.review = review;
     }
 }

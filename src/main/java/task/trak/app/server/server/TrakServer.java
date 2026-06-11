@@ -43,6 +43,8 @@ public class TrakServer {
         server.createContext("/api/auth/signup", new AuthRoutes.SignupHandler());
         server.createContext("/api/auth/google", new AuthRoutes.GoogleLoginHandler());
         server.createContext("/api/auth/logout", AuthFilter.requireAuth(new AuthRoutes.LogoutHandler()));
+        server.createContext("/api/auth/forgot-password", new AuthRoutes.ForgotPasswordHandler());
+        server.createContext("/api/auth/reset-password", new AuthRoutes.ResetPasswordHandler());
 
         // User routes (POST /api/users is open for registration; detail requires auth)
         server.createContext("/api/users/exists/", new UserRoutes.UserExistsHandler());

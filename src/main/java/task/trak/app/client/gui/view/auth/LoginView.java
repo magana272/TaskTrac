@@ -38,6 +38,14 @@ public class LoginView extends FormDialogView {
         googleBtn.setPreferredSize(new Dimension(200, 32));
         googleBtn.addActionListener(e -> onGoogleSignIn());
         form.addField("", googleBtn);
+        JButton forgotBtn = new JButton("Forgot Password?");
+        forgotBtn.setBorderPainted(false);
+        forgotBtn.setContentAreaFilled(false);
+        forgotBtn.setForeground(new Color(100, 149, 237));
+        forgotBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        forgotBtn.setFont(forgotBtn.getFont().deriveFont(11f));
+        forgotBtn.addActionListener(e -> new ForgotPasswordView(parent, authController).show());
+        form.addField("", forgotBtn);
 
         return form;
     }

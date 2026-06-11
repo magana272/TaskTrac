@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.sun.mail:jakarta.mail:2.0.1")
     implementation("org.apache.parquet:parquet-avro:1.15.1")
     implementation("org.apache.hadoop:hadoop-common:3.4.1") {
         exclude(group = "org.slf4j")
