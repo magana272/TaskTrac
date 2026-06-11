@@ -140,6 +140,20 @@ public class CMD_Factory implements CMD<Consumer<String[]>> {
                 System.err.println("Error: " + e.getMessage());
             }
         });
+        cmds.put("forgot-password", (String[] options) -> {
+            try {
+                new ForgotPasswordCMD(options).Execute();
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        });
+        cmds.put("reset-password", (String[] options) -> {
+            try {
+                new ResetPasswordCMD(options).Execute();
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
+            }
+        });
     }
 
     private boolean verify(String[] option) {

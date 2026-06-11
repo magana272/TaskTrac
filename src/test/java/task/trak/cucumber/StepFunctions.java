@@ -16,6 +16,7 @@ import task.trak.app.server.model.project.Project;
 import task.trak.app.server.model.sprint.Sprint;
 import task.trak.app.server.model.task.Task;
 import task.trak.app.server.model.user.User;
+import task.trak.app.server.server.PasswordResetStore;
 import task.trak.app.server.service.auth.TrakAuthService;
 import task.trak.app.server.service.user.TrakUserService;
 
@@ -37,6 +38,7 @@ public class StepFunctions {
     private String pendingCommand;
     private String projectName;
     private Long createdTaskId;
+    private String resetCode;
 
     @Before
     public void setUp() {
@@ -59,6 +61,7 @@ public class StepFunctions {
         System.setOut(originalOut);
         System.setErr(originalErr);
         SessionDAO.clear();
+        PasswordResetStore.clear();
         File dir = new File(TEST_STORE);
         if (dir.exists()) {
             File[] files = dir.listFiles();
@@ -638,6 +641,34 @@ public class StepFunctions {
     public void theUserStartsTheCreatedTask() {
         assertNotNull("Task ID must exist", this.createdTaskId);
         executeCommand(new String[]{"start", String.valueOf(this.createdTaskId)}, null);
+    }
+
+    // --- Password Reset steps ---
+
+    @When("the user requests a password reset for email {string}")
+    public void theUserRequestsAPasswordResetForEmail(String email) {
+        PasswordResetStore.clear();
+        executeCommand(new String[]{"forgot-password", "--email", email}, null);
+    }
+
+    @Given("a password reset code exists for user {string}")
+    public void aPasswordResetCodeExistsForUser(String username) {
+        PasswordResetStore.clear();
+        this.resetCode = PasswordResetStore.createCode(username);
+        assertNotNull("Reset code should be created", this.resetCode);
+    }
+
+    @When("the user resets the password with the code and new password {string}")
+    public void theUserResetsThePasswordWithTheCodeAndNewPassword(String newPassword) {
+        assertNotNull("Reset code must exist", this.resetCode);
+        executeCommand(new String[]{"reset-password", "--code", this.resetCode, "--password", newPassword}, null);
+    }
+
+    @Then("the same reset code cannot be used again")
+    public void theSameResetCodeCannotBeUsedAgain() {
+        assertNotNull("Reset code must exist", this.resetCode);
+        String username = PasswordResetStore.validateCode(this.resetCode);
+        assertNull("Code should be invalidated after use", username);
     }
 
     private String[] tokenize(String command) {
