@@ -32,3 +32,22 @@ Feature: Sprint Management
   Scenario: User cannot create sprint without project
     When the user runs the command "tasktracker sprint add OrphanSprint"
     Then the system displays an error containing "project is required"
+
+  Scenario: User completes a sprint with a review
+    Given a project named "ReviewProj" exists
+    And a sprint named "ReviewSprint" exists in project "ReviewProj"
+    When the user runs the command "tasktracker sprint update ReviewSprint --project ReviewProj --complete --review Good sprint overall"
+    Then the sprint "ReviewSprint" is completed
+    And the sprint "ReviewSprint" has review "Good sprint overall"
+
+  Scenario: User cannot complete a sprint without a review
+    Given a project named "NoReviewProj" exists
+    And a sprint named "NoReviewSprint" exists in project "NoReviewProj"
+    When the user runs the command "tasktracker sprint update NoReviewSprint --project NoReviewProj --complete"
+    Then the system displays an error containing "Review is required"
+
+  Scenario: User cannot complete a sprint with a review longer than 300 characters
+    Given a project named "LongReviewProj" exists
+    And a sprint named "LongReviewSprint" exists in project "LongReviewProj"
+    When the user runs the command "tasktracker sprint update LongReviewSprint --project LongReviewProj --complete --review aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    Then the system displays an error containing "300 characters"

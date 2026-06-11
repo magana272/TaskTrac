@@ -27,7 +27,8 @@ public class ParquetSprintDAO implements EntityDAO<Sprint> {
                 {"name": "start_date", "type": ["null", "long"], "default": null},
                 {"name": "end_date", "type": ["null", "long"], "default": null},
                 {"name": "completed", "type": "boolean", "default": false},
-                {"name": "completed_at", "type": ["null", "long"], "default": null}
+                {"name": "completed_at", "type": ["null", "long"], "default": null},
+                {"name": "review", "type": ["null", "string"], "default": null}
               ]
             }
             """;
@@ -74,12 +75,14 @@ public class ParquetSprintDAO implements EntityDAO<Sprint> {
             Long endMs = (Long) r.get("end_date");
             Boolean completed = (Boolean) r.get("completed");
             Long completedAtMs = (Long) r.get("completed_at");
+            String review = r.get("review") != null ? r.get("review").toString() : null;
             Sprint sprint = new Sprint(id, projectName, name,
                     taskIds != null ? new ArrayList<>(taskIds) : new ArrayList<>(),
                     startMs != null ? new Date(startMs) : null,
                     endMs != null ? new Date(endMs) : null);
             sprint.setCompleted(completed != null && completed);
             sprint.setCompleted_at(completedAtMs != null ? new Date(completedAtMs) : null);
+            sprint.setReview(review);
             sprints.add(sprint);
         }
         return sprints;
@@ -100,6 +103,7 @@ public class ParquetSprintDAO implements EntityDAO<Sprint> {
         record.put("end_date", s.getEnd_date() != null ? s.getEnd_date().getTime() : null);
         record.put("completed", s.isCompleted());
         record.put("completed_at", s.getCompleted_at() != null ? s.getCompleted_at().getTime() : null);
+        record.put("review", s.getReview());
         return record;
     }
 }
