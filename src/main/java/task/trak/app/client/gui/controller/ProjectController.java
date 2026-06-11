@@ -3,7 +3,7 @@ package task.trak.app.client.gui.controller;
 import task.trak.model.dto.ProjectDTO;
 import task.trak.model.dto.request.CreateProjectRequest;
 import task.trak.model.dto.request.UpdateProjectRequest;
-import task.trak.app.client.http.ProjectHttpService;
+import task.trak.api.service.ProjectService;
 import task.trak.app.client.gui.viewmodel.ProjectViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 
@@ -12,11 +12,11 @@ import java.util.List;
 
 public class ProjectController {
 
-    private final ProjectHttpService projectService;
+    private final ProjectService projectService;
     private final ProjectViewModel projectViewModel;
     private final UserViewModel userViewModel;
 
-    public ProjectController(ProjectHttpService projectService, ProjectViewModel projectViewModel, UserViewModel userViewModel) {
+    public ProjectController(ProjectService projectService, ProjectViewModel projectViewModel, UserViewModel userViewModel) {
         this.projectService = projectService;
         this.projectViewModel = projectViewModel;
         this.userViewModel = userViewModel;

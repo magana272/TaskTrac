@@ -16,4 +16,8 @@ public interface UserService {
     UserDTO updateByUsername(UpdateUserRequest request);
 
     boolean authenticate(String username, String password);
+
+    boolean usernameExists(String username);
+
+    boolean emailExists(String email);
 }

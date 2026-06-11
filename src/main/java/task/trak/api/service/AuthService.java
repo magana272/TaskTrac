@@ -9,7 +9,9 @@ public interface AuthService {
 
     void logout();
 
-    Session getCurrentSession();
+    Session loginWithGoogle(String idToken);
 
-    boolean isLoggedIn();
+    String requestPasswordReset(String email);
+
+    String resetPassword(String code, String newPassword);
 }

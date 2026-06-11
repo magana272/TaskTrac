@@ -6,11 +6,14 @@ import task.trak.model.Session;
 import task.trak.api.service.AuthService;
 import task.trak.api.service.UserService;
 import task.trak.app.server.dao.SessionDAO;
-import task.trak.app.server.service.user.TrakUserService;
 
 public class TrakAuthService implements AuthService {
 
-    private final UserService userService = new TrakUserService();
+    private final UserService userService;
+
+    public TrakAuthService(UserService userService) {
+        this.userService = userService;
+    }
 
     @Override
     public Session login(String username, String password) {
@@ -46,13 +49,17 @@ public class TrakAuthService implements AuthService {
     }
 
     @Override
-    public Session getCurrentSession() {
-        return SessionDAO.load();
+    public Session loginWithGoogle(String idToken) {
+        throw new UnsupportedOperationException("Google login is not supported in local mode.");
     }
 
     @Override
-    public boolean isLoggedIn() {
-        Session session = getCurrentSession();
-        return session != null && session.getLogged_in_user() != null;
+    public String requestPasswordReset(String email) {
+        throw new UnsupportedOperationException("Password reset is not supported in local mode.");
+    }
+
+    @Override
+    public String resetPassword(String code, String newPassword) {
+        throw new UnsupportedOperationException("Password reset is not supported in local mode.");
     }
 }
