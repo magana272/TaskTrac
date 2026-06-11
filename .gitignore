@@ -41,7 +41,6 @@ bin/
 
 ### Project ###
 .env
-src/main/resources/env.properties
 .store/
 .cache/
 src/test/.store/

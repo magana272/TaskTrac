@@ -7,13 +7,15 @@ import task.trak.model.dto.request.CreateUserRequest;
 import task.trak.api.service.UserService;
 import task.trak.app.server.service.user.TrakUserService;
 
-import task.trak.app.client.config.EnvLoader;
-
+import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Properties;
 
 /**
  * Verifies Google ID tokens and creates/retrieves users.
@@ -121,14 +123,36 @@ public class GoogleAuthService {
     }
 
     private static String loadClientId() {
-        return EnvLoader.get("TRAK_GOOGLE_CLIENT_ID", EnvLoader.load().getProperty("clientID"));
+        // Try System env first
+        String envVal = System.getenv("TRAK_GOOGLE_CLIENT_ID");
+        if (envVal != null && !envVal.isBlank()) return envVal;
+
+        // Fall back to .env file
+        return loadFromEnvFile("clientID");
     }
 
     public static String loadClientSecret() {
-        return EnvLoader.get("TRAK_GOOGLE_CLIENT_SECRET", EnvLoader.load().getProperty("clientsecret"));
+        String envVal = System.getenv("TRAK_GOOGLE_CLIENT_SECRET");
+        if (envVal != null && !envVal.isBlank()) return envVal;
+
+        return loadFromEnvFile("clientsecret");
     }
 
     public static String loadFromEnvFile(String key) {
-        return EnvLoader.getRequired(key);
+        Path envPath = Path.of(".env");
+        if (!Files.exists(envPath)) {
+            throw new IllegalStateException("Google OAuth not configured: .env file not found.");
+        }
+        try {
+            Properties props = new Properties();
+            props.load(Files.newBufferedReader(envPath));
+            String value = props.getProperty(key);
+            if (value == null || value.isBlank()) {
+                throw new IllegalStateException("Google OAuth not configured: " + key + " not set.");
+            }
+            return value;
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read .env file: " + e.getMessage(), e);
+        }
     }
 }
