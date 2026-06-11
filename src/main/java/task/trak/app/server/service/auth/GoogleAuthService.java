@@ -23,7 +23,7 @@ import java.util.Properties;
 public class GoogleAuthService {
 
     private final UserService userService;
-    private final String clientId;
+    private String clientId;
 
     public GoogleAuthService() {
         this(new TrakUserService());
@@ -31,7 +31,6 @@ public class GoogleAuthService {
 
     public GoogleAuthService(UserService userService) {
         this.userService = userService;
-        this.clientId = loadClientId();
     }
 
     /**
@@ -45,7 +44,7 @@ public class GoogleAuthService {
         JsonObject payload = verifyToken(idToken);
 
         String aud = payload.has("aud") ? payload.get("aud").getAsString() : null;
-        if (!clientId.equals(aud)) {
+        if (!getClientId().equals(aud)) {
             throw new SecurityException("Token audience mismatch.");
         }
 
@@ -114,6 +113,13 @@ public class GoogleAuthService {
             suffix++;
         }
         return candidate;
+    }
+
+    private String getClientId() {
+        if (clientId == null) {
+            clientId = loadClientId();
+        }
+        return clientId;
     }
 
     private static String loadClientId() {
