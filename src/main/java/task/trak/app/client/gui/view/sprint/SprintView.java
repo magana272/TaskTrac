@@ -145,8 +145,13 @@ public class SprintView extends DataView implements ViewModelChangeListener {
     }
 
     private void openAddSprintDialog() {
+        if (guiController.getAuthController().getSession() == null) {
+            new task.trak.app.client.gui.view.auth.AuthPromptView(
+                    this, guiController.getAuthController(), "add a sprint").show();
+            return;
+        }
         var projects = guiController.getProjectController().getProjectsForUser(
-                guiController.getSession() != null ? guiController.getSession().getLogged_in_user() : null);
+                guiController.getAuthController().getSession().getLogged_in_user());
         var tasks = guiController.getTaskController().getViewModel().get();
         new SprintAddView(this, guiController.getSprintController(), projects, tasks).show();
     }

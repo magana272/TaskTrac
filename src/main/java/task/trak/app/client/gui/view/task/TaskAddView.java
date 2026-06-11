@@ -41,8 +41,7 @@ public class TaskAddView extends FormDialogView {
     @Override
     public void show() {
         if (projects == null || projects.isEmpty()) {
-            JOptionPane.showMessageDialog(parent, "No projects found. Create a project first.",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            new task.trak.app.client.gui.view.error.ErrorView("No projects found. Create a project first.").show(parent);
             return;
         }
         super.show();

@@ -252,11 +252,15 @@ public class TasksView extends DataView implements ViewModelChangeListener {
     }
 
     private void showAddTaskDialog() {
+        if (guiController.getAuthController().getSession() == null) {
+            new task.trak.app.client.gui.view.auth.AuthPromptView(
+                    this, guiController.getAuthController(), "add a task").show();
+            return;
+        }
         var projects = guiController.getProjectController().getProjectsForUser(
-                guiController.getSession() != null ? guiController.getSession().getLogged_in_user() : null);
+                guiController.getAuthController().getSession().getLogged_in_user());
         if (projects == null || projects.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No projects found. Create a project first.",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            new task.trak.app.client.gui.view.error.ErrorView("No projects found. Create a project first.").show(this);
             return;
         }
         String selected = guiController.getProjectController().getViewModel().getSelectedProject();
