@@ -2,9 +2,15 @@ package task.trak.app.server.service.email;
 
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 public class SmtpEmailService implements EmailService {
+
+    private static Properties dotenv;
 
     private final String host;
     private final int port;
@@ -48,7 +54,21 @@ public class SmtpEmailService implements EmailService {
     }
 
     private static String env(String key, String defaultValue) {
+        // Try system env first
         String val = System.getenv(key);
-        return val != null && !val.isBlank() ? val : defaultValue;
+        if (val != null && !val.isBlank()) return val;
+
+        // Fall back to .env file
+        if (dotenv == null) {
+            dotenv = new Properties();
+            Path envPath = Path.of(".env");
+            if (Files.exists(envPath)) {
+                try {
+                    dotenv.load(Files.newBufferedReader(envPath));
+                } catch (IOException ignored) { }
+            }
+        }
+        String fileVal = dotenv.getProperty(key);
+        return fileVal != null && !fileVal.isBlank() ? fileVal : defaultValue;
     }
 }
