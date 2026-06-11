@@ -575,7 +575,7 @@ public class StepFunctions {
     public void theUserSignsUp(String username, String password, String firstName, String lastName, String email) {
         File storeDir = new File(TTApp.storedir);
         if (!storeDir.exists()) storeDir.mkdirs();
-        AuthService authService = new TrakAuthService();
+        AuthService authService = new TrakAuthService(new TrakUserService());
         authService.signup(firstName, lastName, username, email, password);
     }
 

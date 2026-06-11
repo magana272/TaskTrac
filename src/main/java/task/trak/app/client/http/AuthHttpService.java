@@ -99,14 +99,4 @@ public class AuthHttpService implements AuthService {
         return json.get("message").getAsString();
     }
 
-    @Override
-    public Session getCurrentSession() {
-        // Client manages session locally; no server-side session retrieval
-        return null;
-    }
-
-    @Override
-    public boolean isLoggedIn() {
-        return ApiClient.getAuthToken() != null;
-    }
 }

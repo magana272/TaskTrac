@@ -84,6 +84,16 @@ public class TrakUserService implements UserService {
         return PasswordUtil.verify(password, user.getPassword_hash());
     }
 
+    @Override
+    public boolean usernameExists(String username) {
+        return store.loadByKey(username) != null;
+    }
+
+    @Override
+    public boolean emailExists(String email) {
+        return getByEmail(email) != null;
+    }
+
     private UserDTO toDTO(User u) {
         return new UserDTO(u.getID(), u.getFirst_name(), u.getLast_name(), u.getUser_name(), u.getEmail());
     }

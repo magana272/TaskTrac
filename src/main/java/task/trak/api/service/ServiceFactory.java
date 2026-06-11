@@ -93,7 +93,7 @@ public class ServiceFactory {
                 TrakProjectService::new,
                 TrakSprintService::new,
                 TrakBacklogService::new,
-                TrakAuthService::new
+                () -> new TrakAuthService(new TrakUserService())
         );
     }
 }

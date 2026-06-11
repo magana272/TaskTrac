@@ -27,8 +27,6 @@ public final class TrakTheme {
     public static final int SP_MD = 12;
     public static final int SP_LG = 16;
     public static final int SP_XL = 24;
-    public static final int SP_2XL = 32;
-    public static final int SP_3XL = 48;
 
     // ── Backgrounds ──
     public static Color BG_DARK = new Color(0x12, 0x12, 0x16);
@@ -76,9 +74,7 @@ public final class TrakTheme {
     public static final Font FONT_CAPTION = new Font("SansSerif", Font.PLAIN, 10);
     public static final Font FONT_MONO = new Font(Font.MONOSPACED, Font.PLAIN, 13);
     // ── Corner radii — theme-independent ──
-    public static final int RADIUS_SM = 6;
     public static final int RADIUS_MD = 10;
-    public static final int RADIUS_LG = 16;
 
     private TrakTheme() {
     }

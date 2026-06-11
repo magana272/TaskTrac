@@ -13,8 +13,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
@@ -101,7 +99,7 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
                 });
             }
 
-            JTable table = createCopyableTable(model);
+            JTable table = task.trak.app.client.gui.view.util.TableUtil.createCopyableTable(model);
             TrakTheme.styleTable(table);
 
             table.addMouseListener(new MouseAdapter() {
@@ -250,29 +248,4 @@ public class ProjectsView extends DataView implements ViewModelChangeListener {
         }
     }
 
-    private JTable createCopyableTable(DefaultTableModel model) {
-        JTable table = new JTable(model);
-        table.setCellSelectionEnabled(true);
-        table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-
-        KeyStroke copy = KeyStroke.getKeyStroke("control C");
-        KeyStroke macCopy = KeyStroke.getKeyStroke("meta C");
-        Action copyAction = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int row = table.getSelectedRow();
-                int col = table.getSelectedColumn();
-                if (row >= 0 && col >= 0) {
-                    Object val = table.getValueAt(row, col);
-                    String text = val != null ? val.toString() : "";
-                    Toolkit.getDefaultToolkit().getSystemClipboard()
-                            .setContents(new StringSelection(text), null);
-                }
-            }
-        };
-        table.getInputMap().put(copy, "copy");
-        table.getInputMap().put(macCopy, "copy");
-        table.getActionMap().put("copy", copyAction);
-        return table;
-    }
 }

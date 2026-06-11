@@ -4,7 +4,7 @@ import task.trak.model.dto.TaskDTO;
 import task.trak.model.dto.request.CreateTaskRequest;
 import task.trak.model.dto.request.UpdateTaskRequest;
 import task.trak.model.Session;
-import task.trak.app.client.http.TaskHttpService;
+import task.trak.api.service.TaskService;
 import task.trak.app.client.gui.viewmodel.TaskViewModel;
 import task.trak.app.client.gui.viewmodel.UserViewModel;
 
@@ -13,11 +13,11 @@ import java.util.List;
 
 public class TaskController {
 
-    private final TaskHttpService taskService;
+    private final TaskService taskService;
     private final TaskViewModel taskViewModel;
     private final UserViewModel userViewModel;
 
-    public TaskController(TaskHttpService taskService, TaskViewModel taskViewModel, UserViewModel userViewModel) {
+    public TaskController(TaskService taskService, TaskViewModel taskViewModel, UserViewModel userViewModel) {
         this.taskService = taskService;
         this.taskViewModel = taskViewModel;
         this.userViewModel = userViewModel;
