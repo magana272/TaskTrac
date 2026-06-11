@@ -6,6 +6,7 @@ import task.trak.app.client.gui.view.form.FormDialogView;
 import task.trak.app.client.gui.view.form.FormPanel;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -44,7 +45,8 @@ public class SignUpView extends FormDialogView {
     private volatile boolean userAvailResult = false;
     private volatile boolean emailAvailResult = false;
     private Timer asyncTimer;
-    private JButton okBtnRef;
+    private JButton nextBtnRef;
+    private JButton signUpBtnRef;
     private JDialog dialogRef;
 
     public SignUpView(Component parent, AuthController authController) {
@@ -54,7 +56,11 @@ public class SignUpView extends FormDialogView {
 
     @Override
     protected FormPanel buildPanel() {
-        FormPanel form = new FormPanel();
+        return new FormPanel(); // Not used — show() builds the multi-page layout
+    }
+
+    @Override
+    public void show() {
         usernameField = new JTextField();
         firstNameField = new JTextField();
         lastNameField = new JTextField();
@@ -62,39 +68,19 @@ public class SignUpView extends FormDialogView {
         passwordField = new JPasswordField();
         confirmPasswordField = new JPasswordField();
 
-        // Username
-        form.addField("Username:", usernameField);
-        JPanel userReq = makeReqPanel();
-        userLenCheck = makeCheckLabel("5–17 characters");
-        userAlphaCheck = makeCheckLabel("Alphanumeric only");
-        userAvailCheck = makeCheckLabel("Available");
-        userReq.add(userLenCheck);
-        userReq.add(userAlphaCheck);
-        userReq.add(userAvailCheck);
-        form.addField("", userReq);
+        // ── Page 1: Account ──
+        FormPanel page1 = new FormPanel();
 
-        // Name
-        form.addField("First Name:", firstNameField);
-        form.addField("Last Name:", lastNameField);
-        JPanel nameReq = makeReqPanel();
-        firstNameCheck = makeCheckLabel("First name required");
-        lastNameCheck = makeCheckLabel("Last name required");
-        nameReq.add(firstNameCheck);
-        nameReq.add(lastNameCheck);
-        form.addField("", nameReq);
-
-        // Email
-        form.addField("Email:", emailField);
+        page1.addField("Email:", emailField);
         JPanel emailReq = makeReqPanel();
         emailFormatCheck = makeCheckLabel("Valid email");
         emailAvailCheck = makeCheckLabel("Available");
         emailReq.add(emailFormatCheck);
         emailReq.add(emailAvailCheck);
-        form.addField("", emailReq);
+        page1.addField("", emailReq);
 
-        // Password
-        form.addField("Password:", passwordField);
-        form.addField("Confirm:", confirmPasswordField);
+        page1.addField("Password:", passwordField);
+        page1.addField("Confirm:", confirmPasswordField);
         JPanel pwReq = makeReqPanel();
         pwLenCheck = makeCheckLabel("5–16 characters");
         pwLowerCheck = makeCheckLabel("Lowercase letter");
@@ -108,29 +94,119 @@ public class SignUpView extends FormDialogView {
         pwReq.add(pwDigitCheck);
         pwReq.add(pwSymbolCheck);
         pwReq.add(pwMatchCheck);
-        form.addField("", pwReq);
+        page1.addField("", pwReq);
 
-        // Separator + Google sign-up
+        page1.addField("Username:", usernameField);
+        JPanel userReq = makeReqPanel();
+        userLenCheck = makeCheckLabel("5–17 characters");
+        userAlphaCheck = makeCheckLabel("Alphanumeric only");
+        userAvailCheck = makeCheckLabel("Available");
+        userReq.add(userLenCheck);
+        userReq.add(userAlphaCheck);
+        userReq.add(userAvailCheck);
+        page1.addField("", userReq);
+
         JSeparator sep = new JSeparator();
         sep.setForeground(TrakTheme.BORDER);
-        form.addField("", sep);
-
-        JButton googleBtn = new JButton("Sign up with Google");
+        page1.addField("", sep);
+        ImageIcon rawIcon = new ImageIcon(getClass().getResource("/icons/google.png"));
+        Image scaled = rawIcon.getImage().getScaledInstance(14, 14, Image.SCALE_SMOOTH);
+        JButton googleBtn = new JButton("Sign up with Google", new ImageIcon(scaled));
         TrakTheme.styleButtonNav(googleBtn);
-        googleBtn.setPreferredSize(new Dimension(200, 32));
+        googleBtn.setIconTextGap(8);
+        googleBtn.setPreferredSize(new Dimension(220, 32));
         googleBtn.addActionListener(e -> onGoogleSignUp());
-        form.addField("", googleBtn);
+        page1.addField("", googleBtn);
 
-        return form;
-    }
+        // ── Page 2: User Info ──
+        FormPanel page2 = new FormPanel();
+        page2.addField("First Name:", firstNameField);
+        page2.addField("Last Name:", lastNameField);
+        JPanel nameReq = makeReqPanel();
+        firstNameCheck = makeCheckLabel("First name required");
+        lastNameCheck = makeCheckLabel("Last name required");
+        nameReq.add(firstNameCheck);
+        nameReq.add(lastNameCheck);
+        page2.addField("", nameReq);
 
-    @Override
-    protected void onDialogReady(JDialog dialog, JButton okBtn) {
+        // ── Card layout ──
+        CardLayout cardLayout = new CardLayout();
+        JPanel pages = new JPanel(cardLayout);
+        pages.setOpaque(false);
+        page1.setBackground(TrakTheme.BG_SURFACE);
+        page2.setBackground(TrakTheme.BG_SURFACE);
+        page1.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        page2.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        pages.add(page1, "page1");
+        pages.add(page2, "page2");
+
+        // ── Dialog ──
+        Window owner = (parent instanceof Window) ? (Window) parent
+                : SwingUtilities.getWindowAncestor(parent);
+        JDialog dialog = new JDialog(owner instanceof Frame ? (Frame) owner : null, title, true);
         this.dialogRef = dialog;
-        this.okBtnRef = okBtn;
-        okBtn.setEnabled(false);
+        dialog.setUndecorated(true);
+        dialog.setLayout(new BorderLayout());
+        dialog.getContentPane().setBackground(TrakTheme.BG_SURFACE);
 
-        // Debounce timer for async availability checks (400ms after last keystroke)
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(TrakTheme.FONT_HEADING);
+        titleLabel.setForeground(TrakTheme.TEXT_PRIMARY);
+        titleLabel.setBorder(new EmptyBorder(TrakTheme.SP_MD, TrakTheme.SP_LG, TrakTheme.SP_SM, TrakTheme.SP_LG));
+        dialog.add(titleLabel, BorderLayout.NORTH);
+        dialog.add(pages, BorderLayout.CENTER);
+
+        // ── Buttons ──
+        JButton cancelBtn = new JButton("Cancel");
+        TrakTheme.styleButtonNav(cancelBtn);
+        cancelBtn.setPreferredSize(new Dimension(80, 28));
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        nextBtnRef = new JButton("Next");
+        TrakTheme.styleButtonPrimary(nextBtnRef);
+        nextBtnRef.setPreferredSize(new Dimension(80, 28));
+        nextBtnRef.setEnabled(false);
+
+        JButton backBtn = new JButton("Back");
+        TrakTheme.styleButtonNav(backBtn);
+        backBtn.setPreferredSize(new Dimension(80, 28));
+
+        signUpBtnRef = new JButton("Sign Up");
+        TrakTheme.styleButtonPrimary(signUpBtnRef);
+        signUpBtnRef.setPreferredSize(new Dimension(100, 28));
+        signUpBtnRef.setEnabled(false);
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, TrakTheme.SP_SM, 0));
+        buttonRow.setBackground(TrakTheme.BG_SURFACE);
+        buttonRow.setBorder(new EmptyBorder(TrakTheme.SP_SM, TrakTheme.SP_LG, TrakTheme.SP_MD, TrakTheme.SP_LG));
+        buttonRow.add(cancelBtn);
+        buttonRow.add(nextBtnRef);
+
+        nextBtnRef.addActionListener(e -> {
+            cardLayout.show(pages, "page2");
+            buttonRow.removeAll();
+            buttonRow.add(backBtn);
+            buttonRow.add(signUpBtnRef);
+            buttonRow.revalidate();
+            buttonRow.repaint();
+            updateButtons();
+        });
+
+        backBtn.addActionListener(e -> {
+            cardLayout.show(pages, "page1");
+            buttonRow.removeAll();
+            buttonRow.add(cancelBtn);
+            buttonRow.add(nextBtnRef);
+            buttonRow.revalidate();
+            buttonRow.repaint();
+        });
+
+        signUpBtnRef.addActionListener(e -> { onConfirm(); dialog.dispose(); });
+
+        dialog.add(buttonRow, BorderLayout.SOUTH);
+        dialog.getRootPane().setBorder(BorderFactory.createLineBorder(TrakTheme.BORDER, 1));
+
+        // ── Validation ──
         asyncTimer = new Timer(400, e -> checkAvailabilityAsync());
         asyncTimer.setRepeats(false);
 
@@ -147,18 +223,20 @@ public class SignUpView extends FormDialogView {
         confirmPasswordField.getDocument().addDocumentListener(validator);
 
         validateLocal();
+
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(400, 250));
+        dialog.setLocationRelativeTo(parent);
+        dialog.setVisible(true);
     }
 
     private void onFieldChanged() {
-        // Reset async checks while typing
         userAvailResult = false;
         emailAvailResult = false;
         updateCheck(userAvailCheck, false);
         updateCheck(emailAvailCheck, false);
 
         validateLocal();
-
-        // Restart debounce timer for network checks
         asyncTimer.restart();
     }
 
@@ -178,10 +256,9 @@ public class SignUpView extends FormDialogView {
                     emailAvailResult = emailOk;
                     updateCheck(userAvailCheck, userFormatOk && userOk);
                     updateCheck(emailAvailCheck, emailFormatOk && emailOk);
-                    updateOkButton();
+                    updateButtons();
                 });
             } catch (Exception ignored) {
-                // Network error — leave as unchecked, server validates on submit
             }
         }, "signup-avail-check").start();
     }
@@ -194,12 +271,6 @@ public class SignUpView extends FormDialogView {
         String pw = new String(passwordField.getPassword());
         String confirm = new String(confirmPasswordField.getPassword());
 
-        updateCheck(userLenCheck, user.length() >= 5 && user.length() <= 17);
-        updateCheck(userAlphaCheck, !user.isEmpty() && user.matches("[a-zA-Z0-9]+"));
-
-        updateCheck(firstNameCheck, !first.isEmpty());
-        updateCheck(lastNameCheck, !last.isEmpty());
-
         updateCheck(emailFormatCheck, email.contains("@") && email.contains("."));
 
         updateCheck(pwLenCheck, pw.length() >= 5 && pw.length() <= 16);
@@ -209,27 +280,35 @@ public class SignUpView extends FormDialogView {
         updateCheck(pwSymbolCheck, pw.matches(".*[^a-zA-Z0-9].*"));
         updateCheck(pwMatchCheck, !pw.isEmpty() && pw.equals(confirm));
 
-        updateOkButton();
+        updateCheck(userLenCheck, user.length() >= 5 && user.length() <= 17);
+        updateCheck(userAlphaCheck, !user.isEmpty() && user.matches("[a-zA-Z0-9]+"));
+
+        updateCheck(firstNameCheck, !first.isEmpty());
+        updateCheck(lastNameCheck, !last.isEmpty());
+
+        updateButtons();
     }
 
-    private void updateOkButton() {
+    private void updateButtons() {
         String user = usernameField.getText().trim();
-        String first = firstNameField.getText().trim();
-        String last = lastNameField.getText().trim();
         String email = emailField.getText().trim();
         String pw = new String(passwordField.getPassword());
         String confirm = new String(confirmPasswordField.getPassword());
 
-        boolean allLocal =
-                user.length() >= 5 && user.length() <= 17 && user.matches("[a-zA-Z0-9]+")
-                && !first.isEmpty() && !last.isEmpty()
-                && email.contains("@") && email.contains(".")
+        boolean page1Valid =
+                email.contains("@") && email.contains(".")
                 && pw.length() >= 5 && pw.length() <= 16
                 && pw.matches(".*[a-z].*") && pw.matches(".*[A-Z].*")
                 && pw.matches(".*\\d.*") && pw.matches(".*[^a-zA-Z0-9].*")
-                && pw.equals(confirm);
+                && pw.equals(confirm)
+                && user.length() >= 5 && user.length() <= 17 && user.matches("[a-zA-Z0-9]+")
+                && userAvailResult && emailAvailResult;
 
-        okBtnRef.setEnabled(allLocal && userAvailResult && emailAvailResult);
+        nextBtnRef.setEnabled(page1Valid);
+
+        String first = firstNameField.getText().trim();
+        String last = lastNameField.getText().trim();
+        signUpBtnRef.setEnabled(!first.isEmpty() && !last.isEmpty());
     }
 
     private JPanel makeReqPanel() {
@@ -287,4 +366,5 @@ public class SignUpView extends FormDialogView {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 }

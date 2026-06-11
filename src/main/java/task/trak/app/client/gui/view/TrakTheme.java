@@ -280,6 +280,11 @@ public final class TrakTheme {
         UIManager.put("PasswordField.background", BG_INPUT);
         UIManager.put("PasswordField.foreground", TEXT_PRIMARY);
         UIManager.put("PasswordField.caretForeground", ACCENT);
+        UIManager.put("PasswordField.selectionBackground", TABLE_SELECTION);
+        UIManager.put("PasswordField.selectionForeground", TEXT_PRIMARY);
+        UIManager.put("PasswordField.border", BorderFactory.createCompoundBorder(
+                new LineBorder(BORDER, 1, true),
+                new EmptyBorder(SP_XS, SP_SM, SP_XS, SP_SM)));
 
         UIManager.put("TextArea.background", BG_INPUT);
         UIManager.put("TextArea.foreground", TEXT_PRIMARY);
