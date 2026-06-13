@@ -172,7 +172,6 @@ make test
 
 | Document | Contents |
 |---|---|
-| [docs/DESIGN.md](docs/DESIGN.md) | Architecture, requirements, data model, package structure |
-| [docs/DIAGRAM.md](docs/DIAGRAM.md) | Mermaid diagrams (architecture, MVC, DTO flow, storage, etc.) |
+| [docs/DESIGN_DOC.pdf](docs/DESIGN_DOC.pdf) | Architecture, requirements, data model, design decisions, testing strategy |
 | [docs/usage.md](docs/usage.md) | GUI features, CLI reference, REST API endpoints |
 | [docs/store_analysis/ANALYSIS.md](docs/store_analysis/ANALYSIS.md) | Storage backend benchmark (JSON, Parquet, DuckDB, Redis, MongoDB) |
