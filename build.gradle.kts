@@ -121,7 +121,7 @@ val jpackageGui = tasks.register<Exec>("jpackage-gui") {
         "--main-jar", jarName,
         "--main-class", "task.trak.app.client.gui.GUIMain",
         "--name", "Trak",
-        "--app-version", "1.0.0",
+        "--app-version", version.toString(),
         "--icon", iconFile.absolutePath,
         "--dest", outputDir.absolutePath,
         "--java-options", "--add-opens java.desktop/com.apple.eawt=ALL-UNNAMED",
