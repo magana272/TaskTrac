@@ -1,28 +1,29 @@
 .PHONY: test build build-gui build-cli build-server clean reset server gui gui-test gui-server gui-test-server cli cli-test cli-server cli-test-server all all-test installer
 
 # Requires: Java 23+, Gradle 9.5+
+VERSION := $(shell cat VERSION)
 
 # Build
 build:
 	./gradlew allJars
-	cp build/libs/trak-server-0.1.0.jar trak-server
-	cp build/libs/trak-cli-0.1.0.jar trak-cli
-	cp build/libs/trak-gui-0.1.0.jar trak-gui
+	cp build/libs/trak-server-$(VERSION).jar trak-server
+	cp build/libs/trak-cli-$(VERSION).jar trak-cli
+	cp build/libs/trak-gui-$(VERSION).jar trak-gui
 	chmod +x trak-server trak-cli trak-gui
 
 build-gui:
 	./gradlew trak-gui --rerun-tasks
-	cp build/libs/trak-gui-0.1.0.jar trak-gui
+	cp build/libs/trak-gui-$(VERSION).jar trak-gui
 	chmod +x trak-gui
 
 build-cli:
 	./gradlew trak-cli
-	cp build/libs/trak-cli-0.1.0.jar trak-cli
+	cp build/libs/trak-cli-$(VERSION).jar trak-cli
 	chmod +x trak-cli
 
 build-server:
 	./gradlew trak-server
-	cp build/libs/trak-server-0.1.0.jar trak-server
+	cp build/libs/trak-server-$(VERSION).jar trak-server
 	chmod +x trak-server
 
 test:
